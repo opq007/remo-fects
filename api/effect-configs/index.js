@@ -20,7 +20,8 @@ const effectConfigs = {
   'text-vortex-effect': require('./text-vortex-effect'),
   'text-kaleidoscope-effect': require('./text-kaleidoscope-effect'),
   'text-windmill-effect': require('./text-windmill-effect'),
-  'text-vector-effect': require('./text-vector-effect')
+  'text-vector-effect': require('./text-vector-effect'),
+  'text-crystal-ball-effect': require('./text-crystal-ball-effect')
 };
 
 // 导入公共参数处理
