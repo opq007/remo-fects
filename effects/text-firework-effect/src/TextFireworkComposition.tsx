@@ -12,6 +12,7 @@ import {
   RadialBurstSchema,
   RadialBurst,
   extractRadialBurstProps,
+  extractForegroundProps,
   seededRandom,
   BlessingSymbolType,
   DEFAULT_BLESSING_TYPES,
@@ -151,6 +152,25 @@ export const TextFireworkComposition: React.FC<TextFireworkCompositionProps> = (
   radialBurstSeed = 42,
   radialBurstRotate = true,
   radialBurstRotationSpeed = 1,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   const { width, height, durationInFrames } = useVideoConfig();
 
@@ -359,6 +379,28 @@ export const TextFireworkComposition: React.FC<TextFireworkCompositionProps> = (
       }
     : undefined;
 
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
+
   return (
     <BaseComposition
       backgroundType={backgroundType}
@@ -373,6 +415,7 @@ export const TextFireworkComposition: React.FC<TextFireworkCompositionProps> = (
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       extraLayers={<StarField count={100} opacity={0.5} />}
+      foreground={foregroundConfig ?? undefined}
       watermark={
         watermarkEnabled
           ? {

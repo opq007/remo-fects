@@ -16,7 +16,9 @@ import {
   MarqueeSchema,
   BlessingSymbolTypeSchema,
   RadialBurstSchema,
+  ForegroundSchema,
   extractRadialBurstProps,
+  extractForegroundProps,
 } from "../../shared/index";
 import {
   TextFlood,
@@ -137,6 +139,9 @@ export const TextFloodCompositionSchema = z.object({
 
   // 发散粒子效果配置
   ...RadialBurstSchema.shape,
+
+  // 前景配置
+  ...ForegroundSchema.shape,
 });
 
 export type TextFloodCompositionProps = z.infer<typeof TextFloodCompositionSchema>;
@@ -219,6 +224,25 @@ export const TextFloodComposition: React.FC<TextFloodCompositionProps> = ({
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   // 默认文字样式
   const defaultTextStyle = {
@@ -272,6 +296,28 @@ export const TextFloodComposition: React.FC<TextFloodCompositionProps> = ({
     radialBurstRotationSpeed,
   });
 
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
+
   // 构建走马灯配置
   const marqueeConfig = marqueeEnabled
     ? {
@@ -321,6 +367,7 @@ export const TextFloodComposition: React.FC<TextFloodCompositionProps> = ({
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
       watermark={
         watermarkEnabled
           ? {

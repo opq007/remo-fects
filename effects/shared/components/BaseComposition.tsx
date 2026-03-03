@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import { AbsoluteFill, Audio, staticFile } from "remotion";
-import { Background, Overlay, Watermark, Marquee, RadialBurst } from "./index";
-import { BackgroundType, BaseCompositionProps, RadialBurstComponentProps } from "../schemas";
+import { Background, Overlay, Watermark, Marquee, RadialBurst, Foreground } from "./index";
+import { BackgroundType, BaseCompositionProps, RadialBurstComponentProps, ForegroundComponentProps } from "../schemas";
 import { Watermark as WatermarkComponent, WatermarkProps } from "./Watermark";
 import { Marquee as MarqueeComponent, MarqueeProps } from "./Marquee";
 
@@ -50,6 +50,9 @@ export interface BaseCompositionComponentProps extends BaseCompositionProps {
   
   /** 发散粒子效果配置 */
   radialBurst?: RadialBurstComponentProps;
+  
+  /** 前景配置对象（可选，用于批量传入） */
+  foreground?: ForegroundComponentProps;
 }
 
 /**
@@ -122,6 +125,8 @@ export const BaseComposition: React.FC<BaseCompositionComponentProps> = ({
   marquee,
   // 发散粒子效果参数
   radialBurst,
+  // 前景参数
+  foreground,
 }) => {
   // 渲染遮罩层
   const renderOverlay = () => {
@@ -184,6 +189,39 @@ export const BaseComposition: React.FC<BaseCompositionComponentProps> = ({
     );
   };
 
+  // 渲染前景层
+  const renderForeground = () => {
+    if (!foreground || !foreground.enabled || !foreground.source) return null;
+    
+    return (
+      <Foreground
+        type={foreground.type}
+        source={foreground.source}
+        width={foreground.width}
+        height={foreground.height}
+        verticalOffset={foreground.verticalOffset}
+        horizontalOffset={foreground.horizontalOffset}
+        scale={foreground.scale}
+        animationType={foreground.animationType}
+        animationStartFrame={foreground.animationStartFrame}
+        animationDuration={foreground.animationDuration}
+        animationIntensity={foreground.animationIntensity}
+        useSpring={foreground.useSpring}
+        springDamping={foreground.springDamping}
+        springStiffness={foreground.springStiffness}
+        opacity={foreground.opacity}
+        mixBlendMode={foreground.mixBlendMode}
+        objectFit={foreground.objectFit}
+        enabled={foreground.enabled}
+        zIndex={foreground.zIndex}
+        videoLoop={foreground.videoLoop}
+        videoMuted={foreground.videoMuted}
+        continuousAnimation={foreground.continuousAnimation}
+        continuousSpeed={foreground.continuousSpeed}
+      />
+    );
+  };
+
   return (
     <AbsoluteFill>
       {/* 背景层 */}
@@ -215,6 +253,9 @@ export const BaseComposition: React.FC<BaseCompositionComponentProps> = ({
 
       {/* 额外层（内容后） */}
       {extraLayersPosition === "after-content" && renderExtraLayers()}
+
+      {/* 前景层 - 在水印层之前 */}
+      {renderForeground()}
 
       {/* 水印层 */}
       {renderWatermark()}

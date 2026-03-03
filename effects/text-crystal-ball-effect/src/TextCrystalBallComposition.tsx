@@ -14,7 +14,9 @@ import {
   NestedAudioSchema,
   BlessingSymbolTypeSchema,
   RadialBurstSchema,
+  ForegroundSchema,
   extractRadialBurstProps,
+  extractForegroundProps,
 } from "../../shared/index";
 import { CrystalBall } from "./CrystalBall";
 
@@ -108,6 +110,9 @@ export const TextCrystalBallSchema = z.object({
 
   // 发散粒子效果配置
   ...RadialBurstSchema.shape,
+
+  // 前景配置
+  ...ForegroundSchema.shape,
 });
 
 export type TextCrystalBallProps = z.infer<typeof TextCrystalBallSchema>;
@@ -175,6 +180,25 @@ export const TextCrystalBallComposition: React.FC<TextCrystalBallProps> = ({
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   // 默认文字样式
   const defaultTextStyle = {
@@ -217,6 +241,28 @@ export const TextCrystalBallComposition: React.FC<TextCrystalBallProps> = ({
     radialBurstRotationSpeed,
   });
 
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
+
   return (
     <BaseComposition
       backgroundType={backgroundType}
@@ -231,6 +277,7 @@ export const TextCrystalBallComposition: React.FC<TextCrystalBallProps> = ({
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
     >
       <CrystalBall
         contentType={contentType}

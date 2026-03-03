@@ -8,6 +8,7 @@ import {
   MixedInputSchema,
   BlessingStyleSchema,
   extractRadialBurstProps,
+  extractForegroundProps,
 } from "../../shared/index";
 import { MarqueeComponentProps } from "../../shared/schemas/marquee";
 
@@ -128,6 +129,25 @@ export const TextRingComposition: React.FC<TextRingCompositionProps> = ({
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   // 提取发散粒子效果参数
   const radialBurstConfig = extractRadialBurstProps({
@@ -144,6 +164,28 @@ export const TextRingComposition: React.FC<TextRingCompositionProps> = ({
     radialBurstRotate,
     radialBurstRotationSpeed,
   });
+
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
 
   // 构建走马灯配置
   const marqueeConfig: MarqueeComponentProps | undefined = marqueeEnabled
@@ -198,6 +240,7 @@ export const TextRingComposition: React.FC<TextRingCompositionProps> = ({
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
       extraLayers={<CenterGlow intensity={glowIntensity} />}
       watermark={
         watermarkEnabled

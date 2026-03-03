@@ -28,6 +28,8 @@ export { BlessingSymbol, SingleBlessingSymbol } from "./BlessingSymbol";
 
 export { RadialBurst } from "./RadialBurst";
 
+export { Foreground } from "./Foreground";
+
 // 混合输入渲染组件
 export {
   TextItemRender,

@@ -14,6 +14,7 @@ import {
   MixedInputSchema,
   BlessingSymbolType,
   DEFAULT_BLESSING_TYPES,
+  extractForegroundProps,
 } from "../../shared/index";
 
 // ==================== 主组件 Schema ====================
@@ -272,6 +273,25 @@ export const TextBreakthroughComposition: React.FC<TextBreakthroughCompositionPr
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   const { width, height, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -481,6 +501,28 @@ export const TextBreakthroughComposition: React.FC<TextBreakthroughCompositionPr
       }
     : undefined;
 
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
+
   return (
     <BaseComposition
       backgroundType={backgroundType}
@@ -511,6 +553,7 @@ export const TextBreakthroughComposition: React.FC<TextBreakthroughCompositionPr
       }
       marquee={marqueeConfig}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
     >
       {contentTimings.map((timing, index) => {
         const pos = contentPositions[timing.itemIndex] ?? contentPositions[0] ?? { x: 0, y: 0 };

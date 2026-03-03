@@ -53,7 +53,7 @@ export const RemotionRoot: React.FC = () => {
               color: "#ffd700",
               effect: "gold3d",
               effectIntensity: 0.9,
-              fontWeight: 1000,
+              fontWeight: 900,
               letterSpacing: 2,
             },
             backgroundType: "image",

@@ -13,7 +13,7 @@ import {
   BlessingSymbol,
   BlessingSymbolType,
   getImageSrc,
-} from "../../shared/components";
+} from "../../shared/index";
 
 // ==================== 文字样式类型定义 ====================
 
@@ -552,8 +552,8 @@ const generateNonOverlappingDrops = (
       itemWidth = itemSize;
       itemHeight = itemSize;
       
-      // 根据图案类型调整尺寸比例
-      const sizeMultiplier = blessingType === "ingotPile" || blessingType === "coinStack" ? 1.5 : 1;
+      // 根据图案类型调整尺寸比例（moneyBag 稍大）
+      const sizeMultiplier = blessingType === "moneyBag" ? 1.2 : 1;
       
       drops.push({
         type: "blessing",

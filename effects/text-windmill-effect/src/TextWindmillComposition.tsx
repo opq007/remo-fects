@@ -7,6 +7,7 @@ import {
   CompleteCompositionSchema,
   BlessingSymbolType,
   extractRadialBurstProps,
+  extractForegroundProps,
 } from "../../shared/index";
 import { Windmill, BladesData } from "./Windmill";
 import { BladeContentType } from "./WindmillBlade";
@@ -215,6 +216,25 @@ export const TextWindmillComposition: React.FC<TextWindmillCompositionProps> = (
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   // 有效颜色列表
   const effectiveColors = colors && colors.length > 0 ? colors : DEFAULT_COLORS;
@@ -234,6 +254,28 @@ export const TextWindmillComposition: React.FC<TextWindmillCompositionProps> = (
     radialBurstRotate,
     radialBurstRotationSpeed,
   });
+  
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
   
   // 生成叶片数据
   const bladesData = React.useMemo((): BladesData => {
@@ -307,6 +349,7 @@ export const TextWindmillComposition: React.FC<TextWindmillCompositionProps> = (
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
       extraLayers={<StarField count={60} opacity={0.3} />}
       watermark={
         watermarkEnabled

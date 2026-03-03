@@ -10,6 +10,7 @@ import {
   BlessingSymbolType,
   DEFAULT_BLESSING_TYPES,
   extractRadialBurstProps,
+  extractForegroundProps,
 } from "../../shared/index";
 import { Kaleidoscope } from "./Kaleidoscope";
 import { CenterBurst } from "./CenterBurst";
@@ -186,6 +187,25 @@ export const TextKaleidoscopeComposition: React.FC<TextKaleidoscopeCompositionPr
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   const { width, height, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -208,6 +228,28 @@ export const TextKaleidoscopeComposition: React.FC<TextKaleidoscopeCompositionPr
     radialBurstRotate,
     radialBurstRotationSpeed,
   });
+  
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
   
   // 检测可用内容
   const hasText = words && words.length > 0;
@@ -338,6 +380,7 @@ export const TextKaleidoscopeComposition: React.FC<TextKaleidoscopeCompositionPr
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
       extraLayers={<StarField count={80} opacity={0.4} />}
       watermark={
         watermarkEnabled

@@ -11,7 +11,9 @@ import {
   MarqueeSchema,
   BlessingSymbolTypeSchema,
   RadialBurstSchema,
+  ForegroundSchema,
   extractRadialBurstProps,
+  extractForegroundProps,
 } from "../../shared/index";
 
 // ==================== 特有 Schema 定义 ====================
@@ -124,6 +126,9 @@ export const TextRainCompositionSchema = z.object({
 
   // 发散粒子效果配置
   ...RadialBurstSchema.shape,
+
+  // 前景配置
+  ...ForegroundSchema.shape,
 });
 
 export type TextRainCompositionProps = z.infer<typeof TextRainCompositionSchema>;
@@ -203,6 +208,30 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundUseSpring,
+  foregroundSpringDamping,
+  foregroundSpringStiffness,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundVideoLoop,
+  foregroundVideoMuted,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   const defaultTextStyle: TextStyleConfig = {
     color: "#ffd700",
@@ -258,6 +287,33 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
     radialBurstRotationSpeed,
   });
 
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundUseSpring,
+    foregroundSpringDamping,
+    foregroundSpringStiffness,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundVideoLoop,
+    foregroundVideoMuted,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  }) ?? undefined;
+
   // 构建走马灯配置
   const marqueeConfig = marqueeEnabled
     ? {
@@ -307,6 +363,7 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig}
       watermark={
         watermarkEnabled
           ? {

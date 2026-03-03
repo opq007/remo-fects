@@ -21,9 +21,12 @@ import {
   WatermarkSchema,
   MarqueeSchema,
   RadialBurstSchema,
+  ForegroundSchema,
   Watermark,
   Marquee,
   RadialBurst,
+  Foreground,
+  extractForegroundProps,
 } from "../../shared/index";
 
 // ==================== Schema 定义（使用公共 Schema）====================
@@ -88,6 +91,9 @@ export const TaiChiBaguaSchema = BackgroundSchema.extend({
 
   // 发散粒子效果配置（使用公共 Schema）
   ...RadialBurstSchema.shape,
+
+  // 前景配置（使用公共 Schema）
+  ...ForegroundSchema.shape,
 });
 
 export type TaiChiBaguaProps = z.infer<typeof TaiChiBaguaSchema>;
@@ -360,6 +366,25 @@ export const TaiChiBaguaComposition: React.FC<TaiChiBaguaProps> = ({
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   const { width, height } = useVideoConfig();
   const frame = useCurrentFrame();
@@ -556,6 +581,30 @@ export const TaiChiBaguaComposition: React.FC<TaiChiBaguaProps> = ({
           foregroundOffsetY={marqueeForegroundOffsetY ?? 0}
           backgroundOffsetX={marqueeBackgroundOffsetX ?? 0}
           backgroundOffsetY={marqueeBackgroundOffsetY ?? 0}
+        />
+      )}
+
+      {/* 前景层 */}
+      {foregroundEnabled && foregroundSource && (
+        <Foreground
+          enabled={foregroundEnabled}
+          type={foregroundType}
+          source={foregroundSource}
+          width={foregroundWidth}
+          height={foregroundHeight}
+          verticalOffset={foregroundVerticalOffset}
+          horizontalOffset={foregroundHorizontalOffset}
+          scale={foregroundScale}
+          animationType={foregroundAnimationType}
+          animationStartFrame={foregroundAnimationStartFrame}
+          animationDuration={foregroundAnimationDuration}
+          animationIntensity={foregroundAnimationIntensity}
+          opacity={foregroundOpacity}
+          mixBlendMode={foregroundMixBlendMode}
+          objectFit={foregroundObjectFit}
+          zIndex={foregroundZIndex}
+          continuousAnimation={foregroundContinuousAnimation}
+          continuousSpeed={foregroundContinuousSpeed}
         />
       )}
     </AbsoluteFill>

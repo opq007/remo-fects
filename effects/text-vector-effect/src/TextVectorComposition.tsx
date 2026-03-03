@@ -13,6 +13,7 @@ import {
   CompleteCompositionSchema,
   MixedInputSchema,
   extractRadialBurstProps,
+  extractForegroundProps,
 } from "../../shared/index";
 import { TextVectorAnimation } from "./TextVectorAnimation";
 
@@ -199,6 +200,25 @@ export const TextVectorComposition: React.FC<TextVectorCompositionProps> = ({
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   // 有效颜色
   const effectiveColors = colors && colors.length > 0 ? colors : DEFAULT_COLORS;
@@ -218,6 +238,28 @@ export const TextVectorComposition: React.FC<TextVectorCompositionProps> = ({
     radialBurstRotate,
     radialBurstRotationSpeed,
   });
+  
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
   
   // 构建走马灯配置
   const marqueeConfig = marqueeEnabled
@@ -268,6 +310,7 @@ export const TextVectorComposition: React.FC<TextVectorCompositionProps> = ({
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
       extraLayers={
         enableStarField ? <StarField count={starCount} opacity={starOpacity} /> : undefined
       }

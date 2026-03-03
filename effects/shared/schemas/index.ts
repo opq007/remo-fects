@@ -105,6 +105,18 @@ export {
   extractRadialBurstProps,
 } from "./radial-burst";
 
+// 前景配置
+export {
+  ForegroundAnimationTypeSchema,
+  ForegroundTypeSchema,
+  ForegroundSchema,
+  type ForegroundAnimationType,
+  type ForegroundType,
+  type ForegroundProps,
+  type ForegroundComponentProps,
+  extractForegroundProps,
+} from "./foreground";
+
 // 重新导出完整背景 Schema（合并背景和遮罩）
 import { z } from "zod";
 import { BackgroundSchema } from "./background";
@@ -113,6 +125,7 @@ import { AudioSchema } from "./audio";
 import { WatermarkSchema } from "./watermark";
 import { MarqueeSchema } from "./marquee";
 import { RadialBurstSchema } from "./radial-burst";
+import { ForegroundSchema } from "./foreground";
 
 /**
  * 完整背景 Schema（背景 + 遮罩 + 发散粒子）
@@ -148,7 +161,7 @@ export const FullCompositionSchema = FullBackgroundSchema.merge(AudioSchema);
 
 /**
  * 全功能组合 Schema
- * 包含背景 + 遮罩 + 音频 + 水印的完整配置
+ * 包含背景 + 遮罩 + 音频 + 水印 + 前景的完整配置
  * 
  * 使用方式：
  * ```typescript
@@ -157,4 +170,7 @@ export const FullCompositionSchema = FullBackgroundSchema.merge(AudioSchema);
  * });
  * ```
  */
-export const CompleteCompositionSchema = FullCompositionSchema.merge(WatermarkSchema).merge(MarqueeSchema);
+export const CompleteCompositionSchema = FullCompositionSchema
+  .merge(WatermarkSchema)
+  .merge(MarqueeSchema)
+  .merge(ForegroundSchema);

@@ -373,6 +373,111 @@ const commonParams = {
     defaultValue: 1,
     parser: (v) => parseFloat(v) || 1,
     description: '发散粒子旋转速度'
+  },
+
+  // ===== 前景配置 =====
+  foregroundEnabled: {
+    type: 'boolean',
+    defaultValue: false,
+    parser: (v) => v === 'true' || v === true,
+    description: '是否启用前景'
+  },
+  foregroundType: {
+    type: 'string',
+    defaultValue: 'image',
+    description: '前景类型：image | video'
+  },
+  foregroundSource: {
+    type: 'string',
+    defaultValue: null,
+    description: '前景源文件路径（本地 public 目录、网络 URL 或 Data URL）'
+  },
+  foregroundWidth: {
+    type: 'number',
+    defaultValue: null,
+    parser: (v) => v ? parseInt(v) : null,
+    description: '前景宽度（像素）'
+  },
+  foregroundHeight: {
+    type: 'number',
+    defaultValue: null,
+    parser: (v) => v ? parseInt(v) : null,
+    description: '前景高度（像素）'
+  },
+  foregroundVerticalOffset: {
+    type: 'number',
+    defaultValue: 0,
+    parser: (v) => parseFloat(v) || 0,
+    description: '垂直偏移（像素），正数向下，负数向上'
+  },
+  foregroundHorizontalOffset: {
+    type: 'number',
+    defaultValue: 0,
+    parser: (v) => parseFloat(v) || 0,
+    description: '水平偏移（像素），正数向右，负数向左'
+  },
+  foregroundScale: {
+    type: 'number',
+    defaultValue: 1,
+    parser: (v) => parseFloat(v) || 1,
+    description: '前景缩放比例'
+  },
+  foregroundAnimationType: {
+    type: 'string',
+    defaultValue: 'none',
+    description: '前景动画类型：none | zoom-in | zoom-out | fade-in | fade-out | slide-up | slide-down | scale-pulse | breath | rotate-zoom'
+  },
+  foregroundAnimationStartFrame: {
+    type: 'number',
+    defaultValue: 0,
+    parser: (v) => parseInt(v) || 0,
+    description: '动画开始帧'
+  },
+  foregroundAnimationDuration: {
+    type: 'number',
+    defaultValue: 60,
+    parser: (v) => parseInt(v) || 60,
+    description: '动画持续时间（帧）'
+  },
+  foregroundAnimationIntensity: {
+    type: 'number',
+    defaultValue: 1,
+    parser: (v) => parseFloat(v) || 1,
+    description: '动画强度系数（0-2）'
+  },
+  foregroundOpacity: {
+    type: 'number',
+    defaultValue: 1,
+    parser: (v) => parseFloat(v) || 1,
+    description: '前景透明度（0-1）'
+  },
+  foregroundMixBlendMode: {
+    type: 'string',
+    defaultValue: 'normal',
+    description: 'CSS 混合模式'
+  },
+  foregroundObjectFit: {
+    type: 'string',
+    defaultValue: 'cover',
+    description: '对象适应方式：cover | contain | fill | none'
+  },
+  foregroundZIndex: {
+    type: 'number',
+    defaultValue: 100,
+    parser: (v) => parseInt(v) || 100,
+    description: '前景 z-index 层级'
+  },
+  foregroundContinuousAnimation: {
+    type: 'boolean',
+    defaultValue: false,
+    parser: (v) => v === 'true' || v === true,
+    description: '是否启用持续动画'
+  },
+  foregroundContinuousSpeed: {
+    type: 'number',
+    defaultValue: 1,
+    parser: (v) => parseFloat(v) || 1,
+    description: '持续动画速度'
   }
 };
 

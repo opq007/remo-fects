@@ -1,7 +1,7 @@
 import React from "react";
 import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
-import { BaseComposition, FullBackgroundSchema, OverlaySchema, NestedAudioSchema, BlessingSymbolTypeSchema, RadialBurstSchema, extractRadialBurstProps } from "../../shared/index";
+import { BaseComposition, FullBackgroundSchema, OverlaySchema, NestedAudioSchema, BlessingSymbolTypeSchema, RadialBurstSchema, ForegroundSchema, extractRadialBurstProps, extractForegroundProps } from "../../shared/index";
 import { TextTornado } from "./TextTornado";
 
 // ==================== 特有 Schema 定义 ====================
@@ -81,6 +81,9 @@ export const TextTornadoSchema = z.object({
 
   // 发散粒子效果配置
   ...RadialBurstSchema.shape,
+
+  // 前景配置
+  ...ForegroundSchema.shape,
 });
 
 export type TextTornadoProps = z.infer<typeof TextTornadoSchema>;
@@ -137,6 +140,25 @@ export const TextTornadoComposition: React.FC<TextTornadoProps> = ({
   radialBurstSeed,
   radialBurstRotate,
   radialBurstRotationSpeed,
+  // 前景参数
+  foregroundEnabled,
+  foregroundType,
+  foregroundSource,
+  foregroundWidth,
+  foregroundHeight,
+  foregroundVerticalOffset,
+  foregroundHorizontalOffset,
+  foregroundScale,
+  foregroundAnimationType,
+  foregroundAnimationStartFrame,
+  foregroundAnimationDuration,
+  foregroundAnimationIntensity,
+  foregroundOpacity,
+  foregroundMixBlendMode,
+  foregroundObjectFit,
+  foregroundZIndex,
+  foregroundContinuousAnimation,
+  foregroundContinuousSpeed,
 }) => {
   // 默认文字样式
   const defaultTextStyle = {
@@ -179,6 +201,28 @@ export const TextTornadoComposition: React.FC<TextTornadoProps> = ({
     radialBurstRotationSpeed,
   });
 
+  // 提取前景参数
+  const foregroundConfig = extractForegroundProps({
+    foregroundEnabled,
+    foregroundType,
+    foregroundSource,
+    foregroundWidth,
+    foregroundHeight,
+    foregroundVerticalOffset,
+    foregroundHorizontalOffset,
+    foregroundScale,
+    foregroundAnimationType,
+    foregroundAnimationStartFrame,
+    foregroundAnimationDuration,
+    foregroundAnimationIntensity,
+    foregroundOpacity,
+    foregroundMixBlendMode,
+    foregroundObjectFit,
+    foregroundZIndex,
+    foregroundContinuousAnimation,
+    foregroundContinuousSpeed,
+  } as any);
+
   return (
     <BaseComposition
       backgroundType={backgroundType}
@@ -193,6 +237,7 @@ export const TextTornadoComposition: React.FC<TextTornadoProps> = ({
       audioVolume={audioVolume}
       audioLoop={audioLoop}
       radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
     >
       <TextTornado
         contentType={contentType}
