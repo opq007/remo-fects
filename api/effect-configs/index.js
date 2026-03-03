@@ -19,7 +19,8 @@ const effectConfigs = {
   'text-flood-effect': require('./text-flood-effect'),
   'text-vortex-effect': require('./text-vortex-effect'),
   'text-kaleidoscope-effect': require('./text-kaleidoscope-effect'),
-  'text-windmill-effect': require('./text-windmill-effect')
+  'text-windmill-effect': require('./text-windmill-effect'),
+  'text-vector-effect': require('./text-vector-effect')
 };
 
 // 导入公共参数处理
