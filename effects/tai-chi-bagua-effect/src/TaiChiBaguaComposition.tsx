@@ -6,32 +6,22 @@ import {
   interpolate,
   Easing,
   spring,
-  Audio,
-  staticFile,
 } from "remotion";
 import { z } from "zod";
 import { TaiChi } from "./TaiChi";
 import { Bagua } from "./Bagua";
 import {
-  Background,
-  BackgroundType,
-  BackgroundSchema,
-  OverlaySchema,
-  AudioSchema,
-  WatermarkSchema,
-  MarqueeSchema,
-  RadialBurstSchema,
-  ForegroundSchema,
-  Watermark,
-  Marquee,
-  RadialBurst,
-  Foreground,
+  BaseComposition,
+  CompleteCompositionSchema,
+  extractWatermarkProps,
+  extractMarqueeProps,
+  extractRadialBurstProps,
   extractForegroundProps,
 } from "../../shared/index";
 
 // ==================== Schema 定义（使用公共 Schema）====================
 
-export const TaiChiBaguaSchema = BackgroundSchema.extend({
+export const TaiChiBaguaSchema = CompleteCompositionSchema.extend({
   // 颜色配置
   yangColor: z.string().default("#FFD700"),
   yinColor: z.string().default("#1a1a1a"),
@@ -76,24 +66,6 @@ export const TaiChiBaguaSchema = BackgroundSchema.extend({
   // 神秘氛围效果
   enableMysticalAura: z.boolean().default(true),
   auraIntensity: z.number().min(0).max(1).default(0.6),
-
-  // 遮罩效果（从 OverlaySchema 继承）
-  ...OverlaySchema.shape,
-
-  // 音效配置（使用公共 Schema）
-  ...AudioSchema.shape,
-
-  // 水印配置（使用公共 Schema）
-  ...WatermarkSchema.shape,
-
-  // 走马灯配置（使用公共 Schema）
-  ...MarqueeSchema.shape,
-
-  // 发散粒子效果配置（使用公共 Schema）
-  ...RadialBurstSchema.shape,
-
-  // 前景配置（使用公共 Schema）
-  ...ForegroundSchema.shape,
 });
 
 export type TaiChiBaguaProps = z.infer<typeof TaiChiBaguaSchema>;
@@ -287,105 +259,50 @@ const Depth3DLayer: React.FC<{
 
 // ==================== 主组件 ====================
 
-export const TaiChiBaguaComposition: React.FC<TaiChiBaguaProps> = ({
-  yangColor = "#FFD700",
-  yinColor = "#1a1a1a",
-  backgroundColor = "#FFFFFF",
-  backgroundType = "color",
-  backgroundSource,
-  backgroundVideoLoop = true,
-  backgroundVideoMuted = true,
-  glowIntensity = 0.9,
-  taichiRotationSpeed = 1,
-  baguaRotationSpeed = 0.5,
-  taichiSize = 200,
-  baguaRadius = 280,
-  showLabels = true,
-  showParticles = true,
-  showEnergyField = true,
-  labelOffset = 45,
-  particleCount = 40,
-  particleSpeed = 1,
-  viewAngle = 90,
-  perspectiveDistance = 800,
-  verticalPosition = 0.5,
-  verticalMargin = 50,
-  enable3D = false,
-  depth3D = 15,
-  enableGoldenSparkle = true,
-  sparkleDensity = 30,
-  enableMysticalAura = true,
-  auraIntensity = 0.6,
-  overlayColor = "#000000",
-  overlayOpacity = 0,
-  audioEnabled = false,
-  audioSource = "coin-sound.mp3",
-  audioVolume = 0.5,
-  audioLoop = true,
-  // 水印参数
-  watermarkEnabled = false,
-  watermarkText,
-  watermarkFontSize,
-  watermarkColor,
-  watermarkOpacity,
-  watermarkSpeed,
-  watermarkIntensity,
-  watermarkVelocityX,
-  watermarkVelocityY,
-  // 走马灯参数
-  marqueeEnabled = false,
-  marqueeForegroundTexts,
-  marqueeForegroundFontSize,
-  marqueeForegroundOpacity,
-  marqueeForegroundColor,
-  marqueeForegroundEffect,
-  marqueeBackgroundTexts,
-  marqueeBackgroundFontSize,
-  marqueeBackgroundOpacity,
-  marqueeBackgroundColor,
-  marqueeBackgroundEffect,
-  marqueeOrientation,
-  marqueeTextOrientation,
-  marqueeDirection,
-  marqueeSpeed,
-  marqueeSpacing,
-  marqueeForegroundOffsetX,
-  marqueeForegroundOffsetY,
-  marqueeBackgroundOffsetX,
-  marqueeBackgroundOffsetY,
-  // 发散粒子效果参数
-  radialBurstEnabled,
-  radialBurstEffectType,
-  radialBurstColor,
-  radialBurstSecondaryColor,
-  radialBurstIntensity,
-  radialBurstVerticalOffset,
-  radialBurstCount,
-  radialBurstSpeed,
-  radialBurstOpacity,
-  radialBurstSeed,
-  radialBurstRotate,
-  radialBurstRotationSpeed,
-  // 前景参数
-  foregroundEnabled,
-  foregroundType,
-  foregroundSource,
-  foregroundWidth,
-  foregroundHeight,
-  foregroundVerticalOffset,
-  foregroundHorizontalOffset,
-  foregroundScale,
-  foregroundAnimationType,
-  foregroundAnimationStartFrame,
-  foregroundAnimationDuration,
-  foregroundAnimationIntensity,
-  foregroundOpacity,
-  foregroundMixBlendMode,
-  foregroundObjectFit,
-  foregroundZIndex,
-  foregroundContinuousAnimation,
-  foregroundContinuousSpeed,
-}) => {
+export const TaiChiBaguaComposition: React.FC<TaiChiBaguaProps> = (props) => {
+  const {
+    yangColor = "#FFD700",
+    yinColor = "#1a1a1a",
+    backgroundColor = "#FFFFFF",
+    backgroundType = "color",
+    backgroundSource,
+    backgroundVideoLoop = true,
+    backgroundVideoMuted = true,
+    glowIntensity = 0.9,
+    taichiRotationSpeed = 1,
+    baguaRotationSpeed = 0.5,
+    taichiSize = 200,
+    baguaRadius = 280,
+    showLabels = true,
+    showParticles = true,
+    showEnergyField = true,
+    labelOffset = 45,
+    particleCount = 40,
+    particleSpeed = 1,
+    viewAngle = 90,
+    perspectiveDistance = 800,
+    verticalPosition = 0.5,
+    verticalMargin = 50,
+    enable3D = false,
+    depth3D = 15,
+    enableGoldenSparkle = true,
+    sparkleDensity = 30,
+    enableMysticalAura = true,
+    auraIntensity = 0.6,
+    overlayColor = "#000000",
+    overlayOpacity = 0,
+    audioEnabled = false,
+    audioSource = "coin-sound.mp3",
+    audioVolume = 0.5,
+    audioLoop = true,
+  } = props;
+
+  // 提取公共组件参数
+  const watermarkConfig = extractWatermarkProps(props);
+  const marqueeConfig = extractMarqueeProps(props);
+  const radialBurstConfig = extractRadialBurstProps(props);
+  const foregroundConfig = extractForegroundProps(props);
+
   const { width, height } = useVideoConfig();
   const frame = useCurrentFrame();
   
@@ -426,33 +343,23 @@ export const TaiChiBaguaComposition: React.FC<TaiChiBaguaProps> = ({
   const depthLayers = enable3D ? 5 : 0;
 
   return (
-    <AbsoluteFill>
-      <Background
-        type={backgroundType as BackgroundType}
-        source={backgroundSource}
-        color={backgroundColor}
-        videoLoop={backgroundVideoLoop}
-        videoMuted={backgroundVideoMuted}
-      />
-
-      {/* 发散粒子效果层 */}
-      {radialBurstEnabled && (
-        <RadialBurst
-          enabled={radialBurstEnabled}
-          effectType={radialBurstEffectType}
-          color={radialBurstColor}
-          secondaryColor={radialBurstSecondaryColor}
-          intensity={radialBurstIntensity}
-          verticalOffset={radialBurstVerticalOffset}
-          count={radialBurstCount}
-          speed={radialBurstSpeed}
-          opacity={radialBurstOpacity}
-          seed={radialBurstSeed}
-          rotate={radialBurstRotate}
-          rotationSpeed={radialBurstRotationSpeed}
-        />
-      )}
-
+    <BaseComposition
+      backgroundType={backgroundType}
+      backgroundSource={backgroundSource}
+      backgroundColor={backgroundColor}
+      backgroundVideoLoop={backgroundVideoLoop}
+      backgroundVideoMuted={backgroundVideoMuted}
+      overlayColor={overlayColor}
+      overlayOpacity={overlayOpacity}
+      audioEnabled={audioEnabled}
+      audioSource={audioSource}
+      audioVolume={audioVolume}
+      audioLoop={audioLoop}
+      watermark={watermarkConfig}
+      marquee={marqueeConfig}
+      radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
+    >
       <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", ...perspective3D }}>
         <svg width={width} height={height} style={{ position: "absolute", top: 0, left: 0, ...transform3D, opacity: entranceProgress }}>
           <defs>
@@ -531,82 +438,8 @@ export const TaiChiBaguaComposition: React.FC<TaiChiBaguaProps> = ({
           );
         })}
       </svg>
-
-      {audioEnabled && (
-        <Audio
-          src={staticFile(audioSource)}
-          volume={audioVolume}
-          loop={audioLoop}
-        />
-      )}
-
-      {watermarkEnabled && (
-        <Watermark
-          text={watermarkText ?? "© Remo-Fects"}
-          fontSize={watermarkFontSize ?? 24}
-          color={watermarkColor ?? "#ffffff"}
-          opacity={watermarkOpacity ?? 0.35}
-          speed={watermarkSpeed ?? 1}
-          intensity={watermarkIntensity ?? 0.8}
-          velocityX={watermarkVelocityX ?? 180}
-          velocityY={watermarkVelocityY ?? 120}
-        />
-      )}
-
-      {marqueeEnabled && (
-        <Marquee
-          foreground={{
-            texts: (marqueeForegroundTexts ?? ["新年快乐", "万事如意", "恭喜发财"]).map(text => ({ text })),
-            fontSize: marqueeForegroundFontSize ?? 32,
-            opacity: marqueeForegroundOpacity ?? 0.9,
-            textStyle: {
-              color: marqueeForegroundColor ?? "#ffd700",
-              effect: marqueeForegroundEffect ?? "none",
-            },
-          }}
-          background={{
-            texts: (marqueeBackgroundTexts ?? ["新春大吉", "财源广进", "龙年行大运"]).map(text => ({ text })),
-            fontSize: marqueeBackgroundFontSize ?? 24,
-            opacity: marqueeBackgroundOpacity ?? 0.5,
-            textStyle: {
-              color: marqueeBackgroundColor ?? "#ffffff",
-              effect: marqueeBackgroundEffect ?? "none",
-            },
-          }}
-          orientation={marqueeOrientation ?? "horizontal"}
-          textOrientation={marqueeTextOrientation ?? "horizontal"}
-          direction={marqueeDirection ?? "left-to-right"}
-          speed={marqueeSpeed ?? 50}
-          foregroundOffsetX={marqueeForegroundOffsetX ?? 0}
-          foregroundOffsetY={marqueeForegroundOffsetY ?? 0}
-          backgroundOffsetX={marqueeBackgroundOffsetX ?? 0}
-          backgroundOffsetY={marqueeBackgroundOffsetY ?? 0}
-        />
-      )}
-
-      {/* 前景层 */}
-      {foregroundEnabled && foregroundSource && (
-        <Foreground
-          enabled={foregroundEnabled}
-          type={foregroundType}
-          source={foregroundSource}
-          width={foregroundWidth}
-          height={foregroundHeight}
-          verticalOffset={foregroundVerticalOffset}
-          horizontalOffset={foregroundHorizontalOffset}
-          scale={foregroundScale}
-          animationType={foregroundAnimationType}
-          animationStartFrame={foregroundAnimationStartFrame}
-          animationDuration={foregroundAnimationDuration}
-          animationIntensity={foregroundAnimationIntensity}
-          opacity={foregroundOpacity}
-          mixBlendMode={foregroundMixBlendMode}
-          objectFit={foregroundObjectFit}
-          zIndex={foregroundZIndex}
-          continuousAnimation={foregroundContinuousAnimation}
-          continuousSpeed={foregroundContinuousSpeed}
-        />
-      )}
-    </AbsoluteFill>
+    </BaseComposition>
   );
 };
+
+export default TaiChiBaguaComposition;

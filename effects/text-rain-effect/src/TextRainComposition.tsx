@@ -4,16 +4,12 @@ import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
 import {
   BaseComposition,
-  FullBackgroundSchema,
-  OverlaySchema,
-  NestedAudioSchema,
-  WatermarkSchema,
-  MarqueeSchema,
+  CompleteCompositionSchema,
   BlessingSymbolTypeSchema,
-  RadialBurstSchema,
-  ForegroundSchema,
   extractRadialBurstProps,
   extractForegroundProps,
+  extractWatermarkProps,
+  extractMarqueeProps,
 } from "../../shared/index";
 
 // ==================== 特有 Schema 定义 ====================
@@ -75,7 +71,7 @@ const BlessingStyleSchema = z.object({
 
 // ==================== 主组件 Schema（使用公共 Schema）====================
 
-export const TextRainCompositionSchema = z.object({
+export const TextRainCompositionSchema = CompleteCompositionSchema.extend({
   // 内容配置
   words: z.array(z.string()).optional().meta({ description: "要显示的文字列表" }),
   images: z.array(z.string()).optional().meta({ description: "图片路径列表（支持：public目录相对路径、网络URL、Data URL）" }),
@@ -108,27 +104,6 @@ export const TextRainCompositionSchema = z.object({
   // 样式配置
   textStyle: TextStyleSchema.optional().meta({ description: "文字样式配置" }),
   imageStyle: ImageStyleSchema.optional().meta({ description: "图片样式配置" }),
-
-  // 音效配置（使用公共嵌套 Schema）
-  audio: NestedAudioSchema.optional().meta({ description: "音效配置" }),
-
-  // 背景配置（使用公共 Schema，包含视频选项）
-  ...FullBackgroundSchema.shape,
-  
-  // 遮罩效果（使用公共 Schema）
-  ...OverlaySchema.shape,
-
-  // 水印配置（使用公共 Schema）
-  ...WatermarkSchema.shape,
-
-  // 走马灯配置（使用公共 Schema）
-  ...MarqueeSchema.shape,
-
-  // 发散粒子效果配置
-  ...RadialBurstSchema.shape,
-
-  // 前景配置
-  ...ForegroundSchema.shape,
 });
 
 export type TextRainCompositionProps = z.infer<typeof TextRainCompositionSchema>;
@@ -141,7 +116,7 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
   contentType = "text",
   imageWeight = 0.5,
   textDirection = "horizontal",
-  fallDirection = "down",  // 默认从上到下
+  fallDirection = "down",
   density = 2,
   fallSpeed = 0.2,
   fontSizeRange = [72, 140],
@@ -153,10 +128,9 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
   minVerticalGap = 140,
   textStyle,
   imageStyle,
-  // 祝福图案参数
   blessingTypes,
   blessingStyle,
-  audio,
+  // 公共参数（从 CompleteCompositionSchema 继承）
   backgroundType = "color",
   backgroundSource,
   backgroundColor = "#1a1a2e",
@@ -164,74 +138,11 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
   backgroundVideoMuted = true,
   overlayColor = "#000000",
   overlayOpacity = 0.2,
-  // 水印参数
-  watermarkEnabled = false,
-  watermarkText,
-  watermarkFontSize,
-  watermarkColor,
-  watermarkOpacity,
-  watermarkSpeed,
-  watermarkIntensity,
-  watermarkVelocityX,
-  watermarkVelocityY,
-  // 走马灯参数
-  marqueeEnabled = false,
-  marqueeForegroundTexts,
-  marqueeForegroundFontSize,
-  marqueeForegroundOpacity,
-  marqueeForegroundColor,
-  marqueeForegroundEffect,
-  marqueeBackgroundTexts,
-  marqueeBackgroundFontSize,
-  marqueeBackgroundOpacity,
-  marqueeBackgroundColor,
-  marqueeBackgroundEffect,
-  marqueeOrientation,
-  marqueeTextOrientation,
-  marqueeDirection,
-  marqueeSpeed,
-  marqueeSpacing,
-  marqueeForegroundOffsetX,
-  marqueeForegroundOffsetY,
-  marqueeBackgroundOffsetX,
-  marqueeBackgroundOffsetY,
-  // 发散粒子效果参数
-  radialBurstEnabled,
-  radialBurstEffectType,
-  radialBurstColor,
-  radialBurstSecondaryColor,
-  radialBurstIntensity,
-  radialBurstVerticalOffset,
-  radialBurstCount,
-  radialBurstSpeed,
-  radialBurstOpacity,
-  radialBurstSeed,
-  radialBurstRotate,
-  radialBurstRotationSpeed,
-  // 前景参数
-  foregroundEnabled,
-  foregroundType,
-  foregroundSource,
-  foregroundWidth,
-  foregroundHeight,
-  foregroundVerticalOffset,
-  foregroundHorizontalOffset,
-  foregroundScale,
-  foregroundAnimationType,
-  foregroundAnimationStartFrame,
-  foregroundAnimationDuration,
-  foregroundAnimationIntensity,
-  foregroundUseSpring,
-  foregroundSpringDamping,
-  foregroundSpringStiffness,
-  foregroundOpacity,
-  foregroundMixBlendMode,
-  foregroundObjectFit,
-  foregroundZIndex,
-  foregroundVideoLoop,
-  foregroundVideoMuted,
-  foregroundContinuousAnimation,
-  foregroundContinuousSpeed,
+  audioEnabled = false,
+  audioSource = "coin-sound.mp3",
+  audioVolume = 0.5,
+  audioLoop = true,
+  ...props
 }) => {
   const defaultTextStyle: TextStyleConfig = {
     color: "#ffd700",
@@ -265,89 +176,11 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
     ...blessingStyle,
   };
 
-  // 从嵌套 audio 对象提取扁平化参数
-  const audioEnabled = audio?.enabled !== false;
-  const audioSource = audio?.src ?? audio?.source ?? "coin-sound.mp3";
-  const audioVolume = audio?.volume ?? 0.5;
-  const audioLoop = audio?.loop ?? true;
-
-  // 提取发散粒子效果参数
-  const radialBurstConfig = extractRadialBurstProps({
-    radialBurstEnabled,
-    radialBurstEffectType,
-    radialBurstColor,
-    radialBurstSecondaryColor,
-    radialBurstIntensity,
-    radialBurstVerticalOffset,
-    radialBurstCount,
-    radialBurstSpeed,
-    radialBurstOpacity,
-    radialBurstSeed,
-    radialBurstRotate,
-    radialBurstRotationSpeed,
-  });
-
-  // 提取前景参数
-  const foregroundConfig = extractForegroundProps({
-    foregroundEnabled,
-    foregroundType,
-    foregroundSource,
-    foregroundWidth,
-    foregroundHeight,
-    foregroundVerticalOffset,
-    foregroundHorizontalOffset,
-    foregroundScale,
-    foregroundAnimationType,
-    foregroundAnimationStartFrame,
-    foregroundAnimationDuration,
-    foregroundAnimationIntensity,
-    foregroundUseSpring,
-    foregroundSpringDamping,
-    foregroundSpringStiffness,
-    foregroundOpacity,
-    foregroundMixBlendMode,
-    foregroundObjectFit,
-    foregroundZIndex,
-    foregroundVideoLoop,
-    foregroundVideoMuted,
-    foregroundContinuousAnimation,
-    foregroundContinuousSpeed,
-  }) ?? undefined;
-
-  // 构建走马灯配置
-  const marqueeConfig = marqueeEnabled
-    ? {
-        enabled: true,
-        foreground: {
-          texts: (marqueeForegroundTexts ?? ["新年快乐", "万事如意", "恭喜发财"]).map(text => ({ text })),
-          fontSize: marqueeForegroundFontSize ?? 32,
-          opacity: marqueeForegroundOpacity ?? 0.9,
-          spacing: marqueeSpacing ?? 80,
-          textStyle: {
-            color: marqueeForegroundColor ?? "#ffd700",
-            effect: marqueeForegroundEffect ?? "none",
-          },
-        },
-        background: {
-          texts: (marqueeBackgroundTexts ?? ["新春大吉", "财源广进", "龙年行大运"]).map(text => ({ text })),
-          fontSize: marqueeBackgroundFontSize ?? 24,
-          opacity: marqueeBackgroundOpacity ?? 0.5,
-          spacing: marqueeSpacing ?? 80,
-          textStyle: {
-            color: marqueeBackgroundColor ?? "#ffffff",
-            effect: marqueeBackgroundEffect ?? "none",
-          },
-        },
-        orientation: marqueeOrientation ?? "horizontal",
-        textOrientation: marqueeTextOrientation ?? "horizontal",
-        direction: marqueeDirection ?? "left-to-right",
-        speed: marqueeSpeed ?? 50,
-        foregroundOffsetX: marqueeForegroundOffsetX ?? 0,
-        foregroundOffsetY: marqueeForegroundOffsetY ?? 0,
-        backgroundOffsetX: marqueeBackgroundOffsetX ?? 0,
-        backgroundOffsetY: marqueeBackgroundOffsetY ?? 0,
-      }
-    : undefined;
+  // 提取公共配置
+  const watermarkConfig = extractWatermarkProps(props);
+  const marqueeConfig = extractMarqueeProps(props);
+  const radialBurstConfig = extractRadialBurstProps(props);
+  const foregroundConfig = extractForegroundProps(props);
 
   return (
     <BaseComposition
@@ -362,46 +195,34 @@ export const TextRainComposition: React.FC<TextRainCompositionProps> = ({
       audioSource={audioSource}
       audioVolume={audioVolume}
       audioLoop={audioLoop}
-      radialBurst={radialBurstConfig}
-      foreground={foregroundConfig}
-      watermark={
-        watermarkEnabled
-          ? {
-              enabled: true,
-              text: watermarkText ?? "© Remo-Fects",
-              fontSize: watermarkFontSize ?? 24,
-              color: watermarkColor ?? "#ffffff",
-              opacity: watermarkOpacity ?? 0.35,
-              speed: watermarkSpeed ?? 1,
-              intensity: watermarkIntensity ?? 0.8,
-              velocityX: watermarkVelocityX ?? 180,
-              velocityY: watermarkVelocityY ?? 120,
-            }
-          : undefined
-      }
+      watermark={watermarkConfig}
       marquee={marqueeConfig}
+      radialBurst={radialBurstConfig}
+      foreground={foregroundConfig ?? undefined}
     >
       <TextRain
         words={words}
         images={images}
-        contentType={contentType}
+        contentType={contentType as RainContentType}
         imageWeight={imageWeight}
-        textDirection={textDirection}
-        fallDirection={fallDirection}
+        blessingTypes={blessingTypes}
+        blessingStyle={defaultBlessingStyle}
+        textDirection={textDirection as TextDirection}
+        fallDirection={(fallDirection ?? "down") as FallDirection}
         density={density}
         fallSpeed={fallSpeed}
-        fontSizeRange={fontSizeRange}
-        imageSizeRange={imageSizeRange}
-        opacityRange={opacityRange}
-        rotationRange={rotationRange}
+        fontSizeRange={fontSizeRange as [number, number]}
+        imageSizeRange={imageSizeRange as [number, number]}
+        opacityRange={opacityRange as [number, number]}
+        rotationRange={rotationRange as [number, number]}
         seed={seed}
         laneCount={laneCount}
         minVerticalGap={minVerticalGap}
         textStyle={defaultTextStyle}
         imageStyle={defaultImageStyle}
-        blessingTypes={blessingTypes}
-        blessingStyle={defaultBlessingStyle}
       />
     </BaseComposition>
   );
 };
+
+export default TextRainComposition;

@@ -9,16 +9,14 @@ import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
 import {
   BaseComposition,
-  FullBackgroundSchema,
-  OverlaySchema,
-  NestedAudioSchema,
-  WatermarkSchema,
-  MarqueeSchema,
-  BlessingSymbolTypeSchema,
-  RadialBurstSchema,
-  ForegroundSchema,
+  CompleteCompositionSchema,
+  MixedInputSchema,
+  BlessingStyleSchema,
+  MixedImageStyleSchema,
   extractRadialBurstProps,
   extractForegroundProps,
+  extractWatermarkProps,
+  extractMarqueeProps,
 } from "../../shared/index";
 import {
   TextFlood,
@@ -58,35 +56,11 @@ const TextStyleSchema = z.object({
   fontFamily: z.string().optional().meta({ description: "字体" }),
 });
 
-const ImageStyleSchema = z.object({
-  glow: z.boolean().optional().meta({ description: "是否发光" }),
-  glowColor: zColor().optional().meta({ description: "发光颜色" }),
-  glowIntensity: z.number().min(0).max(2).optional().meta({ description: "发光强度" }),
-  shadow: z.boolean().optional().meta({ description: "是否阴影" }),
-  shadowBlur: z.number().optional().meta({ description: "阴影模糊" }),
-  swing: z.boolean().optional().meta({ description: "是否摇摆" }),
-  spin: z.boolean().optional().meta({ description: "是否旋转" }),
-});
-
-const BlessingStyleSchema = z.object({
-  primaryColor: zColor().optional().meta({ description: "主颜色" }),
-  secondaryColor: zColor().optional().meta({ description: "次颜色" }),
-  enable3D: z.boolean().optional().meta({ description: "是否启用3D效果" }),
-  enableGlow: z.boolean().optional().meta({ description: "是否启用发光效果" }),
-  glowIntensity: z.number().min(0).max(2).optional().meta({ description: "发光强度" }),
-});
-
 // ==================== 主组件 Schema ====================
 
-export const TextFloodCompositionSchema = z.object({
-  // 内容配置
-  words: z.array(z.string()).optional().meta({ description: "要显示的文字列表" }),
-  images: z.array(z.string()).optional().meta({ description: "图片路径列表（支持：public目录相对路径、网络URL、Data URL）" }),
-  contentType: z.enum(["text", "image", "mixed", "blessing"]).meta({ description: "内容类型" }),
-  imageWeight: z.number().min(0).max(1).optional().meta({ description: "图片出现权重 (mixed模式下)" }),
-
-  // 祝福图案配置
-  blessingTypes: z.array(BlessingSymbolTypeSchema).optional().meta({ description: "祝福图案类型列表" }),
+export const TextFloodCompositionSchema = CompleteCompositionSchema.extend({
+  // 混合输入配置
+  ...MixedInputSchema.shape,
   blessingStyle: BlessingStyleSchema.optional().meta({ description: "祝福图案样式配置" }),
 
   // 洪水参数
@@ -110,7 +84,7 @@ export const TextFloodCompositionSchema = z.object({
 
   // 样式配置
   textStyle: TextStyleSchema.optional().meta({ description: "文字样式配置" }),
-  imageStyle: ImageStyleSchema.optional().meta({ description: "图片样式配置" }),
+  imageStyle: MixedImageStyleSchema.optional().meta({ description: "图片样式配置" }),
 
   // 视觉效果
   enablePerspective: z.boolean().optional().meta({ description: "是否启用3D透视效果" }),
@@ -121,129 +95,39 @@ export const TextFloodCompositionSchema = z.object({
 
   // 随机种子
   seed: z.number().meta({ description: "随机种子" }),
-
-  // 音效配置
-  audio: NestedAudioSchema.optional().meta({ description: "音效配置" }),
-
-  // 背景配置
-  ...FullBackgroundSchema.shape,
-
-  // 遮罩效果
-  ...OverlaySchema.shape,
-
-  // 水印配置
-  ...WatermarkSchema.shape,
-
-  // 走马灯配置
-  ...MarqueeSchema.shape,
-
-  // 发散粒子效果配置
-  ...RadialBurstSchema.shape,
-
-  // 前景配置
-  ...ForegroundSchema.shape,
 });
 
 export type TextFloodCompositionProps = z.infer<typeof TextFloodCompositionSchema>;
 
 // ==================== 主组件 ====================
 
-export const TextFloodComposition: React.FC<TextFloodCompositionProps> = ({
-  words = [],
-  images = [],
-  contentType = "text",
-  imageWeight = 0.5,
-  particleCount = 80,
-  waveCount = 5,
-  direction = "toward",
-  waveConfig,
-  impactConfig,
-  fontSizeRange = [50, 100],
-  imageSizeRange = [60, 120],
-  blessingSizeRange = [60, 120],
-  opacityRange = [0.7, 1],
-  textStyle,
-  imageStyle,
-  blessingTypes,
-  blessingStyle,
-  enablePerspective = true,
-  perspectiveStrength = 800,
-  enableWaveBackground = true,
-  waveBackgroundColor = "#1a4a7a",
-  waveBackgroundOpacity = 0.3,
-  seed = 42,
-  audio,
-  backgroundType = "color",
-  backgroundSource,
-  backgroundColor = "#0a1a2e",
-  backgroundVideoLoop = true,
-  backgroundVideoMuted = true,
-  overlayColor = "#000000",
-  overlayOpacity = 0.15,
-  // 水印参数
-  watermarkEnabled = false,
-  watermarkText,
-  watermarkFontSize,
-  watermarkColor,
-  watermarkOpacity,
-  watermarkSpeed,
-  watermarkIntensity,
-  watermarkVelocityX,
-  watermarkVelocityY,
-  // 走马灯参数
-  marqueeEnabled = false,
-  marqueeForegroundTexts,
-  marqueeForegroundFontSize,
-  marqueeForegroundOpacity,
-  marqueeForegroundColor,
-  marqueeForegroundEffect,
-  marqueeBackgroundTexts,
-  marqueeBackgroundFontSize,
-  marqueeBackgroundOpacity,
-  marqueeBackgroundColor,
-  marqueeBackgroundEffect,
-  marqueeOrientation,
-  marqueeTextOrientation,
-  marqueeDirection,
-  marqueeSpeed,
-  marqueeSpacing,
-  marqueeForegroundOffsetX,
-  marqueeForegroundOffsetY,
-  marqueeBackgroundOffsetX,
-  marqueeBackgroundOffsetY,
-  // 发散粒子效果参数
-  radialBurstEnabled,
-  radialBurstEffectType,
-  radialBurstColor,
-  radialBurstSecondaryColor,
-  radialBurstIntensity,
-  radialBurstVerticalOffset,
-  radialBurstCount,
-  radialBurstSpeed,
-  radialBurstOpacity,
-  radialBurstSeed,
-  radialBurstRotate,
-  radialBurstRotationSpeed,
-  // 前景参数
-  foregroundEnabled,
-  foregroundType,
-  foregroundSource,
-  foregroundWidth,
-  foregroundHeight,
-  foregroundVerticalOffset,
-  foregroundHorizontalOffset,
-  foregroundScale,
-  foregroundAnimationType,
-  foregroundAnimationStartFrame,
-  foregroundAnimationDuration,
-  foregroundAnimationIntensity,
-  foregroundOpacity,
-  foregroundMixBlendMode,
-  foregroundObjectFit,
-  foregroundZIndex,
-  foregroundContinuousAnimation,
-  foregroundContinuousSpeed,
-}) => {
+export const TextFloodComposition: React.FC<TextFloodCompositionProps> = (props) => {
+  const {
+    words = [],
+    images = [],
+    contentType = "text",
+    imageWeight = 0.5,
+    particleCount = 80,
+    waveCount = 5,
+    direction = "toward",
+    waveConfig,
+    impactConfig,
+    fontSizeRange = [50, 100],
+    imageSizeRange = [60, 120],
+    blessingSizeRange = [60, 120],
+    opacityRange = [0.7, 1],
+    textStyle,
+    imageStyle,
+    blessingTypes,
+    blessingStyle,
+    enablePerspective = true,
+    perspectiveStrength = 800,
+    enableWaveBackground = true,
+    waveBackgroundColor = "#1a4a7a",
+    waveBackgroundOpacity = 0.3,
+    seed = 42,
+  } = props;
+
   // 默认文字样式
   const defaultTextStyle = {
     color: "#00d4ff",
@@ -274,115 +158,18 @@ export const TextFloodComposition: React.FC<TextFloodCompositionProps> = ({
     ...blessingStyle,
   };
 
-  // 从嵌套 audio 对象提取扁平化参数
-  const audioEnabled = audio?.enabled !== false;
-  const audioSource = audio?.src ?? audio?.source ?? "coin-sound.mp3";
-  const audioVolume = audio?.volume ?? 0.5;
-  const audioLoop = audio?.loop ?? true;
-
-  // 提取发散粒子效果参数
-  const radialBurstConfig = extractRadialBurstProps({
-    radialBurstEnabled,
-    radialBurstEffectType,
-    radialBurstColor,
-    radialBurstSecondaryColor,
-    radialBurstIntensity,
-    radialBurstVerticalOffset,
-    radialBurstCount,
-    radialBurstSpeed,
-    radialBurstOpacity,
-    radialBurstSeed,
-    radialBurstRotate,
-    radialBurstRotationSpeed,
-  });
-
-  // 提取前景参数
-  const foregroundConfig = extractForegroundProps({
-    foregroundEnabled,
-    foregroundType,
-    foregroundSource,
-    foregroundWidth,
-    foregroundHeight,
-    foregroundVerticalOffset,
-    foregroundHorizontalOffset,
-    foregroundScale,
-    foregroundAnimationType,
-    foregroundAnimationStartFrame,
-    foregroundAnimationDuration,
-    foregroundAnimationIntensity,
-    foregroundOpacity,
-    foregroundMixBlendMode,
-    foregroundObjectFit,
-    foregroundZIndex,
-    foregroundContinuousAnimation,
-    foregroundContinuousSpeed,
-  } as any);
-
-  // 构建走马灯配置
-  const marqueeConfig = marqueeEnabled
-    ? {
-        enabled: true,
-        foreground: {
-          texts: (marqueeForegroundTexts ?? ["洪水来袭", "势不可挡", "奔涌向前"]).map(text => ({ text })),
-          fontSize: marqueeForegroundFontSize ?? 32,
-          opacity: marqueeForegroundOpacity ?? 0.9,
-          spacing: marqueeSpacing ?? 80,
-          textStyle: {
-            color: marqueeForegroundColor ?? "#00d4ff",
-            effect: marqueeForegroundEffect ?? "glow",
-          },
-        },
-        background: {
-          texts: (marqueeBackgroundTexts ?? ["滚滚洪流", "气势磅礴", "惊天动地"]).map(text => ({ text })),
-          fontSize: marqueeBackgroundFontSize ?? 24,
-          opacity: marqueeBackgroundOpacity ?? 0.5,
-          spacing: marqueeSpacing ?? 80,
-          textStyle: {
-            color: marqueeBackgroundColor ?? "#ffffff",
-            effect: marqueeBackgroundEffect ?? "none",
-          },
-        },
-        orientation: marqueeOrientation ?? "horizontal",
-        textOrientation: marqueeTextOrientation ?? "horizontal",
-        direction: marqueeDirection ?? "right-to-left",
-        speed: marqueeSpeed ?? 60,
-        foregroundOffsetX: marqueeForegroundOffsetX ?? 0,
-        foregroundOffsetY: marqueeForegroundOffsetY ?? 0,
-        backgroundOffsetX: marqueeBackgroundOffsetX ?? 0,
-        backgroundOffsetY: marqueeBackgroundOffsetY ?? 0,
-      }
-    : undefined;
+  // 提取公共组件参数
+  const radialBurstConfig = extractRadialBurstProps(props);
+  const foregroundConfig = extractForegroundProps(props);
+  const watermarkConfig = extractWatermarkProps(props);
+  const marqueeConfig = extractMarqueeProps(props);
 
   return (
     <BaseComposition
-      backgroundType={backgroundType}
-      backgroundSource={backgroundSource}
-      backgroundColor={backgroundColor}
-      backgroundVideoLoop={backgroundVideoLoop}
-      backgroundVideoMuted={backgroundVideoMuted}
-      overlayColor={overlayColor}
-      overlayOpacity={overlayOpacity}
-      audioEnabled={audioEnabled}
-      audioSource={audioSource}
-      audioVolume={audioVolume}
-      audioLoop={audioLoop}
+      {...props}
       radialBurst={radialBurstConfig}
       foreground={foregroundConfig ?? undefined}
-      watermark={
-        watermarkEnabled
-          ? {
-              enabled: true,
-              text: watermarkText ?? "© Remo-Fects",
-              fontSize: watermarkFontSize ?? 24,
-              color: watermarkColor ?? "#ffffff",
-              opacity: watermarkOpacity ?? 0.35,
-              speed: watermarkSpeed ?? 1,
-              intensity: watermarkIntensity ?? 0.8,
-              velocityX: watermarkVelocityX ?? 180,
-              velocityY: watermarkVelocityY ?? 120,
-            }
-          : undefined
-      }
+      watermark={watermarkConfig}
       marquee={marqueeConfig}
     >
       <TextFlood

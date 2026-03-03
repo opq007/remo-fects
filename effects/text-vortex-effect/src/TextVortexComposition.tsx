@@ -1,17 +1,23 @@
+/**
+ * 文字旋涡组合组件
+ */
+
 import React from "react";
 import { z } from "zod";
 import { zColor } from "@remotion/zod-types";
-import { BaseComposition, FullBackgroundSchema, OverlaySchema, NestedAudioSchema, BlessingSymbolTypeSchema, RadialBurstSchema, ForegroundSchema, extractRadialBurstProps, extractForegroundProps } from "../../shared/index";
+import {
+  BaseComposition,
+  CompleteCompositionSchema,
+  MixedInputSchema,
+  BlessingStyleSchema,
+  extractRadialBurstProps,
+  extractForegroundProps,
+  extractWatermarkProps,
+  extractMarqueeProps,
+} from "../../shared/index";
 import { TextVortex } from "./TextVortex";
 
 // ==================== 特有 Schema 定义 ====================
-
-/**
- * 内容类型 Schema
- */
-const ContentTypeSchema = z.enum(["text", "image", "blessing", "mixed"]).meta({ 
-  description: "内容类型" 
-});
 
 /**
  * 旋转方向 Schema
@@ -30,26 +36,11 @@ const TextStyleSchema = z.object({
   fontWeight: z.number().min(100).max(900).optional().meta({ description: "字重" }),
 });
 
-/**
- * 祝福图案样式 Schema
- */
-const BlessingStyleSchema = z.object({
-  primaryColor: zColor().optional().meta({ description: "主颜色" }),
-  secondaryColor: zColor().optional().meta({ description: "次颜色" }),
-  enable3D: z.boolean().optional().meta({ description: "是否启用3D效果" }),
-  enableGlow: z.boolean().optional().meta({ description: "是否启用发光效果" }),
-  glowIntensity: z.number().min(0).max(2).optional().meta({ description: "发光强度" }),
-});
-
 // ==================== 主组件 Schema ====================
 
-export const TextVortexSchema = z.object({
-  // 内容配置
-  contentType: ContentTypeSchema,
-  words: z.array(z.string()).optional().meta({ description: "文字列表" }),
-  images: z.array(z.string()).optional().meta({ description: "图片路径列表（支持：public目录相对路径、网络URL、Data URL）" }),
-  imageWeight: z.number().min(0).max(1).optional().meta({ description: "图片出现权重" }),
-  blessingTypes: z.array(BlessingSymbolTypeSchema).optional().meta({ description: "祝福图案类型列表" }),
+export const TextVortexSchema = CompleteCompositionSchema.extend({
+  // 混合输入配置
+  ...MixedInputSchema.shape,
   blessingStyle: BlessingStyleSchema.optional().meta({ description: "祝福图案样式配置" }),
 
   // 旋涡配置
@@ -89,115 +80,59 @@ export const TextVortexSchema = z.object({
 
   // 随机种子
   seed: z.number().optional().meta({ description: "随机种子" }),
-
-  // 音效配置
-  audio: NestedAudioSchema.optional().meta({ description: "音效配置" }),
-
-  // 背景配置
-  ...FullBackgroundSchema.shape,
-
-  // 遮罩效果
-  ...OverlaySchema.shape,
-
-  // 发散粒子效果配置
-  ...RadialBurstSchema.shape,
-
-  // 前景配置
-  ...ForegroundSchema.shape,
 });
 
 export type TextVortexProps = z.infer<typeof TextVortexSchema>;
 
 // ==================== 主组件 ====================
 
-export const TextVortexComposition: React.FC<TextVortexProps> = ({
-  // 内容配置
-  contentType = "text",
-  words = [],
-  images = [],
-  imageWeight = 0.5,
-  blessingTypes = [],
-  blessingStyle,
-  
-  // 旋涡配置
-  particleCount = 80,
-  ringCount = 6,
-  rotationDirection = "clockwise",
-  rotationSpeed = 1.5,
-  expansionDuration = 6,
-  initialRadius = 30,
-  maxRadius = 350,
-  
-  // 3D效果
-  depth3D = true,
-  depthIntensity = 0.4,
-  perspective = 800,
-  
-  // 尺寸配置
-  fontSizeRange = [30, 70],
-  imageSizeRange = [40, 90],
-  blessingSizeRange = [30, 70],
-  
-  // 动画配置
-  entranceDuration = 25,
-  fadeInEnabled = true,
-  spiralTightness = 1.2,
-  pulseEnabled = true,
-  pulseIntensity = 0.15,
-  
-  // 震撼效果
-  shockwaveEnabled = true,
-  shockwaveTiming = 3,
-  suctionEffect = true,
-  suctionIntensity = 0.3,
-  
-  // 样式配置
-  textStyle,
-  seed,
-  // 音频参数
-  audio,
-  // 背景参数
-  backgroundType = "color",
-  backgroundColor = "#0a0a20",
-  backgroundSource,
-  backgroundVideoLoop = true,
-  backgroundVideoMuted = true,
-  // 遮罩参数
-  overlayColor = "#000000",
-  overlayOpacity = 0.2,
-  // 发散粒子效果参数
-  radialBurstEnabled,
-  radialBurstEffectType,
-  radialBurstColor,
-  radialBurstSecondaryColor,
-  radialBurstIntensity,
-  radialBurstVerticalOffset,
-  radialBurstCount,
-  radialBurstSpeed,
-  radialBurstOpacity,
-  radialBurstSeed,
-  radialBurstRotate,
-  radialBurstRotationSpeed,
-  // 前景参数
-  foregroundEnabled,
-  foregroundType,
-  foregroundSource,
-  foregroundWidth,
-  foregroundHeight,
-  foregroundVerticalOffset,
-  foregroundHorizontalOffset,
-  foregroundScale,
-  foregroundAnimationType,
-  foregroundAnimationStartFrame,
-  foregroundAnimationDuration,
-  foregroundAnimationIntensity,
-  foregroundOpacity,
-  foregroundMixBlendMode,
-  foregroundObjectFit,
-  foregroundZIndex,
-  foregroundContinuousAnimation,
-  foregroundContinuousSpeed,
-}) => {
+export const TextVortexComposition: React.FC<TextVortexProps> = (props) => {
+  const {
+    // 混合输入配置
+    contentType = "text",
+    words = [],
+    images = [],
+    imageWeight = 0.5,
+    blessingTypes = [],
+    blessingStyle,
+    
+    // 旋涡配置
+    particleCount = 80,
+    ringCount = 6,
+    rotationDirection = "clockwise",
+    rotationSpeed = 1.5,
+    expansionDuration = 6,
+    initialRadius = 30,
+    maxRadius = 350,
+    
+    // 3D效果
+    depth3D = true,
+    depthIntensity = 0.4,
+    perspective = 800,
+    
+    // 尺寸配置
+    fontSizeRange = [30, 70],
+    imageSizeRange = [40, 90],
+    blessingSizeRange = [30, 70],
+    
+    // 动画配置
+    entranceDuration = 25,
+    fadeInEnabled = true,
+    spiralTightness = 1.2,
+    pulseEnabled = true,
+    pulseIntensity = 0.15,
+    
+    // 震撼效果
+    shockwaveEnabled = true,
+    shockwaveTiming = 3,
+    suctionEffect = true,
+    suctionIntensity = 0.3,
+    
+    // 样式配置
+    textStyle,
+    seed,
+  } = props;
+
   // 默认文字样式
   const defaultTextStyle = {
     color: "#FFD700",
@@ -217,65 +152,19 @@ export const TextVortexComposition: React.FC<TextVortexProps> = ({
     ...blessingStyle,
   };
 
-  // 从嵌套 audio 对象提取扁平化参数
-  const audioEnabled = audio?.enabled !== false;
-  const audioSource = audio?.src ?? audio?.source ?? "coin-sound.mp3";
-  const audioVolume = audio?.volume ?? 0.5;
-  const audioLoop = audio?.loop ?? true;
-
-  // 提取发散粒子效果参数
-  const radialBurstConfig = extractRadialBurstProps({
-    radialBurstEnabled,
-    radialBurstEffectType,
-    radialBurstColor,
-    radialBurstSecondaryColor,
-    radialBurstIntensity,
-    radialBurstVerticalOffset,
-    radialBurstCount,
-    radialBurstSpeed,
-    radialBurstOpacity,
-    radialBurstSeed,
-    radialBurstRotate,
-    radialBurstRotationSpeed,
-  });
-
-  // 提取前景参数
-  const foregroundConfig = extractForegroundProps({
-    foregroundEnabled,
-    foregroundType,
-    foregroundSource,
-    foregroundWidth,
-    foregroundHeight,
-    foregroundVerticalOffset,
-    foregroundHorizontalOffset,
-    foregroundScale,
-    foregroundAnimationType,
-    foregroundAnimationStartFrame,
-    foregroundAnimationDuration,
-    foregroundAnimationIntensity,
-    foregroundOpacity,
-    foregroundMixBlendMode,
-    foregroundObjectFit,
-    foregroundZIndex,
-    foregroundContinuousAnimation,
-    foregroundContinuousSpeed,
-  } as any);
+  // 提取公共组件参数
+  const radialBurstConfig = extractRadialBurstProps(props);
+  const foregroundConfig = extractForegroundProps(props);
+  const watermarkConfig = extractWatermarkProps(props);
+  const marqueeConfig = extractMarqueeProps(props);
 
   return (
     <BaseComposition
-      backgroundType={backgroundType}
-      backgroundColor={backgroundColor}
-      backgroundSource={backgroundSource}
-      backgroundVideoLoop={backgroundVideoLoop}
-      backgroundVideoMuted={backgroundVideoMuted}
-      overlayColor={overlayColor}
-      overlayOpacity={overlayOpacity}
-      audioEnabled={audioEnabled}
-      audioSource={audioSource}
-      audioVolume={audioVolume}
-      audioLoop={audioLoop}
+      {...props}
       radialBurst={radialBurstConfig}
       foreground={foregroundConfig ?? undefined}
+      watermark={watermarkConfig}
+      marquee={marqueeConfig}
     >
       <TextVortex
         contentType={contentType}

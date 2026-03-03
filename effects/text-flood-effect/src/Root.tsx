@@ -41,6 +41,9 @@ export const RemotionRoot: React.FC = () => {
           schema={TextFloodCompositionSchema}
           defaultProps={{
             words: defaultWords,
+            images: [],
+            blessingTypes: [],
+            imageWeight: 0.5,
             contentType: "text",
             particleCount: 60,
             waveCount: 5,
@@ -87,13 +90,11 @@ export const RemotionRoot: React.FC = () => {
             watermarkVelocityX: 180,
             watermarkVelocityY: 120,
 
-            // 音频配置
-            audio: {
-              enabled: true,
-              src: "coin-sound.mp3",
-              volume: 0.6,
-              loop: true,
-            },
+            // 音频配置（扁平格式）
+            audioEnabled: true,
+            audioSource: "coin-sound.mp3",
+            audioVolume: 0.6,
+            audioLoop: true,
           }}
         />
       </Folder>

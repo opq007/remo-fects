@@ -288,17 +288,17 @@ Content-Type: application/json
 
 ### 步骤 2：创建组合组件
 
-使用 `BaseComposition` 和 `FullCompositionSchema`：
+使用 `BaseComposition` 和 `CompleteCompositionSchema`：
 
 ```tsx
 // effects/your-effect/src/YourComposition.tsx
 import React from "react";
 import { z } from "zod";
-import { BaseComposition, FullCompositionSchema } from "../../shared/index";
+import { BaseComposition, CompleteCompositionSchema } from "../../shared/index";
 import { YourEffectContent } from "./YourEffectContent";
 
 // 定义 Schema（继承公共参数）
-export const YourCompositionSchema = FullCompositionSchema.extend({
+export const YourCompositionSchema = CompleteCompositionSchema.extend({
   words: z.array(z.string()).meta({ description: "文字列表" }),
   speed: z.number().min(0.1).max(2).default(1),
 });

@@ -14,6 +14,9 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{
         contentType: "text",
         words: ["福", "禄", "寿", "喜", "财", "旺", "吉", "祥"],
+        images: [],
+        blessingTypes: [],
+        imageWeight: 0.5,
         ballRadius: 200,
         ballColor: "#4169E1",
         ballOpacity: 0.3,
@@ -28,9 +31,10 @@ export const RemotionRoot: React.FC = () => {
         zoomProgress: 0,
         particleCount: 30,
         backgroundColor: "#0a0a30",
-        audio: {
-          enabled: false,
-        },
+        audioEnabled: false,
+        audioSource: "coin-sound.mp3",
+        audioVolume: 0.5,
+        audioLoop: true,
         textStyle: {
           color: "#FFD700",
           effect: "gold3d",

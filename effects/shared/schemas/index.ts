@@ -161,7 +161,10 @@ export const FullCompositionSchema = FullBackgroundSchema.merge(AudioSchema);
 
 /**
  * 全功能组合 Schema
- * 包含背景 + 遮罩 + 音频 + 水印 + 前景的完整配置
+ * 包含背景 + 遮罩 + 音频 + 水印 + 走马灯 + 前景的完整配置
+ * 
+ * 注意：使用扁平化的 AudioSchema（audioEnabled, audioSource 等），
+ * 与 BaseComposition 组件接口保持一致。
  * 
  * 使用方式：
  * ```typescript
@@ -170,7 +173,8 @@ export const FullCompositionSchema = FullBackgroundSchema.merge(AudioSchema);
  * });
  * ```
  */
-export const CompleteCompositionSchema = FullCompositionSchema
+export const CompleteCompositionSchema = FullBackgroundSchema
+  .merge(AudioSchema)
   .merge(WatermarkSchema)
   .merge(MarqueeSchema)
   .merge(ForegroundSchema);

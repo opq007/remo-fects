@@ -14,15 +14,19 @@ export const RemotionRoot: React.FC = () => {
       defaultProps={{
         contentType: "text",
         words: ["福", "禄", "寿", "喜", "财", "旺"],
+        images: [],
+        blessingTypes: [],
+        imageWeight: 0.5,
         particleCount: 60,
         baseRadius: 280,
         topRadius: 40,
         rotationSpeed: 2.5,
         zoomIntensity: 0.6,
         backgroundColor: "#0a0a15",
-        audio: {
-          enabled: false,
-        },
+        audioEnabled: false,
+        audioSource: "coin-sound.mp3",
+        audioVolume: 0.5,
+        audioLoop: true,
         textStyle: {
           color: "#FFD700",
           effect: "gold3d",

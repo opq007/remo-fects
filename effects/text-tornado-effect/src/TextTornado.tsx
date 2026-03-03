@@ -8,7 +8,8 @@ import {
   Img,
   staticFile,
 } from "remotion";
-import { SingleBlessingSymbol, BlessingSymbolType, getImageSrc } from "../../shared/components";
+import { SingleBlessingSymbol, getImageSrc } from "../../shared/components";
+import { BlessingSymbolType } from "../../shared/schemas";
 import { generateTextStyle } from "../../shared/utils";
 
 /**

@@ -43,6 +43,12 @@ export const RemotionRoot: React.FC = () => {
           overlayColor: "#000000",
           overlayOpacity: 0,
 
+          // 音频配置（扁平格式）
+          audioEnabled: false,
+          audioSource: "coin-sound.mp3",
+          audioVolume: 0.5,
+          audioLoop: true,
+
           // 水印配置
           watermarkEnabled: true,
           watermarkText: "© Remo-Fects",

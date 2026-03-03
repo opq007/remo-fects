@@ -2,14 +2,6 @@ import React from "react";
 import { Composition } from "remotion";
 import { TextVectorComposition, TextVectorCompositionSchema } from "./TextVectorComposition";
 
-// 混合输入默认参数
-const defaultMixedInput = {
-  contentType: "mixed" as const,
-  images: [],
-  blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket"] as const,
-  imageWeight: 0.5,
-};
-
 export const RemotionRoot: React.FC = () => {
   return (
     <>
@@ -29,8 +21,11 @@ export const RemotionRoot: React.FC = () => {
           fontWeight: 700,
           
           // 混合输入
-          ...defaultMixedInput,
+          contentType: "mixed",
           words: ["福", "禄", "寿", "喜", "财", "运", "吉", "祥"],
+          images: [],
+          blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket"],
+          imageWeight: 0.5,
           
           // 元素配置
           elementSize: 20,
@@ -74,7 +69,6 @@ export const RemotionRoot: React.FC = () => {
           backgroundColor: "#0a0a1a",
           overlayColor: "#000000",
           overlayOpacity: 0.12,
-          seed: 12345,
           
           // 水印配置
           watermarkEnabled: true,
