@@ -108,7 +108,7 @@ const params = {
       }
       return VECTOR_BLESSING_TYPES;
     },
-    description: '祝福图案类型：goldCoin | moneyBag | luckyBag | redPacket'
+    description: '祝福图案类型：goldCoin | moneyBag | luckyBag | redPacket | star | heart | balloon'
   },
   imageWeight: {
     ...MIXED_INPUT_PARAMS.imageWeight,

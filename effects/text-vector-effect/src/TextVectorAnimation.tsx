@@ -34,7 +34,7 @@ export interface TextVectorAnimationProps {
   /** 图片列表 */
   images?: string[];
   /** 祝福图案类型列表 */
-  blessingTypes?: Array<"goldCoin" | "moneyBag" | "luckyBag" | "redPacket">;
+  blessingTypes?: Array<"goldCoin" | "moneyBag" | "luckyBag" | "redPacket" | "star" | "heart" | "balloon">;
   /** 图片出现权重 */
   imageWeight?: number;
   
@@ -126,11 +126,14 @@ const DEFAULT_COLORS = [
   "#FFEAA7", // 淡金
 ];
 
-const DEFAULT_BLESSING_TYPES: Array<"goldCoin" | "moneyBag" | "luckyBag" | "redPacket"> = [
+const DEFAULT_BLESSING_TYPES: Array<"goldCoin" | "moneyBag" | "luckyBag" | "redPacket" | "star" | "heart" | "balloon"> = [
   "goldCoin",
   "moneyBag",
   "luckyBag",
   "redPacket",
+  "star",
+  "heart",
+  "balloon",
 ];
 
 // ==================== 工具函数 ====================

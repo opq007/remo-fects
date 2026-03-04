@@ -8,7 +8,7 @@
 /**
  * 祝福图案类型常量
  */
-const BLESSING_TYPES = ['goldCoin', 'moneyBag', 'luckyBag', 'redPacket'];
+const BLESSING_TYPES = ['goldCoin', 'moneyBag', 'luckyBag', 'redPacket', 'star', 'heart', 'balloon'];
 
 /**
  * 默认颜色配置
@@ -170,7 +170,7 @@ const MIXED_INPUT_PARAMS = {
     type: 'array',
     defaultValue: [...BLESSING_TYPES],
     parser: arrayParser([...BLESSING_TYPES]),
-    description: '祝福图案类型列表：goldCoin(金币) | moneyBag(金钱袋) | luckyBag(福袋) | redPacket(红包)'
+    description: '祝福图案类型列表：goldCoin(金币) | moneyBag(金钱袋) | luckyBag(福袋) | redPacket(红包) | star(五角星) | heart(爱心) | balloon(红气球)'
   },
 
   // 祝福图案样式

@@ -96,7 +96,7 @@ export const MixedInputSchema = z.object({
   /** 图片路径列表（支持：public目录相对路径、网络URL、Data URL） */
   images: z.array(z.string()).optional().default([]),
   /** 祝福图案类型列表 */
-  blessingTypes: z.array(z.enum(["goldCoin", "moneyBag", "luckyBag", "redPacket"])).optional().default([]),
+  blessingTypes: z.array(z.enum(["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"])).optional().default([]),
   /** 图片出现权重（0-1，mixed 模式下有效） */
   imageWeight: z.number().min(0).max(1).optional().default(0.5),
   /** 祝福图案样式 */

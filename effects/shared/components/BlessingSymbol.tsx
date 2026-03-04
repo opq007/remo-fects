@@ -8,7 +8,10 @@ export type BlessingSymbolType =
   | "goldCoin"       // 金币
   | "moneyBag"       // 金钱袋
   | "luckyBag"       // 福袋
-  | "redPacket";     // 红包
+  | "redPacket"      // 红包
+  | "star"           // 五角星
+  | "heart"          // 爱心
+  | "balloon";       // 红气球
 
 /**
  * 单个图案配置
@@ -109,6 +112,29 @@ export interface BlessingSymbolProps {
 // 默认颜色配置
 const DEFAULT_PRIMARY_COLOR = "#FFD700";
 const DEFAULT_SECONDARY_COLOR = "#FFA500";
+
+// 卡通元素类型默认配色（参考 CartoonElements.tsx）
+const CARTOON_DEFAULT_COLORS: Record<"star" | "heart" | "balloon", { primary: string; secondary: string }> = {
+  star: { primary: "#FFD93D", secondary: "#FFA500" },    // 金黄色五角星
+  heart: { primary: "#FF6FAF", secondary: "#FF1493" },   // 粉红色爱心
+  balloon: { primary: "#FF6FAF", secondary: "#DC143C" }, // 粉红色气球（默认）
+};
+
+/**
+ * 获取卡通元素的有效颜色
+ * 如果传入的是默认颜色，则使用卡通元素专属配色
+ */
+function getCartoonColors(
+  type: "star" | "heart" | "balloon",
+  primaryColor: string,
+  secondaryColor: string
+): { primary: string; secondary: string } {
+  // 如果传入的是默认颜色（未自定义），则使用卡通元素专属配色
+  if (primaryColor === DEFAULT_PRIMARY_COLOR && secondaryColor === DEFAULT_SECONDARY_COLOR) {
+    return CARTOON_DEFAULT_COLORS[type];
+  }
+  return { primary: primaryColor, secondary: secondaryColor };
+}
 
 /**
  * 伪随机数生成器
@@ -402,6 +428,152 @@ const RedPacket: React.FC<{
 };
 
 /**
+ * 绘制五角星 SVG
+ */
+const Star: React.FC<{
+  primaryColor: string;
+  secondaryColor: string;
+  enable3D: boolean;
+  enableGlow: boolean;
+  glowIntensity: number;
+}> = ({ primaryColor, secondaryColor, enable3D, enableGlow, glowIntensity }) => {
+  // 如果使用默认颜色，则应用卡通元素专属配色
+  const colors = getCartoonColors("star", primaryColor, secondaryColor);
+  
+  const glowFilter = enableGlow
+    ? `drop-shadow(0 0 ${4 * glowIntensity}px ${colors.primary})`
+    : undefined;
+
+  return (
+    <svg viewBox="0 0 60 60" style={{ filter: glowFilter }}>
+      <defs>
+        <linearGradient id="starGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFF8DC" />
+          <stop offset="30%" stopColor={colors.primary} />
+          <stop offset="100%" stopColor={colors.secondary} />
+        </linearGradient>
+      </defs>
+      {/* 五角星主体 */}
+      <path
+        d="M30 3 L37 22 L57 22 L41 34 L47 54 L30 43 L13 54 L19 34 L3 22 L23 22 Z"
+        fill="url(#starGradient)"
+      />
+      {/* 边缘 */}
+      <path
+        d="M30 3 L37 22 L57 22 L41 34 L47 54 L30 43 L13 54 L19 34 L3 22 L23 22 Z"
+        fill="none"
+        stroke={enable3D ? colors.secondary : colors.primary}
+        strokeWidth="1"
+        opacity="0.8"
+      />
+      {/* 高光 */}
+      {enable3D && (
+        <ellipse cx="22" cy="18" rx="5" ry="4" fill="rgba(255,255,255,0.5)" />
+      )}
+    </svg>
+  );
+};
+
+/**
+ * 绘制爱心 SVG
+ */
+const Heart: React.FC<{
+  primaryColor: string;
+  secondaryColor: string;
+  enable3D: boolean;
+  enableGlow: boolean;
+  glowIntensity: number;
+}> = ({ primaryColor, secondaryColor, enable3D, enableGlow, glowIntensity }) => {
+  // 如果使用默认颜色，则应用卡通元素专属配色
+  const colors = getCartoonColors("heart", primaryColor, secondaryColor);
+  
+  const glowFilter = enableGlow
+    ? `drop-shadow(0 0 ${4 * glowIntensity}px ${colors.primary})`
+    : undefined;
+
+  return (
+    <svg viewBox="0 0 60 60" style={{ filter: glowFilter }}>
+      <defs>
+        <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#FFB6C1" />
+          <stop offset="40%" stopColor={colors.primary} />
+          <stop offset="100%" stopColor={colors.secondary} />
+        </linearGradient>
+      </defs>
+      {/* 爱心主体 */}
+      <path
+        d="M30 52 C10 35 2 22 15 10 C22 3 30 8 30 15 C30 8 38 3 45 10 C58 22 50 35 30 52 Z"
+        fill="url(#heartGradient)"
+      />
+      {/* 边缘 */}
+      <path
+        d="M30 52 C10 35 2 22 15 10 C22 3 30 8 30 15 C30 8 38 3 45 10 C58 22 50 35 30 52 Z"
+        fill="none"
+        stroke={enable3D ? colors.secondary : colors.primary}
+        strokeWidth="1"
+        opacity="0.6"
+      />
+      {/* 高光 */}
+      {enable3D && (
+        <ellipse cx="20" cy="18" rx="6" ry="5" fill="rgba(255,255,255,0.4)" />
+      )}
+    </svg>
+  );
+};
+
+/**
+ * 绘制红气球 SVG
+ */
+const Balloon: React.FC<{
+  primaryColor: string;
+  secondaryColor: string;
+  enable3D: boolean;
+  enableGlow: boolean;
+  glowIntensity: number;
+}> = ({ primaryColor, secondaryColor, enable3D, enableGlow, glowIntensity }) => {
+  // 如果使用默认颜色，则应用卡通元素专属配色
+  const colors = getCartoonColors("balloon", primaryColor, secondaryColor);
+  
+  const glowFilter = enableGlow
+    ? `drop-shadow(0 0 ${3 * glowIntensity}px ${colors.primary})`
+    : undefined;
+
+  return (
+    <svg viewBox="0 0 60 78" style={{ filter: glowFilter }}>
+      <defs>
+        <radialGradient id="balloonGradient" cx="35%" cy="30%">
+          <stop offset="0%" stopColor="#FFB6C1" />
+          <stop offset="30%" stopColor={colors.primary} />
+          <stop offset="100%" stopColor={colors.secondary} />
+        </radialGradient>
+      </defs>
+      {/* 气球主体 */}
+      <ellipse cx="30" cy="26" rx="26" ry="30" fill="url(#balloonGradient)" />
+      {/* 气球底部三角 */}
+      <path d="M30 54 L24 60 L36 60 Z" fill={colors.primary} />
+      {/* 气球绳子 */}
+      <path
+        d="M30 60 Q22 68 30 72 Q38 68 30 60"
+        stroke={colors.secondary}
+        fill="none"
+        strokeWidth="1.5"
+      />
+      {/* 绳子下垂部分 */}
+      <path
+        d="M30 72 Q28 75 30 78"
+        stroke={colors.secondary}
+        fill="none"
+        strokeWidth="1"
+      />
+      {/* 高光 */}
+      {enable3D && (
+        <ellipse cx="18" cy="16" rx="8" ry="10" fill="rgba(255,255,255,0.4)" />
+      )}
+    </svg>
+  );
+};
+
+/**
  * 根据类型渲染对应的图案
  */
 const SymbolRenderer: React.FC<{
@@ -421,6 +593,12 @@ const SymbolRenderer: React.FC<{
       return <LuckyBag {...props} />;
     case "redPacket":
       return <RedPacket {...props} />;
+    case "star":
+      return <Star {...props} />;
+    case "heart":
+      return <Heart {...props} />;
+    case "balloon":
+      return <Balloon {...props} />;
     default:
       return <GoldCoin {...props} />;
   }

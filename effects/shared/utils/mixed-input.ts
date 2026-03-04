@@ -26,6 +26,9 @@ export const DEFAULT_BLESSING_TYPES: BlessingSymbolType[] = [
   "moneyBag",
   "luckyBag",
   "redPacket",
+  "star",
+  "heart",
+  "balloon",
 ];
 
 /**

@@ -24,7 +24,7 @@ export const RemotionRoot: React.FC = () => {
           contentType: "mixed",
           words: ["福", "禄", "寿", "喜", "财", "运", "吉", "祥"],
           images: [],
-          blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket"],
+          blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"],
           imageWeight: 0.5,
           
           // 元素配置

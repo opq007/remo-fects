@@ -38,7 +38,7 @@ const DEFAULT_BLADES_DATA = [
 function parseContentItem(item) {
   if (typeof item === 'string') {
     // 判断是否是祝福图案类型
-    const blessingTypes = ['goldCoin', 'moneyBag', 'luckyBag', 'redPacket'];
+    const blessingTypes = ['goldCoin', 'moneyBag', 'luckyBag', 'redPacket', 'star', 'heart', 'balloon'];
     if (blessingTypes.includes(item)) {
       return { type: 'blessing', content: item };
     }

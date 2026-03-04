@@ -8,7 +8,7 @@ const defaultMixedInput = {
   contentType: "mixed" as const,
   words: ["平安喜乐", "健康成长"],
   images: [] as string[],
-  blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket"] as BlessingSymbolType[],
+  blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"] as BlessingSymbolType[],
   imageWeight: 0.3,
   blessingStyle: {
     primaryColor: "#FFD700",

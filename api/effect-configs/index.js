@@ -20,7 +20,9 @@ const effectConfigs = {
   'text-kaleidoscope-effect': require('./text-kaleidoscope-effect'),
   'text-windmill-effect': require('./text-windmill-effect'),
   'text-vector-effect': require('./text-vector-effect'),
-  'text-crystal-ball-effect': require('./text-crystal-ball-effect')
+  'text-crystal-ball-effect': require('./text-crystal-ball-effect'),
+  // 祝福视频生成器 - 儿童生日祝福
+  'kids-birthday-effect': require('./kids-birthday-effect')
 };
 
 // 导入公共参数处理
