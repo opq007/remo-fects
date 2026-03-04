@@ -1,0 +1,15 @@
+{
+  "name": "blessing-video-generator",
+  "version": "1.0.0",
+  "description": "祝福类爆款视频生成器 - 支持生日祝福、婚礼祝福、节假祝福",
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion render BirthdayBlessing out/birthday.mp4",
+    "dev:kids-birthday": "remotion studio --port 3101",
+    "render:kids-birthday": "remotion render KidsBirthday out/kids-birthday.mp4"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

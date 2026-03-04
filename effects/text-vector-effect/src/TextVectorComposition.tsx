@@ -31,7 +31,7 @@ export const TextVectorCompositionSchema = CompleteCompositionSchema.merge(Mixed
   // ===== 混合输入配置（用于填充元素） =====
   words: z.array(z.string()).optional().meta({ description: "填充文字列表" }),
   images: z.array(z.string()).optional().meta({ description: "填充图片列表" }),
-  blessingTypes: z.array(z.enum(["goldCoin", "moneyBag", "luckyBag", "redPacket"])).optional().meta({ description: "祝福图案类型" }),
+  blessingTypes: z.array(z.enum(["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"])).optional().meta({ description: "祝福图案类型" }),
   
   // ===== 元素配置 =====
   elementSize: z.number().min(10).max(100).meta({ description: "填充元素大小" }),

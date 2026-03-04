@@ -134,7 +134,7 @@ export const RemotionRoot: React.FC = () => {
             contentType: "blessing",
             textDirection: "horizontal",
             // 祝福图案类型：金币、金钱袋、福袋、红包
-            blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket"],
+            blessingTypes: ["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"],
             blessingStyle: {
               primaryColor: "#FFD700",
               secondaryColor: "#FFA500",

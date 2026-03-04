@@ -177,7 +177,7 @@ export const TextVortex: React.FC<TextVortexProps> = ({
   const random = useMemo(() => seededRandom(seed), [seed]);
 
   // 默认祝福图案类型
-  const DEFAULT_BLESSING_TYPES: BlessingSymbolType[] = ["goldCoin", "moneyBag", "luckyBag", "redPacket"];
+  const DEFAULT_BLESSING_TYPES: BlessingSymbolType[] = ["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"];
   const effectiveBlessingTypes = blessingTypes.length > 0 ? blessingTypes : DEFAULT_BLESSING_TYPES;
 
   // 判断可用内容

@@ -8,6 +8,9 @@ export const BlessingSymbolTypeSchema = z.enum([
   "moneyBag",     // 金钱袋
   "luckyBag",     // 福袋
   "redPacket",    // 红包
+  "star",         // 五角星
+  "heart",        // 爱心
+  "balloon",      // 红气球
 ]);
 
 export type BlessingSymbolType = z.infer<typeof BlessingSymbolTypeSchema>;

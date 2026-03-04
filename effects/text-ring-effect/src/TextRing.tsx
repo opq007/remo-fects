@@ -524,7 +524,7 @@ export const TextRing: React.FC<TextRingProps> = ({
       words,
       images,
       imageWeight,
-      blessingTypes: blessingTypes.length > 0 ? blessingTypes : ["goldCoin", "moneyBag", "luckyBag", "redPacket"],
+      blessingTypes: blessingTypes.length > 0 ? blessingTypes : ["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"],
       blessingStyle,
       fontSize,
       imageSizeRange,
