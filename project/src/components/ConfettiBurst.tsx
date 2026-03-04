@@ -85,7 +85,7 @@ export const ConfettiBurst: React.FC<ConfettiBurstProps> = ({
   
   // 爆炸进度
   const progress = Math.min(frame / 60, 1);
-  const elasticProgress = elastic(progress);
+  const elasticProgress = Math.max(0, Math.min(1, elastic(progress)));
   
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>

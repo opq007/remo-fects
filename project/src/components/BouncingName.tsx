@@ -100,7 +100,7 @@ const AgeBadge: React.FC<{
   color: string;
 }> = ({ age, frame, fps, color }) => {
   const progress = spring({
-    frame: frame - 15,
+    frame: Math.max(frame - 15, 0),
     fps,
     config: {
       damping: 10,
