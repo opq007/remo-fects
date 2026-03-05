@@ -378,6 +378,8 @@ interface CharacterProps {
   orientation?: ScreenOrientation;
   animate?: boolean;
   customConfig?: Partial<CharacterConfig>;
+  /** 是否使用内联布局（由父容器控制位置），默认 false */
+  inline?: boolean;
 }
 
 export const Character: React.FC<CharacterProps> = ({
@@ -388,7 +390,8 @@ export const Character: React.FC<CharacterProps> = ({
   position = 'center',
   orientation = 'portrait',
   animate = true,
-  customConfig
+  customConfig,
+  inline = false
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -416,7 +419,15 @@ export const Character: React.FC<CharacterProps> = ({
     ? 1 + Math.sin(frame * 0.3) * 0.05 
     : 1;
   
-  // 位置计算
+  // 内联模式样式（由父容器控制位置）
+  const getInlineStyle = (): React.CSSProperties => {
+    return {
+      transform: `translateY(${floatY}px) scale(${entrance * breathe * expressionScale}) rotate(${floatRotation}deg)`,
+      zIndex: 10,
+    };
+  };
+  
+  // 绝对定位样式
   const getPositionStyle = () => {
     const baseStyle: React.CSSProperties = {
       position: 'absolute',
@@ -459,7 +470,7 @@ export const Character: React.FC<CharacterProps> = ({
   };
   
   return (
-    <div style={getPositionStyle()}>
+    <div style={inline ? getInlineStyle() : getPositionStyle()}>
       <div style={{
         filter: `drop-shadow(0 10px 20px rgba(0,0,0,0.2)) drop-shadow(0 0 30px ${config.primaryColor}40)`,
       }}>

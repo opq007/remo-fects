@@ -109,7 +109,7 @@ export const ModuleA_MagicOpening: React.FC<ModuleAProps> = ({
         style={{
           position: 'absolute',
           left: '50%',
-          bottom: '12%',
+          top: '45%',
           transform: `translateX(-50%) translateY(${interpolate(characterEntrance, [0, 1], [100, 0])}px)`,
           opacity: characterEntrance,
           zIndex: 30,
@@ -122,7 +122,7 @@ export const ModuleA_MagicOpening: React.FC<ModuleAProps> = ({
         {showGreeting && (
           <div
             style={{
-              marginBottom: 15,
+              marginBottom: 25,
               transform: `scale(${bubbleScale})`,
             }}
           >
@@ -134,13 +134,13 @@ export const ModuleA_MagicOpening: React.FC<ModuleAProps> = ({
           </div>
         )}
         
-        {/* 角色 */}
+        {/* 角色 - 使用 inline 模式 */}
         <Character
           series={characterSeries}
           type={characterType}
           size={180}
           expression="happy"
-          position="center"
+          inline={true}
           animate={true}
         />
       </div>
@@ -190,44 +190,44 @@ export const ModuleB_CharacterEntrance: React.FC<ModuleBProps> = ({
   
   return (
     <AbsoluteFill>
-      {/* 角色入场 */}
+      {/* 角色和气泡组合容器 - 整体居中 */}
       <div
         style={{
           position: 'absolute',
-          left: orientation === 'portrait' ? '50%' : '30%',
-          bottom: '10%',
+          left: '50%',
+          top: '45%',
           transform: `translateX(-50%) translateY(${interpolate(characterEntrance, [0, 1], [200, 0])}px)`,
           opacity: characterEntrance,
           zIndex: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
         }}
       >
+        {/* 角色自我介绍气泡 - 在角色上方 */}
+        {showIntroduction && !showNameBounce && (
+          <div
+            style={{
+              marginBottom: 25,
+            }}
+          >
+            <SpeechBubble
+              text={`我是你的生肖守护神小老虎！`}
+              visible={true}
+            />
+          </div>
+        )}
+        
+        {/* 角色 - 使用 inline 模式，由父容器控制位置 */}
         <Character
           series={characterSeries}
           type={characterType}
           size={orientation === 'portrait' ? 180 : 150}
           expression={showIntroduction ? 'waving' : 'happy'}
-          position="center"
-          orientation={orientation}
+          inline={true}
+          animate={true}
         />
       </div>
-      
-      {/* 角色自我介绍 */}
-      {showIntroduction && !showNameBounce && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '25%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 25,
-          }}
-        >
-          <SpeechBubble
-            text={`我是你的生肖守护神小老虎！`}
-            visible={true}
-          />
-        </div>
-      )}
       
       {/* 名字发光弹跳 */}
       {showNameBounce && (
