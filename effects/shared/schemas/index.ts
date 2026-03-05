@@ -117,6 +117,87 @@ export {
   extractForegroundProps,
 } from "./foreground";
 
+// ==================== 故事系统 Schema ====================
+
+// 字幕相关
+export {
+  SubtitlePositionSchema,
+  SubtitleAnimationTypeSchema,
+  SubtitleItemSchema,
+  SubtitleListSchema,
+  type SubtitlePosition,
+  type SubtitleAnimationType,
+  type SubtitleItemProps,
+} from "./story";
+
+// 角色相关
+export {
+  CharacterSeriesSchema,
+  ZodiacTypeSchema,
+  PetTypeSchema,
+  HeroTypeSchema,
+  CharacterExpressionSchema,
+  CharacterPositionSchema,
+  StoryCharacterConfigSchema,
+  type CharacterSeriesType,
+  type ZodiacTypeSchemaType,
+  type PetTypeSchemaType,
+  type HeroTypeSchemaType,
+  type CharacterExpressionType,
+  type CharacterPositionType,
+  type StoryCharacterConfigProps,
+} from "./story";
+
+// 彩带效果
+export {
+  ConfettiLevelSchema,
+  StoryConfettiConfigSchema,
+  type ConfettiLevelType,
+  type StoryConfettiConfigProps,
+} from "./story";
+
+// 魔法效果
+export {
+  StoryMagicParticlesConfigSchema,
+  StoryMagicWandConfigSchema,
+  StoryMagicCircleConfigSchema,
+  StoryFireworkConfigSchema,
+  StoryBalloonBurstConfigSchema,
+  StoryWhiteFlashConfigSchema,
+  StoryShootingStarConfigSchema,
+  StoryMagicEffectsConfigSchema,
+  type StoryMagicParticlesConfigProps,
+  type StoryMagicWandConfigProps,
+  type StoryMagicCircleConfigProps,
+  type StoryFireworkConfigProps,
+  type StoryBalloonBurstConfigProps,
+  type StoryWhiteFlashConfigProps,
+  type StoryShootingStarConfigProps,
+  type StoryMagicEffectsConfigProps,
+} from "./story";
+
+// 故事章节
+export {
+  StoryChapterSchema,
+  type StoryChapterSchemaType,
+} from "./story";
+
+// 故事面板
+export {
+  ChapterTransitionTypeSchema,
+  ChapterTransitionSchema,
+  StoryPanelChapterSchema,
+  BackgroundMusicSchema,
+  StoryPanelSchema,
+  extractStoryChapterProps,
+  extractStoryPanelProps,
+  type ChapterTransitionTypeType,
+  type ChapterTransitionProps,
+  type StoryPanelChapterProps,
+  type BackgroundMusicProps,
+  type StoryPanelProps as StoryPanelSchemaType,
+} from "./story";
+
 // 重新导出完整背景 Schema（合并背景和遮罩）
 import { z } from "zod";
 import { BackgroundSchema } from "./background";

@@ -270,18 +270,27 @@ export const MagicCircle: React.FC<MagicCircleProps> = ({
 
 interface WhiteFlashTransitionProps {
   durationInFrames?: number;
+  /** 触发帧数（相对于当前序列开始） */
+  triggerFrame?: number;
 }
 
 export const WhiteFlashTransition: React.FC<WhiteFlashTransitionProps> = ({
-  durationInFrames = 12
+  durationInFrames = 12,
+  triggerFrame = 0
 }) => {
   const frame = useCurrentFrame();
   
+  // 计算相对帧数
+  const localFrame = frame - triggerFrame;
+  
+  // 如果还没到触发时间，不显示
+  if (localFrame < 0) return null;
+  
   const opacity = interpolate(
-    frame,
+    localFrame,
     [0, durationInFrames * 0.3, durationInFrames],
     [0, 1, 0],
-    { extrapolateRight: 'clamp' }
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
   
   return (
@@ -395,11 +404,7 @@ export const BalloonBurst: React.FC<BalloonBurstProps> = ({
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
   
-  const localFrame = frame - triggerFrame;
-  if (localFrame < 0) return null;
-  
-  const progress = Math.min(localFrame / 90, 1);
-  
+  // 必须在提前返回之前调用所有 hooks，以遵守 React Hooks 规则
   const balloons = useMemo(() => {
     return Array.from({ length: balloonCount }, (_, i) => ({
       id: i,
@@ -410,6 +415,11 @@ export const BalloonBurst: React.FC<BalloonBurstProps> = ({
       wobbleSpeed: random(`wobble-${i}`) * 0.1 + 0.05,
     }));
   }, [balloonCount, colors]);
+  
+  const localFrame = frame - triggerFrame;
+  if (localFrame < 0) return null;
+  
+  const progress = Math.min(localFrame / 90, 1);
   
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>

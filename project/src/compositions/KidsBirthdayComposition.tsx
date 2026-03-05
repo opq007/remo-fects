@@ -2,30 +2,29 @@ import React, { useMemo } from 'react';
 import { 
   AbsoluteFill, 
   useVideoConfig,
-  Sequence,
-  random
+  useCurrentFrame,
+  interpolate,
+  spring
 } from 'remotion';
 import { z } from 'zod';
-import { BaseComposition } from '../../../effects/shared/components';
-import {
-  extractWatermarkProps,
-  extractMarqueeProps,
-  extractRadialBurstProps,
-  extractForegroundProps,
-} from '../../../effects/shared/schemas';
+import { 
+  StoryPanel,
+  StoryChapterConfig,
+  StoryCharacterConfig,
+  Character,
+  SpeechBubble,
+  Firework,
+  StarFieldBackground,
+} from '../../../effects/shared/index';
 import {
   CartoonElements,
-  // 新模块
-  ModuleA_MagicOpening,
-  ModuleB_CharacterEntrance,
-  ModuleC_PhotoInteraction1,
-  ModuleD_PhotoInteraction2,
-  ModuleE_PhotoInteraction3,
-  ModuleF_GrowthCelebration,
-  ModuleG_BirthdaySong,
-  ModuleH_FutureBlessing,
-  ModuleI_DreamSeeds,
-  ModuleJ_WarmClosing,
+  PhotoCard,
+  PhotoFromMagicCircle,
+  FloatingHearts,
+  BirthdaySongScene,
+  DreamBubblesScene,
+  BouncingName,
+  BlessingText,
 } from '../components';
 import { getColorTheme } from '../utils/colors';
 import { 
@@ -34,30 +33,318 @@ import {
   ZodiacType,
   PetType,
   HeroType,
-  VIDEO_VERSIONS,
+  PhotoData,
+  ScreenOrientation,
+  PRIMARY_COLORS,
 } from '../types';
 import { 
   KidsBirthdaySchema, 
   getModulesByVersion, 
-  getDurationByVersion
+  getDurationByVersion 
 } from '../schemas';
 
 export type KidsBirthdayProps = z.infer<typeof KidsBirthdaySchema>;
 
+// ==================== 章节内部组件 ====================
+
 /**
- * 儿童生日祝福视频组合组件 v2.0
+ * 模块 A：魔法开场 - 内部内容
+ */
+const ChapterAContent: React.FC<{
+  name: string;
+  characterSeries: CharacterSeries;
+  characterType: ZodiacType | PetType | HeroType;
+}> = ({ name, characterSeries, characterType }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  
+  const blackOpacity = interpolate(frame, [0, 24], [1, 0], { extrapolateRight: 'clamp' });
+  const characterEntrance = spring({
+    frame: Math.max(frame - 20, 0),
+    fps,
+    config: { damping: 12, stiffness: 80 }
+  });
+  const showGreeting = frame > 35;
+  const bubbleScale = showGreeting 
+    ? spring({
+        frame: frame - 35,
+        fps,
+        config: { damping: 10, stiffness: 200 }
+      })
+    : 0;
+  
+  return (
+    <>
+      {/* 黑屏 */}
+      <AbsoluteFill 
+        style={{ 
+          backgroundColor: 'black', 
+          opacity: blackOpacity,
+          zIndex: 50 
+        }} 
+      />
+      
+      {/* 角色和气泡组合 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '45%',
+          transform: `translateX(-50%) translateY(${interpolate(characterEntrance, [0, 1], [100, 0])}px)`,
+          opacity: characterEntrance,
+          zIndex: 30,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        {showGreeting && (
+          <div style={{ marginBottom: 25, transform: `scale(${bubbleScale})` }}>
+            <SpeechBubble
+              text={`亲爱的${name}小朋友——\n生日快乐呀！`}
+              visible={true}
+              color="#FFFFFF"
+            />
+          </div>
+        )}
+        
+        <Character
+          series={characterSeries}
+          type={characterType}
+          size={180}
+          expression="happy"
+          inline={true}
+          animate={true}
+        />
+      </div>
+    </>
+  );
+};
+
+/**
+ * 模块 B：角色入场 - 内部内容
+ */
+const ChapterBContent: React.FC<{
+  name: string;
+  age?: number;
+  characterSeries: CharacterSeries;
+  characterType: ZodiacType | PetType | HeroType;
+  subStyle: KidsSubStyle;
+  orientation: ScreenOrientation;
+}> = ({ name, age, characterSeries, characterType, subStyle, orientation }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  
+  const characterEntrance = spring({
+    frame,
+    fps,
+    config: { damping: 12, stiffness: 80 }
+  });
+  const showIntroduction = frame > 72;
+  const showNameBounce = frame > 120;
+  
+  return (
+    <>
+      {/* 角色和气泡 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '45%',
+          transform: `translateX(-50%) translateY(${interpolate(characterEntrance, [0, 1], [200, 0])}px)`,
+          opacity: characterEntrance,
+          zIndex: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        {showIntroduction && !showNameBounce && (
+          <div style={{ marginBottom: 25 }}>
+            <SpeechBubble text={`我是你的生肖守护神小老虎！`} visible={true} />
+          </div>
+        )}
+        
+        <Character
+          series={characterSeries}
+          type={characterType}
+          size={orientation === 'portrait' ? 180 : 150}
+          expression={showIntroduction ? 'waving' : 'happy'}
+          inline={true}
+          animate={true}
+        />
+      </div>
+      
+      {/* 名字发光弹跳 */}
+      {showNameBounce && (
+        <div style={{ position: 'absolute', top: '20%', width: '100%', zIndex: 15 }}>
+          <BouncingName
+            name={name}
+            age={age}
+            showAge={false}
+            subStyle={subStyle}
+            fontSize={orientation === 'portrait' ? 100 : 80}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
+/**
+ * 模块 D：照片互动2 - 内部内容
+ */
+const ChapterDContent: React.FC<{
+  photo: PhotoData;
+  orientation: ScreenOrientation;
+}> = ({ photo, orientation }) => {
+  const frame = useCurrentFrame();
+  
+  return (
+    <>
+      <PhotoCard
+        photo={photo}
+        index={0}
+        totalPhotos={1}
+        orientation={orientation}
+        animationType="flyIn"
+        visible={true}
+        showCaption={true}
+      />
+      {frame > 30 && <FloatingHearts count={15} />}
+    </>
+  );
+};
+
+/**
+ * 模块 F：成长庆祝高潮 - 内部内容
+ */
+const ChapterFContent: React.FC<{
+  name: string;
+  age?: number;
+  subStyle: KidsSubStyle;
+  orientation: ScreenOrientation;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+}> = ({ name, age, subStyle, orientation, primaryColor, secondaryColor, accentColor }) => {
+  const frame = useCurrentFrame();
+  const showFirework = frame > 20;
+  
+  return (
+    <>
+      {/* 多个烟花 */}
+      {showFirework && (
+        <>
+          <Firework x={0.3} y={0.3} color={primaryColor} triggerFrame={0} />
+          <Firework x={0.7} y={0.3} color={secondaryColor} triggerFrame={15} />
+          <Firework x={0.5} y={0.2} color={accentColor} triggerFrame={30} />
+        </>
+      )}
+      
+      {/* 名字+年龄大字 */}
+      <div style={{ position: 'absolute', top: '30%', width: '100%', zIndex: 20 }}>
+        <BouncingName
+          name={name}
+          age={age}
+          showAge={true}
+          subStyle={subStyle}
+          fontSize={orientation === 'portrait' ? 90 : 70}
+        />
+      </div>
+      
+      {/* 生日快乐文字 */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '50%', 
+        width: '100%', 
+        zIndex: 15,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <BlessingText
+          text="生日快乐"
+          fontSize={orientation === 'portrait' ? 50 : 40}
+          subStyle={subStyle}
+        />
+      </div>
+    </>
+  );
+};
+
+/**
+ * 模块 G：生日歌 - 内部内容
+ */
+const ChapterGContent: React.FC<{
+  age?: number;
+  name?: string;
+  birthdaySongSource?: string;
+  birthdaySongVolume: number;
+  photos: PhotoData[];
+  subStyle: KidsSubStyle;
+  durationInFrames: number;
+}> = ({ age, name, birthdaySongSource, birthdaySongVolume, photos, subStyle, durationInFrames }) => {
+  return (
+    <BirthdaySongScene
+      age={age}
+      name={name}
+      durationInFrames={durationInFrames}
+      birthdaySongSource={birthdaySongSource}
+      birthdaySongVolume={birthdaySongVolume}
+      photos={photos}
+      subStyle={subStyle}
+    />
+  );
+};
+
+/**
+ * 模块 J：温暖收尾 - 内部内容
+ */
+const ChapterJContent: React.FC<{
+  name: string;
+}> = ({ name }) => {
+  const frame = useCurrentFrame();
+  const logoOpacity = interpolate(frame, [60, 100], [0, 1], { extrapolateRight: 'clamp' });
+  
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        bottom: '5%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        opacity: logoOpacity,
+        zIndex: 30,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 24,
+          fontWeight: 600,
+          color: PRIMARY_COLORS.violet,
+          textShadow: '0 0 10px rgba(255,255,255,0.5)',
+        }}
+      >
+        ✨ Remo-Fects ✨
+      </div>
+    </div>
+  );
+};
+
+// ==================== 主组件 ====================
+
+/**
+ * 儿童生日祝福视频组合组件 v3.0
  * 
- * 支持模块化分镜系统：
- * - 模块 A：魔法开场（0-2秒）
- * - 模块 B：角色入场（2-12秒）
- * - 模块 C：照片互动1（12-25秒）
- * - 模块 D：照片互动2（25-38秒）
- * - 模块 E：照片互动3（38-50秒）
- * - 模块 F：成长庆祝高潮（50-60秒）
- * - 模块 G：生日歌互动（60-90秒）
- * - 模块 H：未来祝福（90-105秒）
- * - 模块 I：梦想种子（105-115秒）
- * - 模块 J：温暖收尾（115-120秒）
+ * 使用 StoryPanel + StoryChapter 架构重构
+ * 
+ * 特性：
+ * - 配置驱动的章节管理
+ * - 统一的过渡效果
+ * - 角色系统支持
+ * - 魔法效果集成
+ * - 字幕系统
  */
 export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   const { fps } = useVideoConfig();
@@ -66,167 +353,42 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   const {
     name,
     age,
-    message,
     videoVersion = '120s',
     duration,
-    fps: propFps = 24,
-    width = 720,
-    height = 1280,
     subStyle = 'general',
     characterSeries = 'zodiac',
     characterType = 'tiger',
     photos = [],
     dreams = ['astronaut', 'artist', 'racer'],
     orientation = 'portrait',
-    nameFontSize = 120,
-    nameColor,
-    showAge = true,
-    blessingText = '生日快乐',
-    blessingFontSize = 60,
     cartoonElements,
     confettiLevel = 'high',
-    animationSpeed = 'normal',
     musicEnabled = true,
     musicTrack = 'kids_party_01',
     birthdaySongSource,
     birthdaySongVolume = 0.6,
     seed,
-    // BaseComposition 参数
+    // 背景参数
     backgroundType = 'gradient',
     backgroundColor,
     backgroundGradient,
     backgroundSource,
     backgroundVideoLoop,
     backgroundVideoMuted,
+    // 遮罩参数
     overlayColor,
     overlayOpacity = 0.1,
+    // 音频参数
     audioEnabled,
     audioSource,
     audioVolume = 0.5,
     audioLoop = true,
-    // 水印参数
-    watermarkEnabled,
-    watermarkText,
-    watermarkFontSize,
-    watermarkColor,
-    watermarkOpacity,
-    watermarkEffect,
-    watermarkSpeed,
-    watermarkIntensity,
-    watermarkVelocityX,
-    watermarkVelocityY,
-    // 走马灯参数
-    marqueeEnabled,
-    marqueeForegroundTexts,
-    marqueeForegroundImages,
-    marqueeForegroundFontSize,
-    marqueeForegroundOpacity,
-    marqueeForegroundColor,
-    marqueeForegroundEffect,
-    marqueeBackgroundTexts,
-    marqueeBackgroundImages,
-    marqueeBackgroundFontSize,
-    marqueeBackgroundOpacity,
-    marqueeBackgroundColor,
-    marqueeBackgroundEffect,
-    marqueeOrientation,
-    marqueeTextOrientation,
-    marqueeDirection,
-    marqueeSpeed: marqueeSpeedProp,
-    marqueeSpacing,
-    marqueePerspectiveDepth,
-    marqueeForegroundOffsetX,
-    marqueeForegroundOffsetY,
-    marqueeBackgroundOffsetX,
-    marqueeBackgroundOffsetY,
-    marqueeZIndex,
-    // 发散粒子参数
-    radialBurstEnabled,
-    radialBurstEffectType,
-    radialBurstColor,
-    radialBurstSecondaryColor,
-    radialBurstIntensity,
-    radialBurstVerticalOffset,
-    radialBurstCount,
-    radialBurstSpeed,
-    radialBurstOpacity,
-    radialBurstSeed,
-    radialBurstRotate,
-    radialBurstRotationSpeed,
-    // 前景参数
-    foregroundEnabled,
-    foregroundType,
-    foregroundSource,
-    foregroundWidth,
-    foregroundHeight,
-    foregroundVerticalOffset,
-    foregroundHorizontalOffset,
-    foregroundScale,
-    foregroundAnimationType,
-    foregroundAnimationStartFrame,
-    foregroundAnimationDuration,
-    foregroundAnimationIntensity,
-    foregroundUseSpring,
-    foregroundSpringDamping,
-    foregroundSpringStiffness,
-    foregroundOpacity,
-    foregroundMixBlendMode,
-    foregroundObjectFit,
-    foregroundZIndex,
-    foregroundVideoLoop,
-    foregroundVideoMuted,
-    foregroundContinuousAnimation,
-    foregroundContinuousSpeed,
   } = props;
   
   const theme = getColorTheme(subStyle);
-  const randomSeed = seed ?? random('kids-birthday-seed');
   
-  // 根据视频版本计算时长和模块
-  const effectiveVersion = videoVersion;
-  const effectiveDuration = duration ?? getDurationByVersion(effectiveVersion);
-  const totalFrames = effectiveDuration * fps;
-  
-  // 获取模块列表
-  const modules = useMemo(() => getModulesByVersion(effectiveVersion), [effectiveVersion]);
-  
-  // 计算各模块的时间范围（帧）
-  const moduleTimings = useMemo(() => {
-    const config = VIDEO_VERSIONS[effectiveVersion];
-    const timings: Record<string, { from: number; durationInFrames: number }> = {};
-    
-    // 模块 A：魔法开场（2秒）
-    timings.A = { from: 0, durationInFrames: 2 * fps };
-    
-    // 模块 B：角色入场（10秒）
-    timings.B = { from: 2 * fps, durationInFrames: 10 * fps };
-    
-    // 模块 C：照片互动1（13秒）- 可裁剪
-    timings.C = { from: 12 * fps, durationInFrames: 13 * fps };
-    
-    // 模块 D：照片互动2（13秒）- 可裁剪
-    timings.D = { from: 25 * fps, durationInFrames: 13 * fps };
-    
-    // 模块 E：照片互动3（12秒）- 可裁剪
-    timings.E = { from: 38 * fps, durationInFrames: 12 * fps };
-    
-    // 模块 F：成长庆祝高潮（10秒）- 60秒版本截止
-    timings.F = { from: 50 * fps, durationInFrames: 10 * fps };
-    
-    // 模块 G：生日歌互动（30秒）
-    timings.G = { from: 60 * fps, durationInFrames: 30 * fps };
-    
-    // 模块 H：未来祝福（15秒）- 90秒版本截止
-    timings.H = { from: 90 * fps, durationInFrames: 15 * fps };
-    
-    // 模块 I：梦想种子（10秒）
-    timings.I = { from: 105 * fps, durationInFrames: 10 * fps };
-    
-    // 模块 J：温暖收尾（5秒）
-    timings.J = { from: 115 * fps, durationInFrames: 5 * fps };
-    
-    return timings;
-  }, [effectiveVersion, fps]);
+  // 计算时长
+  const effectiveDuration = duration ?? getDurationByVersion(videoVersion);
   
   // 确定背景
   const effectiveGradient = backgroundGradient || theme.gradient;
@@ -236,235 +398,312 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   const effectiveAudioEnabled = audioEnabled ?? musicEnabled;
   const effectiveAudioSource = audioSource || `${musicTrack}.mp3`;
   
-  // 转换水印参数
-  const watermarkProps = extractWatermarkProps({
-    watermarkEnabled,
-    watermarkText,
-    watermarkFontSize,
-    watermarkColor,
-    watermarkOpacity,
-    watermarkEffect,
-    watermarkSpeed,
-    watermarkIntensity,
-    watermarkVelocityX,
-    watermarkVelocityY,
-  });
+  // 类型断言
+  const typedCharacterType = characterType as ZodiacType & PetType & HeroType;
   
-  // 转换走马灯参数
-  const marqueeProps = extractMarqueeProps({
-    marqueeEnabled,
-    marqueeForegroundTexts,
-    marqueeForegroundImages,
-    marqueeForegroundFontSize,
-    marqueeForegroundOpacity,
-    marqueeForegroundColor,
-    marqueeForegroundEffect,
-    marqueeBackgroundTexts,
-    marqueeBackgroundImages,
-    marqueeBackgroundFontSize,
-    marqueeBackgroundOpacity,
-    marqueeBackgroundColor,
-    marqueeBackgroundEffect,
-    marqueeOrientation,
-    marqueeTextOrientation,
-    marqueeDirection,
-    marqueeSpeed: marqueeSpeedProp,
-    marqueeSpacing,
-    marqueePerspectiveDepth,
-    marqueeForegroundOffsetX,
-    marqueeForegroundOffsetY,
-    marqueeBackgroundOffsetX,
-    marqueeBackgroundOffsetY,
-    marqueeZIndex,
-  });
+  // 角色配置（共享）
+  const characterConfig: StoryCharacterConfig = {
+    series: characterSeries,
+    type: typedCharacterType,
+    size: orientation === 'portrait' ? 180 : 150,
+    animate: true,
+  };
   
-  // 转换发散粒子参数
-  const radialBurstProps = extractRadialBurstProps({
-    radialBurstEnabled,
-    radialBurstEffectType,
-    radialBurstColor,
-    radialBurstSecondaryColor,
-    radialBurstIntensity,
-    radialBurstVerticalOffset,
-    radialBurstCount,
-    radialBurstSpeed,
-    radialBurstOpacity,
-    radialBurstSeed,
-    radialBurstRotate,
-    radialBurstRotationSpeed,
-  });
-  
-  // 转换前景参数
-  const foregroundProps = extractForegroundProps({
-    foregroundEnabled,
-    foregroundType,
-    foregroundSource,
-    foregroundWidth,
-    foregroundHeight,
-    foregroundVerticalOffset,
-    foregroundHorizontalOffset,
-    foregroundScale,
-    foregroundAnimationType,
-    foregroundAnimationStartFrame,
-    foregroundAnimationDuration,
-    foregroundAnimationIntensity,
-    foregroundUseSpring,
-    foregroundSpringDamping,
-    foregroundSpringStiffness,
-    foregroundOpacity,
-    foregroundMixBlendMode,
-    foregroundObjectFit,
-    foregroundZIndex,
-    foregroundVideoLoop,
-    foregroundVideoMuted,
-    foregroundContinuousAnimation,
-    foregroundContinuousSpeed,
-  });
-  
-  // 渲染模块内容
-  const renderModule = (moduleId: string) => {
-    const timing = moduleTimings[moduleId];
-    if (!timing) return null;
+  // 构建章节配置
+  const chapters = useMemo((): StoryChapterConfig[] => {
+    const chapterList: StoryChapterConfig[] = [];
+    const modules = getModulesByVersion(videoVersion);
     
-    const commonProps = {
-      name,
-      age,
-      subStyle,
-      characterSeries,
-      characterType: characterType as ZodiacType & PetType & HeroType,
-      orientation,
-      dreams,
-    };
-    
-    switch (moduleId) {
-      case 'A':
-        return (
-          <ModuleA_MagicOpening
+    // 模块 A：魔法开场（2秒 = 48帧）
+    if (modules.includes('A')) {
+      chapterList.push({
+        id: 'A_magicOpening',
+        durationInFrames: 2 * fps,
+        backgroundType: 'color',
+        backgroundColor: '#0a0a20',
+        magicEffects: {
+          particles: {
+            enabled: true,
+            particleCount: 80,
+            color: PRIMARY_COLORS.violet,
+            durationInFrames: 48,
+          },
+        },
+        children: (
+          <ChapterAContent
             name={name}
             characterSeries={characterSeries}
-            characterType={characterType as ZodiacType & PetType & HeroType}
+            characterType={typedCharacterType}
           />
-        );
-      case 'B':
-        return (
-          <ModuleB_CharacterEntrance
-            {...commonProps}
-          />
-        );
-      case 'C':
-        return photos[0] ? (
-          <ModuleC_PhotoInteraction1
-            photo={photos[0]}
-            photoIndex={0}
+        ),
+      });
+    }
+    
+    // 模块 B：角色入场（10秒 = 240帧）
+    if (modules.includes('B')) {
+      chapterList.push({
+        id: 'B_characterEntrance',
+        durationInFrames: 10 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: effectiveGradient,
+        magicEffects: {
+          balloonBurst: {
+            enabled: true,
+            x: 0.5,
+            y: 0.5,
+            balloonCount: 12,
+            triggerFrame: 192,
+          },
+          whiteFlash: {
+            enabled: true,
+            durationInFrames: 20,
+            triggerFrame: 200, // 在第 200 帧触发白闪
+          },
+        },
+        children: (
+          <ChapterBContent
+            name={name}
+            age={age}
+            characterSeries={characterSeries}
+            characterType={typedCharacterType}
+            subStyle={subStyle}
             orientation={orientation}
           />
-        ) : null;
-      case 'D':
-        return photos[1] ? (
-          <ModuleD_PhotoInteraction2
-            photo={photos[1]}
-            photoIndex={1}
-            showHearts={true}
-            orientation={orientation}
-          />
-        ) : null;
-      case 'E':
-        return photos[2] ? (
-          <ModuleE_PhotoInteraction3
+        ),
+      });
+    }
+    
+    // 模块 C：照片互动1（13秒 = 312帧）
+    if (modules.includes('C') && photos[0]) {
+      chapterList.push({
+        id: 'C_photoInteraction1',
+        durationInFrames: 13 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: effectiveGradient,
+        overlayOpacity: 0.05,
+        children: <PhotoFromMagicCircle photo={photos[0]} visible={true} orientation={orientation} />,
+      });
+    }
+    
+    // 模块 D：照片互动2（13秒 = 312帧）
+    if (modules.includes('D') && photos[1]) {
+      chapterList.push({
+        id: 'D_photoInteraction2',
+        durationInFrames: 13 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: effectiveGradient,
+        overlayOpacity: 0.05,
+        children: <ChapterDContent photo={photos[1]} orientation={orientation} />,
+      });
+    }
+    
+    // 模块 E：照片互动3（12秒 = 288帧）
+    if (modules.includes('E') && photos[2]) {
+      chapterList.push({
+        id: 'E_photoInteraction3',
+        durationInFrames: 12 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: effectiveGradient,
+        overlayOpacity: 0.05,
+        children: (
+          <PhotoCard
             photo={photos[2]}
-            photoIndex={2}
+            index={0}
+            totalPhotos={1}
             orientation={orientation}
+            animationType="rotateIn"
+            visible={true}
           />
-        ) : null;
-      case 'F':
-        return (
-          <ModuleF_GrowthCelebration
-            {...commonProps}
+        ),
+      });
+    }
+    
+    // 模块 F：成长庆祝高潮（10秒 = 240帧）
+    if (modules.includes('F')) {
+      chapterList.push({
+        id: 'F_growthCelebration',
+        durationInFrames: 10 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: effectiveGradient,
+        confetti: {
+          enabled: true,
+          level: confettiLevel,
+          primaryColor: theme.primary,
+          secondaryColor: theme.secondary,
+        },
+        magicEffects: {
+          firework: {
+            enabled: true,
+            x: 0.5,
+            y: 0.3,
+            particleCount: 50,
+            color: theme.primary,
+            triggerFrame: 20,
+          },
+        },
+        children: (
+          <ChapterFContent
+            name={name}
+            age={age}
+            subStyle={subStyle}
+            orientation={orientation}
+            primaryColor={theme.primary}
+            secondaryColor={theme.secondary}
+            accentColor={theme.accent}
           />
-        );
-      case 'G':
-        return (
-          <ModuleG_BirthdaySong
+        ),
+      });
+    }
+    
+    // 模块 G：生日歌互动（30秒 = 720帧）
+    if (modules.includes('G')) {
+      chapterList.push({
+        id: 'G_birthdaySong',
+        durationInFrames: 30 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: effectiveGradient,
+        children: (
+          <ChapterGContent
             age={age}
             name={name}
             birthdaySongSource={birthdaySongSource}
             birthdaySongVolume={birthdaySongVolume}
             photos={photos}
             subStyle={subStyle}
+            durationInFrames={30 * fps}
           />
-        );
-      case 'H':
-        return (
-          <ModuleH_FutureBlessing
-            {...commonProps}
-          />
-        );
-      case 'I':
-        return (
-          <ModuleI_DreamSeeds
-            dreams={dreams}
-          />
-        );
-      case 'J':
-        return (
-          <ModuleJ_WarmClosing
-            {...commonProps}
-          />
-        );
-      default:
-        return null;
+        ),
+      });
     }
-  };
+    
+    // 模块 H：未来祝福（15秒 = 360帧）
+    if (modules.includes('H')) {
+      chapterList.push({
+        id: 'H_futureBlessing',
+        durationInFrames: 15 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: 'linear-gradient(180deg, #0a0a2e 0%, #1a1a4e 50%, #2a2a6e 100%)',
+        character: {
+          ...characterConfig,
+          position: 'center',
+        },
+        subtitles: [
+          {
+            text: '未来的一年，我会一直守护你。',
+            startFrame: 60,
+            durationInFrames: 180,
+            position: 'bottom',
+            fontSize: 28,
+            color: '#FFFFFF',
+            backgroundColor: PRIMARY_COLORS.violet,
+            backgroundOpacity: 0.8,
+          },
+        ],
+        magicEffects: {
+          shootingStar: {
+            enabled: true,
+            startX: 0.9,
+            startY: 0.1,
+            endX: 0.3,
+            endY: 0.5,
+            durationInFrames: 40,
+          },
+        },
+        children: <StarFieldBackground starCount={150} />,
+      });
+    }
+    
+    // 模块 I：梦想种子（10秒 = 240帧）
+    if (modules.includes('I')) {
+      chapterList.push({
+        id: 'I_dreamSeeds',
+        durationInFrames: 10 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: 'linear-gradient(180deg, #1a1a4e 0%, #2a2a6e 50%, #3a3a8e 100%)',
+        children: (
+          <DreamBubblesScene
+            dreams={dreams}
+            visible={true}
+            showText={true}
+            text="你的梦想一定会发光！"
+          />
+        ),
+      });
+    }
+    
+    // 模块 J：温暖收尾（5秒 = 120帧）
+    if (modules.includes('J')) {
+      chapterList.push({
+        id: 'J_warmClosing',
+        durationInFrames: 5 * fps,
+        backgroundType: 'gradient',
+        backgroundGradient: effectiveGradient,
+        character: {
+          ...characterConfig,
+          position: 'center',
+          expression: 'waving',
+        },
+        subtitles: [
+          {
+            text: `生日快乐，${name}！`,
+            startFrame: 30,
+            durationInFrames: 90,
+            position: 'top',
+            fontSize: 40,
+            color: PRIMARY_COLORS.creamYellow,
+            animationType: 'bounce',
+          },
+        ],
+        children: <ChapterJContent name={name} />,
+      });
+    }
+    
+    return chapterList;
+  }, [
+    videoVersion, fps, photos, dreams, name, age, subStyle, orientation, 
+    confettiLevel, theme, characterSeries, typedCharacterType, effectiveGradient,
+    birthdaySongSource, birthdaySongVolume, characterConfig
+  ]);
   
   return (
-    <BaseComposition
-      // 背景配置
+    <StoryPanel
+      chapters={chapters}
+      defaultTransition={{ type: 'fade', durationInFrames: 12 }}
+      chapterGap={0}
       backgroundType={backgroundType}
       backgroundColor={effectiveBackgroundColor}
       backgroundGradient={effectiveGradient}
       backgroundSource={backgroundSource}
       backgroundVideoLoop={backgroundVideoLoop}
       backgroundVideoMuted={backgroundVideoMuted}
-      // 遮罩配置
       overlayColor={overlayColor}
       overlayOpacity={overlayOpacity}
-      // 音频配置
       audioEnabled={effectiveAudioEnabled}
       audioSource={effectiveAudioSource}
       audioVolume={audioVolume}
       audioLoop={audioLoop}
-      // 水印配置
-      watermark={watermarkProps}
-      // 走马灯配置
-      marquee={marqueeProps}
-      // 发散粒子配置
-      radialBurst={radialBurstProps}
-      // 前景配置
-      foreground={foregroundProps ?? undefined}
-    >
-      {/* 卡通元素层 - 持续显示 */}
-      <CartoonElements 
-        defaultColor={theme.primary}
-        elements={cartoonElements}
-        seed={randomSeed}
-      />
-      
-      {/* 模块化分镜 */}
-      {modules.map((moduleId) => {
-        const timing = moduleTimings[moduleId];
-        if (!timing) return null;
-        
-        return (
-          <Sequence
-            key={moduleId}
-            from={timing.from}
-            durationInFrames={timing.durationInFrames}
-          >
-            {renderModule(moduleId)}
-          </Sequence>
-        );
-      })}
-    </BaseComposition>
+      // 背景音乐配置
+      backgroundMusic={
+        musicEnabled
+          ? {
+              enabled: true,
+              source: `${musicTrack}.mp3`,
+              volume: 0.3,
+              loop: true,
+            }
+          : undefined
+      }
+      // 面板级覆盖内容：卡通元素
+      overlayContent={
+        cartoonElements ? (
+          <CartoonElements
+            defaultColor={theme.primary}
+            elements={cartoonElements}
+            seed={seed ?? 0}
+          />
+        ) : undefined
+      }
+    />
   );
 };
 

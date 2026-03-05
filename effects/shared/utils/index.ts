@@ -70,7 +70,7 @@ export {
   generateGlow,
   generateTextStroke,
   generate3DTextShadow,
-  getCharacterConfig,
+  // getCharacterConfig 已在 components/Character.tsx 中定义，这里不再重复导出
   getContrastColor,
   blendColors,
   randomColor,

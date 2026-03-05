@@ -79,3 +79,35 @@ export {
 
 // 卡通元素（气球、星星、蛋糕等）
 export { CartoonElements } from "./CartoonElements";
+
+// ==================== 故事系统组件 ====================
+
+// 字幕组件
+export { Subtitle, SubtitleList } from "./Subtitle";
+export type { SubtitleItem, SubtitleProps, SubtitleListProps } from "./Subtitle";
+
+// 故事章节组件
+export { StoryChapter } from "./StoryChapter";
+export type {
+  StoryChapterProps,
+  StoryCharacterConfig,
+  StoryConfettiConfig,
+  StoryMagicEffectsConfig,
+  StoryMagicParticlesConfig,
+  StoryMagicWandConfig,
+  StoryMagicCircleConfig,
+  StoryFireworkConfig,
+  StoryBalloonBurstConfig,
+  StoryWhiteFlashConfig,
+  StoryShootingStarConfig,
+  StoryRadialBurstConfig,
+} from "./StoryChapter";
+
+// 故事面板组件
+export { StoryPanel } from "./StoryPanel";
+export type {
+  StoryPanelProps,
+  StoryChapterConfig,
+  ChapterTransition,
+  ChapterTransitionType,
+} from "./StoryPanel";
