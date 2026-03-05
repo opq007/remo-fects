@@ -147,6 +147,14 @@ export const KidsBirthdaySchema = CompleteCompositionSchema.extend({
   musicEnabled: z.boolean().default(true).meta({ description: '是否启用背景音乐' }),
   musicTrack: z.string().default('kids_party_01').meta({ description: '音乐轨道' }),
   
+  // ========== 生日歌音频（独立控制） ==========
+  birthdaySongSource: z.string().optional().meta({ 
+    description: '生日歌音频文件路径（相对于 public 目录），有值时才在模块G播放生日歌' 
+  }),
+  birthdaySongVolume: z.number().min(0).max(1).default(0.6).meta({ 
+    description: '生日歌音量 (0-1)' 
+  }),
+  
   // ========== 随机种子 ==========
   seed: z.number().optional()
 });

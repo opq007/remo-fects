@@ -7,11 +7,31 @@ import {
   spring,
   random,
   Img,
-  Easing
+  Easing,
+  staticFile
 } from 'remotion';
 import { PhotoData, ScreenOrientation, LAYOUT_CONFIGS, PRIMARY_COLORS } from '../types';
 import { colorWithOpacity } from '../utils/colors';
 import { MagicCircle } from './MagicEffects';
+
+/**
+ * 处理照片源路径
+ * - 完整 URL (http://, https://, data:) 直接返回
+ * - 相对路径使用 staticFile() 包装
+ */
+const getPhotoSrc = (src: string | undefined): string | undefined => {
+  if (!src) return undefined;
+  
+  // 完整 URL 或 base64 数据直接返回
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+    return src;
+  }
+  
+  // 相对路径使用 staticFile 处理
+  // 去除开头的 ./ 或 / 
+  const cleanPath = src.replace(/^\.?\//, '');
+  return staticFile(cleanPath);
+};
 
 // ==================== 单张照片卡片 ====================
 
@@ -51,50 +71,58 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
   const floatY = Math.sin(frame * 0.05 + index) * 5;
   const floatRotation = Math.sin(frame * 0.03 + index * 0.5) * 2;
   
-  // 位置计算
+  // 照片卡片尺寸 - 先计算尺寸，用于位置计算
+  const cardWidth = orientation === 'portrait' ? width * 0.5 : width * 0.25;
+  const cardHeight = cardWidth * 1.1; // 调整比例，避免过高
+  
+  // 位置计算 - 确保照片完整显示在画面中
   const getPosition = () => {
+    // 计算安全的 Y 位置范围，确保卡片不会超出画面
+    const minY = cardHeight * 0.6; // 最小 Y（不要太靠上）
+    const maxY = height - cardHeight * 0.6; // 最大 Y（不要太靠下）
+    const safeY = Math.min(Math.max(height * 0.4, minY), maxY);
+    
     if (orientation === 'landscape') {
       return {
         x: width * 0.65,
-        y: height * 0.35 + index * 30,
+        y: safeY,
       };
     }
     return {
       x: width * 0.5,
-      y: height * 0.3 + index * 20,
+      y: safeY,
     };
   };
   
   const pos = getPosition();
   
-  // 动画样式
+  // 动画样式 - 注意 translateX(-50%) 用于居中
   const getAnimationStyle = (): React.CSSProperties => {
+    const baseTranslateY = `translateY(${floatY}px)`;
+    const baseRotate = `rotate(${floatRotation}deg)`;
+    
     switch (animationType) {
       case 'flyIn':
         return {
-          transform: `translateX(${interpolate(entrance, [0, 1], [width, 0])}px) translateY(${floatY}px) rotate(${floatRotation}deg)`,
+          transform: `translateX(calc(-50% + ${interpolate(entrance, [0, 1], [width * 0.5, 0])}px)) ${baseTranslateY} ${baseRotate}`,
         };
       case 'rotateIn':
         return {
-          transform: `rotate(${interpolate(entrance, [0, 1], [180, 0])}deg) scale(${entrance}) translateY(${floatY}px)`,
+          transform: `translateX(-50%) rotate(${interpolate(entrance, [0, 1], [180, 0])}deg) scale(${entrance}) ${baseTranslateY}`,
         };
       case 'scaleIn':
         return {
-          transform: `scale(${interpolate(entrance, [0, 0.5, 1], [0, 1.2, 1])}) translateY(${floatY}px) rotate(${floatRotation}deg)`,
+          transform: `translateX(-50%) scale(${interpolate(entrance, [0, 0.5, 1], [0, 1.2, 1])}) ${baseTranslateY} ${baseRotate}`,
         };
       default:
         return {
-          transform: `translateY(${floatY}px) rotate(${floatRotation}deg)`,
+          transform: `translateX(-50%) ${baseTranslateY} ${baseRotate}`,
           opacity: entrance,
         };
     }
   };
   
   if (!visible) return null;
-  
-  // 照片卡片尺寸
-  const cardWidth = orientation === 'portrait' ? width * 0.6 : width * 0.25;
-  const cardHeight = cardWidth * 1.2;
   
   return (
     <div
@@ -119,7 +147,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
             0 0 0 1px rgba(255,255,255,0.5),
             inset 0 0 0 1px rgba(0,0,0,0.05)
           `,
-          transform: 'translateX(-50%)',
         }}
       >
         {/* 照片 */}
@@ -132,9 +159,9 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
             backgroundColor: '#f0f0f0',
           }}
         >
-          {photo.src ? (
+          {getPhotoSrc(photo.src) ? (
             <Img
-              src={photo.src}
+              src={getPhotoSrc(photo.src)!}
               style={{
                 width: '100%',
                 height: '100%',
@@ -223,12 +250,18 @@ export const PhotoFromMagicCircle: React.FC<PhotoFromMagicCircleProps> = ({
     config: { damping: 20, stiffness: 60 }
   });
   
+  // 卡片尺寸
+  const cardWidth = orientation === 'portrait' ? width * 0.5 : width * 0.25;
+  const cardHeight = cardWidth * 1.1;
+  
+  // 目标位置 - 确保照片完整显示在画面中
   const targetX = orientation === 'portrait' ? width * 0.5 : width * 0.65;
-  const targetY = height * 0.35;
+  const targetY = height * 0.4; // 调整为 40% 高度，避免超出画面
   
   const photoX = interpolate(photoProgress, [0, 1], [width * 0.5, targetX]);
   const photoY = interpolate(photoProgress, [0, 1], [height * 0.5, targetY]);
   const photoScale = interpolate(photoProgress, [0, 0.5, 1], [0.3, 0.5, 1]);
+  const photoOpacity = interpolate(photoProgress, [0, 0.3, 1], [0, 0.5, 1]);
   
   if (!visible) return null;
   
@@ -241,24 +274,80 @@ export const PhotoFromMagicCircle: React.FC<PhotoFromMagicCircleProps> = ({
         rotationSpeed={2}
       />
       
-      {/* 照片 */}
+      {/* 照片卡片 */}
       <div
         style={{
           position: 'absolute',
           left: photoX,
           top: photoY,
           transform: `translate(-50%, -50%) scale(${photoScale})`,
+          opacity: photoOpacity,
           zIndex: 30,
         }}
       >
-        <PhotoCard
-          photo={photo}
-          index={0}
-          totalPhotos={1}
-          orientation={orientation}
-          animationType="fadeIn"
-          visible={photoProgress > 0.2}
-        />
+        <div
+          style={{
+            width: cardWidth,
+            height: cardHeight,
+            backgroundColor: 'white',
+            borderRadius: 15,
+            padding: 10,
+            boxShadow: `
+              0 10px 30px rgba(0,0,0,0.2),
+              0 0 0 1px rgba(255,255,255,0.5),
+              inset 0 0 0 1px rgba(0,0,0,0.05)
+            `,
+          }}
+        >
+          {/* 照片 */}
+          <div
+            style={{
+              width: '100%',
+              height: '75%',
+              borderRadius: 10,
+              overflow: 'hidden',
+              backgroundColor: '#f0f0f0',
+            }}
+          >
+            {getPhotoSrc(photo.src) ? (
+              <Img
+                src={getPhotoSrc(photo.src)!}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            ) : (
+              <div style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 40,
+              }}>
+                📷
+              </div>
+            )}
+          </div>
+          
+          {/* 标题 */}
+          {photo.caption && (
+            <div
+              style={{
+                padding: '8px 5px',
+                textAlign: 'center',
+                fontSize: 14,
+                fontWeight: 600,
+                color: '#333',
+                fontFamily: '"PingFang SC", "Microsoft YaHei", sans-serif',
+              }}
+            >
+              {photo.caption}
+            </div>
+          )}
+        </div>
       </div>
     </AbsoluteFill>
   );

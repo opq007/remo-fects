@@ -88,6 +88,8 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     animationSpeed = 'normal',
     musicEnabled = true,
     musicTrack = 'kids_party_01',
+    birthdaySongSource,
+    birthdaySongVolume = 0.6,
     seed,
     // BaseComposition 参数
     backgroundType = 'gradient',
@@ -385,6 +387,10 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           <ModuleG_BirthdaySong
             age={age}
             name={name}
+            birthdaySongSource={birthdaySongSource}
+            birthdaySongVolume={birthdaySongVolume}
+            photos={photos}
+            subStyle={subStyle}
           />
         );
       case 'H':
