@@ -444,7 +444,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     >
       {/* 卡通元素层 - 持续显示 */}
       <CartoonElements 
-        subStyle={subStyle} 
+        defaultColor={theme.primary}
         elements={cartoonElements}
         seed={randomSeed}
       />

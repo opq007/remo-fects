@@ -3,17 +3,18 @@ import {
   AbsoluteFill, 
   useCurrentFrame, 
   useVideoConfig,
-  interpolate,
   random,
   spring
 } from 'remotion';
-import { getColorTheme } from '../utils/colors';
-import { KidsSubStyle, CartoonElement, CartoonElementType } from '../types';
+import { CartoonElement, CartoonElementType, DEFAULT_CARTOON_COLORS } from '../types/cartoon';
 
 interface CartoonElementsProps {
-  subStyle: KidsSubStyle;
+  /** 卡通元素配置 */
   elements?: CartoonElement[];
+  /** 随机种子 */
   seed?: number;
+  /** 默认颜色 */
+  defaultColor?: string;
 }
 
 // SVG 卡通元素
@@ -122,7 +123,6 @@ const FloatingElement: React.FC<{
   
   // 浮动动画
   const floatY = Math.sin(localFrame * 0.05 + delay * 0.1) * 10;
-  const floatX = Math.cos(localFrame * 0.03 + delay * 0.1) * 5;
   
   // 摇摆旋转
   const rotation = Math.sin(localFrame * 0.08 + delay * 0.2) * 10;
@@ -159,13 +159,12 @@ const DEFAULT_ELEMENTS: CartoonElement[] = [
 ];
 
 export const CartoonElements: React.FC<CartoonElementsProps> = ({
-  subStyle,
   elements = DEFAULT_ELEMENTS,
-  seed = 0
+  seed = 0,
+  defaultColor
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
-  const theme = getColorTheme(subStyle);
   
   // 根据位置生成坐标
   const positionedElements = useMemo(() => {
@@ -213,7 +212,7 @@ export const CartoonElements: React.FC<CartoonElementsProps> = ({
           type: el.type,
           x,
           y,
-          color: el.color || theme.accent,
+          color: el.color || defaultColor || DEFAULT_CARTOON_COLORS[index % DEFAULT_CARTOON_COLORS.length],
           size: baseSize,
           delay: index * 5
         });
@@ -223,7 +222,7 @@ export const CartoonElements: React.FC<CartoonElementsProps> = ({
     });
     
     return result;
-  }, [elements, seed, width, height, theme]);
+  }, [elements, seed, width, height, defaultColor]);
   
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>

@@ -51,3 +51,31 @@ export type {
   MixedInputItemRenderProps,
   MixedInputListRenderProps,
 } from "./MixedInputItem";
+
+// ==================== 新迁移的公共组件 ====================
+
+// 彩带粒子效果
+export { ConfettiBurst } from "./ConfettiBurst";
+
+// 魔法效果集合
+export { 
+  MagicParticles, 
+  MagicWand, 
+  MagicCircle, 
+  WhiteFlashTransition,
+  Firework,
+  BalloonBurst,
+  ShootingStar,
+  StarFieldBackground
+} from "./MagicEffects";
+
+// 角色系统（生肖/萌宠/超人）
+export { 
+  Character, 
+  CharacterWithSpeech, 
+  SpeechBubble,
+  getCharacterConfig 
+} from "./Character";
+
+// 卡通元素（气球、星星、蛋糕等）
+export { CartoonElements } from "./CartoonElements";

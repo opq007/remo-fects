@@ -63,3 +63,15 @@ export {
   // 类型
   type ParticleBaseProps,
 } from "./mixed-input";
+
+// 颜色工具函数
+export {
+  colorWithOpacity,
+  generateGlow,
+  generateTextStroke,
+  generate3DTextShadow,
+  getCharacterConfig,
+  getContrastColor,
+  blendColors,
+  randomColor,
+} from "./colors";

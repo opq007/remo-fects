@@ -12,7 +12,7 @@ import {
 } from 'remotion';
 import { PhotoData, ScreenOrientation, LAYOUT_CONFIGS, PRIMARY_COLORS } from '../types';
 import { colorWithOpacity } from '../utils/colors';
-import { MagicCircle } from './MagicEffects';
+import { MagicCircle } from '../../../effects/shared/components/MagicEffects';
 
 /**
  * 处理照片源路径

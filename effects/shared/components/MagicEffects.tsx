@@ -9,7 +9,7 @@ import {
   Easing
 } from 'remotion';
 import { PRIMARY_COLORS } from '../types';
-import { colorWithOpacity, generateGlow } from '../utils/colors';
+import { colorWithOpacity } from '../utils/colors';
 
 // ==================== 魔法光粒聚集效果 ====================
 
@@ -31,11 +31,10 @@ export const MagicParticles: React.FC<MagicParticlesProps> = ({
   onComplete = false
 }) => {
   const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const { width, height } = useVideoConfig();
   
   const progress = Math.min(frame / durationInFrames, 1);
   
-  // 生成粒子
   const particles = useMemo(() => {
     return Array.from({ length: particleCount }, (_, i) => ({
       id: i,
@@ -64,7 +63,6 @@ export const MagicParticles: React.FC<MagicParticlesProps> = ({
         const opacity = localProgress > 0.8 ? interpolate(localProgress, [0.8, 1], [1, 0]) : localProgress;
         const scale = onComplete ? 0 : 1;
         
-        // 颜色变化
         const hue = (parseInt(color.slice(1), 16) % 360 + p.hue + 360) % 360;
         const particleColor = `hsl(${hue}, 80%, 70%)`;
         
@@ -87,7 +85,6 @@ export const MagicParticles: React.FC<MagicParticlesProps> = ({
         );
       })}
       
-      {/* 中心光晕 */}
       <div
         style={{
           position: 'absolute',
@@ -125,10 +122,7 @@ export const MagicWand: React.FC<MagicWandProps> = ({
   const frame = useCurrentFrame();
   const { width, height } = useVideoConfig();
   
-  // 挥动动画
   const swingAngle = casting ? Math.sin(frame * 0.2) * 20 : 0;
-  
-  // 星星闪烁
   const sparkleOpacity = casting ? 0.5 + Math.sin(frame * 0.3) * 0.5 : 0;
   
   return (
@@ -141,7 +135,6 @@ export const MagicWand: React.FC<MagicWandProps> = ({
           transform: `translate(-50%, -50%) rotate(${rotation + swingAngle}deg)`,
         }}
       >
-        {/* 魔法棒主体 */}
         <div style={{
           width: 8,
           height: 80,
@@ -150,7 +143,6 @@ export const MagicWand: React.FC<MagicWandProps> = ({
           boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
         }} />
         
-        {/* 魔法棒星星 */}
         <div style={{
           position: 'absolute',
           top: -20,
@@ -163,7 +155,6 @@ export const MagicWand: React.FC<MagicWandProps> = ({
           ✨
         </div>
         
-        {/* 施法时发射的星星 */}
         {casting && (
           <>
             {Array.from({ length: 5 }).map((_, i) => (
@@ -223,7 +214,6 @@ export const MagicCircle: React.FC<MagicCircleProps> = ({
           transform: `translate(-50%, -50%) scale(${pulse})`,
         }}
       >
-        {/* 外圈 */}
         <div
           style={{
             width: radius * 2,
@@ -236,7 +226,6 @@ export const MagicCircle: React.FC<MagicCircleProps> = ({
           }}
         />
         
-        {/* 内圈 */}
         <div
           style={{
             position: 'absolute',
@@ -251,7 +240,6 @@ export const MagicCircle: React.FC<MagicCircleProps> = ({
           }}
         />
         
-        {/* 装饰符号 */}
         {Array.from({ length: 6 }).map((_, i) => {
           const angle = (i / 6) * Math.PI * 2 + rotation * 0.02;
           const symbolX = Math.cos(angle) * radius * 0.85;
@@ -330,7 +318,6 @@ export const Firework: React.FC<FireworkProps> = ({
   
   const localFrame = frame - triggerFrame;
   
-  // 生成粒子 - 必须在 early return 之前调用，遵循 Hooks 规则
   const particles = useMemo(() => {
     return Array.from({ length: particleCount }, (_, i) => ({
       id: i,
@@ -341,7 +328,6 @@ export const Firework: React.FC<FireworkProps> = ({
     }));
   }, [particleCount]);
   
-  // early return 移到 useMemo 之后
   if (localFrame < 0) return null;
   
   const progress = Math.min(localFrame / 60, 1);
@@ -431,7 +417,7 @@ export const BalloonBurst: React.FC<BalloonBurstProps> = ({
         const distance = b.speed * progress;
         const wobble = Math.sin(localFrame * b.wobbleSpeed) * 30;
         const currentX = width * x + Math.cos(b.angle) * distance + wobble;
-        const currentY = height * y - distance * 1.5; // 气球向上飞
+        const currentY = height * y - distance * 1.5;
         
         const scale = spring({
           frame: localFrame,
@@ -500,7 +486,6 @@ export const ShootingStar: React.FC<ShootingStarProps> = ({
   
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>
-      {/* 尾迹 */}
       <div
         style={{
           position: 'absolute',
@@ -515,7 +500,6 @@ export const ShootingStar: React.FC<ShootingStarProps> = ({
         }}
       />
       
-      {/* 星星头部 */}
       <div
         style={{
           position: 'absolute',

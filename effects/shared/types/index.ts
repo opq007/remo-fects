@@ -26,3 +26,33 @@ export type {
   AvailableContent,
   ContentTypeResult,
 } from "./mixed-input";
+
+// 角色系统类型
+export type {
+  CharacterSeries,
+  ZodiacType,
+  PetType,
+  HeroType,
+  CharacterConfig,
+  ScreenOrientation,
+} from "./character";
+
+// 颜色主题类型和常量
+export {
+  PRIMARY_COLORS,
+  CONFETTI_COLORS,
+  ZODIAC_CHARACTERS,
+  PET_CHARACTERS,
+  HERO_CHARACTERS,
+} from "./colors";
+export type {
+  PrimaryColors,
+  ColorTheme,
+} from "./colors";
+
+// 卡通元素类型
+export type {
+  CartoonElementType,
+  CartoonElement,
+} from "./cartoon";
+export { DEFAULT_CARTOON_COLORS } from "./cartoon";

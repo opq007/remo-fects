@@ -1,25 +1,74 @@
 # Remo-Fects - Remotion 特效视频生成器
 
-基于 Remotion 的多特效视频生成器，支持统一 API 管理和共享依赖。
+基于 Remotion 的多特效视频生成器，支持统一 API 管理、共享依赖和公共组件复用。
 
 ## 项目结构
 
 ```
 remo-fects/
-├── package.json           # 根目录配置（包含所有公共依赖）
-├── node_modules/          # 共享依赖包（所有子项目共用）
-│   └── .bin/              # 共享命令行工具
-├── api/                   # 统一 API 服务器
-│   ├── server.js          # Express 服务器
-│   ├── render.js          # 渲染逻辑
-│   ├── outputs/           # 输出视频目录
-│   └── uploads/           # 上传文件目录
-└── effects/               # 所有特效项目目录
-    ├── text-rain-effect/  # 文字雨特效项目
-    │   ├── src/           # 源代码
-    │   ├── public/        # 静态资源
-    │   └── package.json   # 子项目配置（无依赖）
-    └── [新特效项目...]    # 未来添加的特效项目
+├── package.json              # 根目录配置（包含所有公共依赖）
+├── node_modules/             # 共享依赖包（所有子项目共用）
+├── api/                      # 统一 API 服务器
+│   ├── server.js             # Express 服务器
+│   ├── render.js             # 渲染逻辑
+│   ├── effect-configs/       # 特效配置目录
+│   ├── outputs/              # 输出视频目录
+│   └── uploads/              # 上传文件目录
+├── effects/                  # 所有特效项目目录
+│   ├── shared/               # 公共组件库（复用核心）
+│   │   ├── components/       # 公共组件
+│   │   │   ├── Background.tsx      # 统一背景组件
+│   │   │   ├── Overlay.tsx         # 遮罩组件
+│   │   │   ├── AudioPlayer.tsx     # 音频播放组件
+│   │   │   ├── BaseComposition.tsx # 基础组合组件（核心）
+│   │   │   ├── CenterGlow.tsx      # 中心发光效果
+│   │   │   ├── StarField.tsx       # 星空背景
+│   │   │   ├── Watermark.tsx       # 水印组件
+│   │   │   ├── Marquee.tsx         # 走马灯组件
+│   │   │   ├── BlessingSymbol.tsx  # 祝福图案组件
+│   │   │   ├── RadialBurst.tsx     # 中心发散粒子
+│   │   │   ├── Foreground.tsx      # 前景效果
+│   │   │   ├── MixedInputItem.tsx  # 混合输入渲染
+│   │   │   ├── Character.tsx       # 角色系统（生肖/萌宠/超人）🆕
+│   │   │   ├── SpeechBubble.tsx    # 对话气泡 🆕
+│   │   │   ├── MagicEffects.tsx    # 魔法效果集合 🆕
+│   │   │   ├── ConfettiBurst.tsx   # 彩带粒子爆炸 🆕
+│   │   │   └── CartoonElements.tsx # 卡通元素 🆕
+│   │   ├── schemas/          # 公共 Schema 定义
+│   │   ├── types/            # 类型定义
+│   │   │   ├── common.ts
+│   │   │   ├── mixed-input.ts
+│   │   │   ├── character.ts      # 角色类型 🆕
+│   │   │   ├── colors.ts         # 颜色主题 🆕
+│   │   │   └── cartoon.ts        # 卡通元素类型 🆕
+│   │   └── utils/            # 工具函数
+│   │       ├── easing.ts
+│   │       ├── random.ts
+│   │       ├── textStyle.ts
+│   │       ├── mixed-input.ts
+│   │       └── colors.ts         # 颜色工具 🆕
+│   ├── text-rain-effect/     # 文字雨特效
+│   ├── text-ring-effect/     # 金色文字环绕特效
+│   ├── text-firework-effect/ # 文字烟花特效
+│   ├── text-breakthrough-effect/ # 文字破屏特效
+│   ├── tai-chi-bagua-effect/ # 太极八卦图特效
+│   ├── text-tornado-effect/  # 文字龙卷风特效
+│   ├── text-flood-effect/    # 文字洪水特效
+│   ├── text-vortex-effect/   # 文字旋涡特效
+│   ├── text-kaleidoscope-effect/ # 文字万花筒特效
+│   ├── text-windmill-effect/ # 文字大风车特效
+│   ├── text-vector-effect/   # 文字矢量动画特效
+│   └── text-crystal-ball-effect/ # 文字水晶球特效
+├── project/                  # 儿童生日祝福视频生成器 🆕
+│   ├── src/
+│   │   ├── components/       # 模块化分镜组件
+│   │   ├── compositions/     # 主组合组件
+│   │   ├── schemas/          # 参数 Schema
+│   │   ├── types/            # 类型定义
+│   │   └── utils/            # 工具函数
+│   └── package.json
+└── scripts/                  # 工具脚本
+    └── install-chrome.js
 ```
 
 ## 特性
@@ -30,160 +79,172 @@ remo-fects/
 - 减少磁盘占用和安装时间
 - 统一版本管理
 
-### 2. 统一 API 管理
+### 2. 公共组件复用
+- **角色系统**：生肖守护神、萌宠精灵、勇气超人三大系列
+- **魔法效果**：光粒聚集、烟花绽放、气球爆炸、流星、星空背景等
+- **彩带粒子**：多形状彩带爆炸效果
+- **卡通元素**：气球、星星、蛋糕、火箭、独角兽、爱心、皇冠
+- **对话气泡**：支持多种位置和样式
+
+### 3. 统一 API 管理
 - 所有特效项目通过统一 API 调用
 - 支持动态添加新特效项目
 - 统一的任务状态查询和下载接口
+- 支持组合特效（顺序拼接、叠加混合、转场合并）
 
-### 3. 独立开发
-- 每个特效项目可以独立运行和调试
-- 使用 `npm run start` 启动 Remotion Studio
-- 实时预览和调整参数
+### 4. 配置驱动架构
+- 每个特效项目的参数定义在独立配置文件中
+- 新增特效无需修改核心代码
+- 自动处理参数验证和转换
 
 ## 快速开始
 
 ### 1. 安装依赖
 
 ```bash
-cd remo-fects
 npm install
 ```
-
-这会安装所有公共依赖到根目录的 `node_modules`。
 
 ### 2. 启动 API 服务
 
 ```bash
-cd remo-fects
 npm run api
 ```
 
-或直接运行：
-```bash
-cd api
-npm run api
-```
+服务将在 http://localhost:3001 启动。
 
 ### 3. 开发特效项目
 
 ```bash
-cd text-rain-effect
-npm run start
+npm run dev:text-rain
+```
+
+## 公共组件使用
+
+### 角色系统
+
+```tsx
+import { Character, SpeechBubble, CharacterWithSpeech } from '../../effects/shared';
+
+// 单独使用角色
+<Character
+  series="zodiac"
+  type="tiger"
+  size={180}
+  expression="happy"
+  inline={true}
+/>
+
+// 带对话气泡的角色组合
+<CharacterWithSpeech
+  series="zodiac"
+  type="tiger"
+  speech="你好呀！"
+  showSpeech={true}
+/>
+```
+
+### 魔法效果
+
+```tsx
+import { 
+  MagicParticles, Firework, BalloonBurst, 
+  StarFieldBackground, WhiteFlashTransition 
+} from '../../effects/shared';
+
+// 魔法光粒聚集
+<MagicParticles color="#B892FF" particleCount={80} />
+
+// 烟花绽放
+<Firework x={0.5} y={0.4} color="#FFD76A" />
+
+// 气球爆炸
+<BalloonBurst balloonCount={12} />
+
+// 星空背景
+<StarFieldBackground starCount={150} />
+
+// 白闪转场
+<WhiteFlashTransition durationInFrames={20} />
+```
+
+### 彩带粒子
+
+```tsx
+import { ConfettiBurst } from '../../effects/shared';
+
+<ConfettiBurst 
+  primaryColor="#FFD76A"
+  level="high"
+  seed={123}
+/>
+```
+
+### 卡通元素
+
+```tsx
+import { CartoonElements } from '../../effects/shared';
+
+<CartoonElements
+  defaultColor="#FFD76A"
+  elements={[
+    { type: 'balloon', position: 'top', count: 3, color: '#FF6FAF' },
+    { type: 'star', position: 'around', count: 8, color: '#FFD93D' },
+    { type: 'cake', position: 'bottom', count: 1, color: '#8DECB4' }
+  ]}
+/>
 ```
 
 ## 添加新特效项目
 
-### 1. 创建项目目录
+### 步骤 1：创建项目目录
 
 ```bash
-cd remo-fects/effects
-mkdir your-effect
-cd your-effect
+mkdir effects/your-effect
 ```
 
-### 2. 初始化项目
+### 步骤 2：创建组合组件
 
-创建 `package.json`（无需重复依赖）：
+```tsx
+// effects/your-effect/src/YourComposition.tsx
+import { BaseComposition, CompleteCompositionSchema } from "../../shared";
 
-```json
-{
-  "name": "your-effect",
-  "version": "1.0.0",
-  "description": "你的特效描述",
-  "private": true,
-  "scripts": {
-    "start": "remotion studio",
-    "render": "remotion render src/index.ts YourComposition out/video.mp4"
-  }
-}
-```
-
-### 3. 在 API 中配置项目
-
-编辑 `api/server.js`：
-
-```javascript
-const projects = {
-  'text-rain-effect': { /* ... */ },
-  'your-effect': {
-    path: path.join(__dirname, '../effects/your-effect'),
-    compositionId: 'YourComposition',
-    name: '你的特效名称'
-  }
+export const YourComposition: React.FC = ({ words, ...props }) => {
+  return (
+    <BaseComposition {...props}>
+      {/* 特效内容 */}
+    </BaseComposition>
+  );
 };
 ```
 
-**无需其他配置！**
-- npm workspace 会自动识别 `effects/*` 下的所有项目
-- 自动继承根目录的所有公共依赖
-- 无需重新安装依赖
+### 步骤 3：创建配置文件
 
-## 公共依赖
-
-### Remotion 核心库
-- `@remotion/cli` - CLI 工具
-- `@remotion/media` - 媒体处理
-- `@remotion/renderer` - 渲染引擎
-- `@remotion/zod-types` - 类型验证
-- `remotion` - 核心框架
-
-### React 生态
-- `react` - UI 框架
-- `react-dom` - DOM 渲染
-
-### API 服务
-- `express` - Web 服务器
-- `cors` - 跨域处理
-- `multer` - 文件上传
-
-### 工具库
-- `zod` - 数据验证
-
-## 优势
-
-### 1. 节省磁盘空间
-- **优化前**：每个子项目 200-300 MB
-- **优化后**：根目录 300 MB，子项目 0 MB
-- **节省**：每个新项目节省 200-300 MB
-
-### 2. 加快安装速度
-- 只需安装一次公共依赖
-- 新项目无需重复下载
-- npm workspace 自动处理依赖解析
-
-### 3. 统一版本管理
-- 所有项目使用相同版本的 Remotion
-- 避免版本冲突
-- 便于升级和维护
-
-### 4. 便于扩展
-- 添加新特效项目只需配置
-- 自动继承所有公共依赖
-- 快速开发和部署
-
-## 常用命令
-
-### 根目录
-```bash
-npm install              # 安装所有依赖
-npm run clean:all        # 清理所有 node_modules
-npm run api              # 启动 API 服务
+```javascript
+// api/effect-configs/your-effect.js
+module.exports = {
+  config: {
+    id: 'your-effect',
+    name: '你的特效',
+    compositionId: 'YourComposition',
+    path: path.join(__dirname, '../../effects/your-effect')
+  },
+  params: { /* 参数定义 */ },
+  validate: (params) => { /* 验证逻辑 */ },
+  buildRenderParams: (reqParams, commonParams) => { /* 构建参数 */ }
+};
 ```
 
-### 子项目（text-rain-effect）
-```bash
-cd effects/text-rain-effect
-npm run start            # 启动 Remotion Studio
-npm run render           # 渲染视频
+### 步骤 4：注册配置
+
+```javascript
+// api/effect-configs/index.js
+const effectConfigs = {
+  'your-effect': require('./your-effect')
+};
 ```
 
-### API 服务
-```bash
-cd api
-npm run api              # 启动服务器
-```
-
-## API 使用示例
+## API 接口
 
 ### 获取所有项目
 ```bash
@@ -192,39 +253,39 @@ GET http://localhost:3001/api/projects
 
 ### 创建渲染任务
 ```bash
-POST http://localhost:3001/api/render/text-rain-effect
+POST http://localhost:3001/api/render/:projectId
 Content-Type: application/json
 
 {
-  "words": ["一马平川", "平安喜乐"],
+  "words": ["福", "禄", "寿"],
   "duration": 5
 }
 ```
 
-### 查询任务状态
+### 创建组合特效
 ```bash
-GET http://localhost:3001/api/jobs/:jobId
+POST http://localhost:3001/api/compose
+Content-Type: application/json
+
+{
+  "mergeMode": "sequence",
+  "effects": [
+    { "projectId": "tai-chi-bagua-effect", "duration": 5 },
+    { "projectId": "text-firework-effect", "words": ["新年快乐"], "duration": 8 }
+  ]
+}
 ```
 
-### 下载视频
+## 常用命令
+
 ```bash
-GET http://localhost:3001/api/download/:jobId
+npm install              # 安装依赖
+npm run api              # 启动 API 服务
+npm run chrome:all       # 下载并链接 Chrome
+npm run clean:all        # 清理所有 node_modules
 ```
 
-## 注意事项
+## 项目地址
 
-1. **不要在子项目中安装依赖**
-   - 所有依赖都应放在根目录
-   - 子项目自动继承根目录的 node_modules
-
-2. **统一版本管理**
-   - 所有项目使用相同的 Remotion 版本
-   - 如需升级，在根目录执行 `npm update`
-
-3. **脚本命令**
-   - 子项目的脚本可以直接使用根目录的命令
-   - 如 `npx remotion studio` 会自动查找
-
-4. **清理缓存**
-   - 如遇到依赖问题，运行 `npm run clean:all`
-   - 然后重新运行 `npm install`
+- GitHub: https://github.com/opq007/remo-fects
+- 问题反馈: 提交 GitHub Issue

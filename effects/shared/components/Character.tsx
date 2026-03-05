@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { 
   AbsoluteFill, 
   useCurrentFrame, 
@@ -12,11 +12,13 @@ import {
   CharacterSeries,
   ZodiacType,
   PetType,
-  HeroType,
-  ScreenOrientation,
-  LAYOUT_CONFIGS
-} from '../types';
-import { getCharacterConfig, generateGlow, generate3DTextShadow } from '../utils/colors';
+  HeroType
+} from '../types/character';
+import { 
+  ZODIAC_CHARACTERS,
+  PET_CHARACTERS,
+  HERO_CHARACTERS
+} from '../types/colors';
 
 // ==================== 角色SVG定义 ====================
 
@@ -29,18 +31,15 @@ const ZodiacCharacterSVG: React.FC<{
   size: number;
   expression: 'happy' | 'excited' | 'waving' | 'hugging';
 }> = ({ type, primaryColor, secondaryColor, accentColor, size, expression }) => {
-  // 眼睛发光效果
   const eyeGlow = expression === 'excited' ? '0 0 10px #fff' : '0 0 5px #fff';
   const eyeSize = expression === 'excited' ? 5 : 4;
   
-  // 嘴巴形状
   const mouthPath = expression === 'happy' 
     ? 'M -8 5 Q 0 12 8 5' 
     : expression === 'excited' 
     ? 'M -10 3 Q 0 15 10 3'
     : 'M -6 4 Q 0 8 6 4';
   
-  // 基础角色模板（大头比例）
   const renderBaseCharacter = () => (
     <g>
       {/* 身体 */}
@@ -72,7 +71,6 @@ const ZodiacCharacterSVG: React.FC<{
     </g>
   );
   
-  // 根据生肖类型添加特征
   const renderZodiacFeatures = () => {
     switch (type) {
       case 'rat':
@@ -138,7 +136,6 @@ const ZodiacCharacterSVG: React.FC<{
     }
   };
   
-  // 手势
   const renderHands = () => {
     if (expression === 'waving') {
       return (
@@ -194,7 +191,6 @@ const PetCharacterSVG: React.FC<{
 }> = ({ type, primaryColor, secondaryColor, accentColor, size, expression }) => {
   const eyeGlow = expression === 'excited' ? '0 0 12px #fff' : '0 0 6px #fff';
   
-  // 基础萌宠模板（更圆润可爱）
   const renderBasePet = () => (
     <g>
       {/* 身体（更圆润） */}
@@ -223,7 +219,6 @@ const PetCharacterSVG: React.FC<{
     </g>
   );
   
-  // 根据宠物类型添加特征
   const renderPetFeatures = () => {
     switch (type) {
       case 'bunny':
@@ -288,7 +283,6 @@ const HeroCharacterSVG: React.FC<{
 }> = ({ type, primaryColor, secondaryColor, accentColor, size, expression }) => {
   const eyeGlow = '0 0 15px #fff';
   
-  // 基础超人模板
   const renderBaseHero = () => (
     <g>
       {/* 披风 */}
@@ -319,7 +313,6 @@ const HeroCharacterSVG: React.FC<{
     </g>
   );
   
-  // 根据英雄类型添加特征
   const renderHeroFeatures = () => {
     switch (type) {
       case 'superhero':
@@ -367,6 +360,24 @@ const HeroCharacterSVG: React.FC<{
   );
 };
 
+// ==================== 辅助函数 ====================
+
+export const getCharacterConfig = (
+  series: CharacterSeries, 
+  type: ZodiacType | PetType | HeroType
+): CharacterConfig => {
+  switch (series) {
+    case 'zodiac':
+      return ZODIAC_CHARACTERS[type as ZodiacType] || ZODIAC_CHARACTERS.tiger;
+    case 'pet':
+      return PET_CHARACTERS[type as PetType] || PET_CHARACTERS.bunny;
+    case 'hero':
+      return HERO_CHARACTERS[type as HeroType] || HERO_CHARACTERS.superhero;
+    default:
+      return ZODIAC_CHARACTERS.tiger;
+  }
+};
+
 // ==================== 主角色组件 ====================
 
 interface CharacterProps {
@@ -375,7 +386,6 @@ interface CharacterProps {
   size?: number;
   expression?: 'happy' | 'excited' | 'waving' | 'hugging';
   position?: 'center' | 'left' | 'right';
-  orientation?: ScreenOrientation;
   animate?: boolean;
   customConfig?: Partial<CharacterConfig>;
   /** 是否使用内联布局（由父容器控制位置），默认 false */
@@ -388,7 +398,6 @@ export const Character: React.FC<CharacterProps> = ({
   size = 200,
   expression = 'happy',
   position = 'center',
-  orientation = 'portrait',
   animate = true,
   customConfig,
   inline = false
@@ -398,7 +407,6 @@ export const Character: React.FC<CharacterProps> = ({
   
   // 获取角色配置
   const config = { ...getCharacterConfig(series, type), ...customConfig };
-  const layoutConfig = LAYOUT_CONFIGS[orientation];
   
   // 入场动画
   const entrance = animate ? spring({

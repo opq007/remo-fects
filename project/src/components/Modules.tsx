@@ -21,11 +21,13 @@ import {
   PRIMARY_COLORS
 } from '../types';
 import { getColorTheme } from '../utils/colors';
+
+// ==================== 从 shared 导入迁移后的公共组件 ====================
 import { 
   Character, 
   CharacterWithSpeech,
   SpeechBubble 
-} from './Character';
+} from '../../../effects/shared/components/Character';
 import { 
   MagicParticles, 
   WhiteFlashTransition,
@@ -33,7 +35,10 @@ import {
   BalloonBurst,
   ShootingStar,
   StarFieldBackground
-} from './MagicEffects';
+} from '../../../effects/shared/components/MagicEffects';
+import { ConfettiBurst } from '../../../effects/shared/components/ConfettiBurst';
+
+// ==================== 本地组件 ====================
 import { 
   PhotoCard, 
   PhotoFromMagicCircle, 
@@ -43,7 +48,7 @@ import {
 } from './PhotoInteraction';
 import { BirthdaySongScene } from './BirthdaySong';
 import { DreamBubblesScene } from './DreamBubbles';
-import { BouncingName, BlessingText, AgeCelebration, ConfettiBurst } from './index';
+import { BouncingName, BlessingText, AgeCelebration } from './index';
 
 // ==================== 模块 A：魔法开场 ====================
 
@@ -395,7 +400,7 @@ export const ModuleF_GrowthCelebration: React.FC<ModuleFProps> = ({
       </div>
       
       {/* 彩带背景 */}
-      <ConfettiBurst subStyle={subStyle} level="high" seed={123} />
+      <ConfettiBurst primaryColor={theme.primary} secondaryColor={theme.secondary} level="high" seed={123} />
     </AbsoluteFill>
   );
 };

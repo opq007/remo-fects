@@ -4,16 +4,19 @@ import {
   useCurrentFrame, 
   useVideoConfig,
   interpolate,
-  spring,
   random
 } from 'remotion';
-import { getColorTheme } from '../utils/colors';
-import { elastic } from '../utils/easing';
-import { KidsSubStyle } from '../types';
+import { CONFETTI_COLORS } from '../types';
+import { easeOutElastic } from '../utils/easing';
 
 interface ConfettiBurstProps {
-  subStyle: KidsSubStyle;
-  level: 'low' | 'medium' | 'high';
+  /** 主题颜色（用于彩带） */
+  primaryColor?: string;
+  /** 次要颜色 */
+  secondaryColor?: string;
+  /** 彩带密度级别 */
+  level?: 'low' | 'medium' | 'high';
+  /** 随机种子 */
   seed?: number;
 }
 
@@ -30,14 +33,6 @@ interface ConfettiPiece {
   rotationSpeed: number;
 }
 
-const CONFETTI_COLORS = [
-  '#FF6FAF', // Candy Pink
-  '#6EC8FF', // Sky Blue
-  '#FFD93D', // Lemon Yellow
-  '#8DECB4', // Mint Green
-  '#BFA8FF', // Soft Purple
-];
-
 const COUNT_MAP = {
   low: 50,
   medium: 100,
@@ -45,15 +40,20 @@ const COUNT_MAP = {
 };
 
 export const ConfettiBurst: React.FC<ConfettiBurstProps> = ({
-  subStyle,
-  level,
+  primaryColor,
+  secondaryColor,
+  level = 'medium',
   seed = 0
 }) => {
   const frame = useCurrentFrame();
   const { width, height } = useVideoConfig();
-  const theme = getColorTheme(subStyle);
   
   const count = COUNT_MAP[level];
+  
+  // 合并颜色列表
+  const colors = primaryColor 
+    ? [primaryColor, secondaryColor || primaryColor, ...CONFETTI_COLORS.slice(0, 3)]
+    : CONFETTI_COLORS;
   
   // 生成彩带粒子
   const pieces = useMemo<ConfettiPiece[]>(() => {
@@ -71,7 +71,7 @@ export const ConfettiBurst: React.FC<ConfettiBurstProps> = ({
         id: i,
         x: width / 2 + (r2 - 0.5) * 100,
         y: height / 2 + (r3 - 0.5) * 100,
-        color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        color: colors[i % colors.length],
         rotation: r4 * 360,
         scale: 0.5 + r * 0.5,
         shape: shapes[Math.floor(r5 * shapes.length)],
@@ -81,11 +81,11 @@ export const ConfettiBurst: React.FC<ConfettiBurstProps> = ({
       });
     }
     return result;
-  }, [count, seed, width, height]);
+  }, [count, seed, width, height, colors]);
   
   // 爆炸进度
   const progress = Math.min(frame / 60, 1);
-  const elasticProgress = Math.max(0, Math.min(1, elastic(progress)));
+  const elasticProgress = Math.max(0, Math.min(1, easeOutElastic(progress)));
   
   return (
     <AbsoluteFill style={{ pointerEvents: 'none' }}>

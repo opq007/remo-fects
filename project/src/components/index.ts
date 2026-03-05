@@ -1,16 +1,9 @@
-// 原有组件
-export { ConfettiBurst } from './ConfettiBurst';
-export { BouncingName } from './BouncingName';
-export { BlessingText } from './BlessingText';
-export { CartoonElements } from './CartoonElements';
-export { MessageText } from './MessageText';
-export { AgeCelebration } from './AgeCelebration';
-export { ClosingEffect } from './ClosingEffect';
+// ==================== 从 shared 导入的公共组件 ====================
 
-// 新增角色系统
-export { Character, CharacterWithSpeech, SpeechBubble } from './Character';
+// 彩带粒子效果
+export { ConfettiBurst } from '../../../effects/shared/components/ConfettiBurst';
 
-// 新增魔法效果
+// 魔法效果集合
 export { 
   MagicParticles, 
   MagicWand, 
@@ -20,9 +13,27 @@ export {
   BalloonBurst,
   ShootingStar,
   StarFieldBackground
-} from './MagicEffects';
+} from '../../../effects/shared/components/MagicEffects';
 
-// 新增照片互动
+// 角色系统（生肖/萌宠/超人）
+export { 
+  Character, 
+  CharacterWithSpeech, 
+  SpeechBubble 
+} from '../../../effects/shared/components/Character';
+
+// 卡通元素（气球、星星、蛋糕等）
+export { CartoonElements } from '../../../effects/shared/components/CartoonElements';
+
+// ==================== 本地特有组件 ====================
+
+export { BouncingName } from './BouncingName';
+export { BlessingText } from './BlessingText';
+export { MessageText } from './MessageText';
+export { AgeCelebration } from './AgeCelebration';
+export { ClosingEffect } from './ClosingEffect';
+
+// 照片互动
 export { 
   PhotoCard, 
   PhotoFromMagicCircle, 
@@ -31,13 +42,13 @@ export {
   PhotoInteractionScene 
 } from './PhotoInteraction';
 
-// 新增生日歌
+// 生日歌
 export { BirthdayCake, BouncingBirthdayText, MakeWish, BirthdaySongScene } from './BirthdaySong';
 
-// 新增梦想泡泡
+// 梦想泡泡
 export { DreamBubblesScene, DreamIcon } from './DreamBubbles';
 
-// 新增模块化分镜
+// 模块化分镜
 export { 
   ModuleA_MagicOpening,
   ModuleB_CharacterEntrance,
