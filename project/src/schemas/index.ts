@@ -189,8 +189,7 @@ export type BirthdayBlessingProps = z.infer<typeof BirthdayBlessingSchema>;
 export const getModulesByVersion = (version: '60s' | '90s' | '120s'): string[] => {
   switch (version) {
     case '60s':
-      // 60秒版本只包含 A-F，模块 F 结束时刚好 60 秒
-      return ['A', 'B', 'C', 'D', 'E', 'F'];
+      return ['A', 'B', 'C', 'G'];
     case '90s':
       return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
     case '120s':

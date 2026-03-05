@@ -101,6 +101,18 @@ export type {
   StoryWhiteFlashConfig,
   StoryShootingStarConfig,
   StoryRadialBurstConfig,
+  // 新增类型导出
+  TextElementConfig,
+  PhotoDisplayConfig,
+  FloatingElementsConfig,
+  StarFieldBackgroundConfig,
+  BlackScreenTransitionConfig,
+  // 角色动画相关类型
+  CharacterEntranceDirection,
+  CharacterEntranceConfig,
+  SpeechBubbleAnimationType,
+  SpeechTimelineItem,
+  ExpressionTimelineItem,
 } from "./StoryChapter";
 
 // 故事面板组件

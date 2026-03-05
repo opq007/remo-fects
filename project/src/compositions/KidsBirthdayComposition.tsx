@@ -1,26 +1,15 @@
 import React, { useMemo } from 'react';
-import { 
-  AbsoluteFill, 
-  useVideoConfig,
-  useCurrentFrame,
-  interpolate,
-  spring
-} from 'remotion';
+import { useVideoConfig } from 'remotion';
 import { z } from 'zod';
 import { 
   StoryPanel,
   StoryChapterConfig,
   StoryCharacterConfig,
-  Character,
-  SpeechBubble,
-  Firework,
   StarFieldBackground,
 } from '../../../effects/shared/index';
 import {
   CartoonElements,
-  PhotoCard,
   PhotoFromMagicCircle,
-  FloatingHearts,
   BirthdaySongScene,
   DreamBubblesScene,
   BouncingName,
@@ -45,203 +34,21 @@ import {
 
 export type KidsBirthdayProps = z.infer<typeof KidsBirthdaySchema>;
 
-// ==================== 章节内部组件 ====================
-
-/**
- * 模块 A：魔法开场 - 内部内容
- */
-const ChapterAContent: React.FC<{
-  name: string;
-  characterSeries: CharacterSeries;
-  characterType: ZodiacType | PetType | HeroType;
-}> = ({ name, characterSeries, characterType }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  
-  const blackOpacity = interpolate(frame, [0, 24], [1, 0], { extrapolateRight: 'clamp' });
-  const characterEntrance = spring({
-    frame: Math.max(frame - 20, 0),
-    fps,
-    config: { damping: 12, stiffness: 80 }
-  });
-  const showGreeting = frame > 35;
-  const bubbleScale = showGreeting 
-    ? spring({
-        frame: frame - 35,
-        fps,
-        config: { damping: 10, stiffness: 200 }
-      })
-    : 0;
-  
-  return (
-    <>
-      {/* 黑屏 */}
-      <AbsoluteFill 
-        style={{ 
-          backgroundColor: 'black', 
-          opacity: blackOpacity,
-          zIndex: 50 
-        }} 
-      />
-      
-      {/* 角色和气泡组合 */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '45%',
-          transform: `translateX(-50%) translateY(${interpolate(characterEntrance, [0, 1], [100, 0])}px)`,
-          opacity: characterEntrance,
-          zIndex: 30,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        {showGreeting && (
-          <div style={{ marginBottom: 25, transform: `scale(${bubbleScale})` }}>
-            <SpeechBubble
-              text={`亲爱的${name}小朋友——\n生日快乐呀！`}
-              visible={true}
-              color="#FFFFFF"
-            />
-          </div>
-        )}
-        
-        <Character
-          series={characterSeries}
-          type={characterType}
-          size={180}
-          expression="happy"
-          inline={true}
-          animate={true}
-        />
-      </div>
-    </>
-  );
-};
-
-/**
- * 模块 B：角色入场 - 内部内容
- */
-const ChapterBContent: React.FC<{
-  name: string;
-  age?: number;
-  characterSeries: CharacterSeries;
-  characterType: ZodiacType | PetType | HeroType;
-  subStyle: KidsSubStyle;
-  orientation: ScreenOrientation;
-}> = ({ name, age, characterSeries, characterType, subStyle, orientation }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  
-  const characterEntrance = spring({
-    frame,
-    fps,
-    config: { damping: 12, stiffness: 80 }
-  });
-  const showIntroduction = frame > 72;
-  const showNameBounce = frame > 120;
-  
-  return (
-    <>
-      {/* 角色和气泡 */}
-      <div
-        style={{
-          position: 'absolute',
-          left: '50%',
-          top: '45%',
-          transform: `translateX(-50%) translateY(${interpolate(characterEntrance, [0, 1], [200, 0])}px)`,
-          opacity: characterEntrance,
-          zIndex: 20,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-        }}
-      >
-        {showIntroduction && !showNameBounce && (
-          <div style={{ marginBottom: 25 }}>
-            <SpeechBubble text={`我是你的生肖守护神小老虎！`} visible={true} />
-          </div>
-        )}
-        
-        <Character
-          series={characterSeries}
-          type={characterType}
-          size={orientation === 'portrait' ? 180 : 150}
-          expression={showIntroduction ? 'waving' : 'happy'}
-          inline={true}
-          animate={true}
-        />
-      </div>
-      
-      {/* 名字发光弹跳 */}
-      {showNameBounce && (
-        <div style={{ position: 'absolute', top: '20%', width: '100%', zIndex: 15 }}>
-          <BouncingName
-            name={name}
-            age={age}
-            showAge={false}
-            subStyle={subStyle}
-            fontSize={orientation === 'portrait' ? 100 : 80}
-          />
-        </div>
-      )}
-    </>
-  );
-};
-
-/**
- * 模块 D：照片互动2 - 内部内容
- */
-const ChapterDContent: React.FC<{
-  photo: PhotoData;
-  orientation: ScreenOrientation;
-}> = ({ photo, orientation }) => {
-  const frame = useCurrentFrame();
-  
-  return (
-    <>
-      <PhotoCard
-        photo={photo}
-        index={0}
-        totalPhotos={1}
-        orientation={orientation}
-        animationType="flyIn"
-        visible={true}
-        showCaption={true}
-      />
-      {frame > 30 && <FloatingHearts count={15} />}
-    </>
-  );
-};
+// ==================== 章节内部组件（仅保留需要复杂动画的部分） ====================
 
 /**
  * 模块 F：成长庆祝高潮 - 内部内容
+ * 注：已通过配置实现烟花和彩带效果
+ * 这里仅处理名字和祝福文字
  */
 const ChapterFContent: React.FC<{
   name: string;
   age?: number;
   subStyle: KidsSubStyle;
   orientation: ScreenOrientation;
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-}> = ({ name, age, subStyle, orientation, primaryColor, secondaryColor, accentColor }) => {
-  const frame = useCurrentFrame();
-  const showFirework = frame > 20;
-  
+}> = ({ name, age, subStyle, orientation }) => {
   return (
     <>
-      {/* 多个烟花 */}
-      {showFirework && (
-        <>
-          <Firework x={0.3} y={0.3} color={primaryColor} triggerFrame={0} />
-          <Firework x={0.7} y={0.3} color={secondaryColor} triggerFrame={15} />
-          <Firework x={0.5} y={0.2} color={accentColor} triggerFrame={30} />
-        </>
-      )}
-      
       {/* 名字+年龄大字 */}
       <div style={{ position: 'absolute', top: '30%', width: '100%', zIndex: 20 }}>
         <BouncingName
@@ -275,6 +82,7 @@ const ChapterFContent: React.FC<{
 
 /**
  * 模块 G：生日歌 - 内部内容
+ * 保留完整场景组件，因为是复杂的交互场景
  */
 const ChapterGContent: React.FC<{
   age?: number;
@@ -298,53 +106,26 @@ const ChapterGContent: React.FC<{
   );
 };
 
-/**
- * 模块 J：温暖收尾 - 内部内容
- */
-const ChapterJContent: React.FC<{
-  name: string;
-}> = ({ name }) => {
-  const frame = useCurrentFrame();
-  const logoOpacity = interpolate(frame, [60, 100], [0, 1], { extrapolateRight: 'clamp' });
-  
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '5%',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        opacity: logoOpacity,
-        zIndex: 30,
-      }}
-    >
-      <div
-        style={{
-          fontSize: 24,
-          fontWeight: 600,
-          color: PRIMARY_COLORS.violet,
-          textShadow: '0 0 10px rgba(255,255,255,0.5)',
-        }}
-      >
-        ✨ Remo-Fects ✨
-      </div>
-    </div>
-  );
-};
-
 // ==================== 主组件 ====================
 
 /**
- * 儿童生日祝福视频组合组件 v3.0
+ * 儿童生日祝福视频组合组件 v3.2
  * 
- * 使用 StoryPanel + StoryChapter 架构重构
+ * 使用 StoryPanel + StoryChapter 架构，完全配置驱动
  * 
- * 特性：
- * - 配置驱动的章节管理
- * - 统一的过渡效果
- * - 角色系统支持
- * - 魔法效果集成
- * - 字幕系统
+ * 重构要点：
+ * - 角色入场动画：使用 character.entrance 配置
+ * - 对话时序：使用 character.speechTimeline 配置
+ * - 表情变化：使用 character.expressionTimeline 配置
+ * - 黑屏过渡：使用 magicEffects.blackScreen 配置
+ * - 文字元素：使用 textElements 配置
+ * - 漂浮元素：使用 floatingElements 配置
+ * - 照片展示：使用 photoDisplay 配置
+ * - 星空背景：使用 starFieldBackground 配置
+ * 
+ * 保留的 children 组件：
+ * - 复杂场景组件（BirthdaySongScene、DreamBubblesScene）
+ * - 复杂文字效果（BouncingName、BlessingText）
  */
 export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   const { fps } = useVideoConfig();
@@ -401,20 +182,13 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   // 类型断言
   const typedCharacterType = characterType as ZodiacType & PetType & HeroType;
   
-  // 角色配置（共享）
-  const characterConfig: StoryCharacterConfig = {
-    series: characterSeries,
-    type: typedCharacterType,
-    size: orientation === 'portrait' ? 180 : 150,
-    animate: true,
-  };
-  
   // 构建章节配置
   const chapters = useMemo((): StoryChapterConfig[] => {
     const chapterList: StoryChapterConfig[] = [];
     const modules = getModulesByVersion(videoVersion);
     
     // 模块 A：魔法开场（2秒 = 48帧）
+    // 完全配置驱动：黑屏过渡 + 角色入场 + 对话时序
     if (modules.includes('A')) {
       chapterList.push({
         id: 'A_magicOpening',
@@ -428,18 +202,44 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
             color: PRIMARY_COLORS.violet,
             durationInFrames: 48,
           },
+          blackScreen: {
+            enabled: true,
+            durationInFrames: 24,
+            startFrame: 0,
+          },
         },
-        children: (
-          <ChapterAContent
-            name={name}
-            characterSeries={characterSeries}
-            characterType={typedCharacterType}
-          />
-        ),
+        character: {
+          series: characterSeries,
+          type: typedCharacterType,
+          size: 180,
+          animate: true,
+          // 入场动画配置
+          entrance: {
+            enabled: true,
+            direction: 'bottom',
+            delay: 20,
+            distance: 100,
+            springConfig: { damping: 12, stiffness: 80 },
+            verticalPosition: 0.45,
+            horizontalPosition: 0.5,
+          },
+          // 对话时序配置
+          speechTimeline: [
+            {
+              text: `亲爱的${name}小朋友——\n生日快乐呀！`,
+              startFrame: 35,
+              animationType: 'scale',
+              bubbleColor: '#FFFFFF',
+            },
+          ],
+          // 表情配置
+          expression: 'happy',
+        },
       });
     }
     
     // 模块 B：角色入场（10秒 = 240帧）
+    // 完全配置驱动：角色入场 + 自我介绍 + 名字弹跳
     if (modules.includes('B')) {
       chapterList.push({
         id: 'B_characterEntrance',
@@ -457,23 +257,61 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           whiteFlash: {
             enabled: true,
             durationInFrames: 20,
-            triggerFrame: 200, // 在第 200 帧触发白闪
+            triggerFrame: 200,
           },
         },
-        children: (
-          <ChapterBContent
-            name={name}
-            age={age}
-            characterSeries={characterSeries}
-            characterType={typedCharacterType}
-            subStyle={subStyle}
-            orientation={orientation}
-          />
-        ),
+        character: {
+          series: characterSeries,
+          type: typedCharacterType,
+          size: orientation === 'portrait' ? 180 : 150,
+          animate: true,
+          // 入场动画配置
+          entrance: {
+            enabled: true,
+            direction: 'bottom',
+            delay: 0,
+            distance: 200,
+            springConfig: { damping: 12, stiffness: 80 },
+            verticalPosition: 0.45,
+            horizontalPosition: 0.5,
+          },
+          // 对话时序配置（第3-5秒显示介绍）
+          speechTimeline: [
+            {
+              text: '我是你的生肖守护神小老虎！',
+              startFrame: 72,
+              endFrame: 120,
+              animationType: 'scale',
+            },
+          ],
+          // 表情变化时序（介绍时挥手）
+          expressionTimeline: [
+            { expression: 'happy', startFrame: 0 },
+            { expression: 'waving', startFrame: 72 },
+            { expression: 'happy', startFrame: 120 },
+          ],
+        },
+        // 名字弹跳文字
+        textElements: [
+          {
+            type: 'name',
+            showAge: false,
+            fontSize: orientation === 'portrait' ? 100 : 80,
+            color: theme.primary,
+            verticalPosition: 0.2,
+            startFrame: 120,
+            animationType: 'bounce',
+          },
+        ],
+        name,
+        age,
+        subStyle,
+        orientation,
       });
     }
     
     // 模块 C：照片互动1（13秒 = 312帧）
+    // 复杂魔法圆环效果，保留自定义组件
     if (modules.includes('C') && photos[0]) {
       chapterList.push({
         id: 'C_photoInteraction1',
@@ -486,6 +324,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     }
     
     // 模块 D：照片互动2（13秒 = 312帧）
+    // 完全配置驱动
     if (modules.includes('D') && photos[1]) {
       chapterList.push({
         id: 'D_photoInteraction2',
@@ -493,11 +332,24 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         backgroundType: 'gradient',
         backgroundGradient: effectiveGradient,
         overlayOpacity: 0.05,
-        children: <ChapterDContent photo={photos[1]} orientation={orientation} />,
+        photoDisplay: {
+          enabled: true,
+          photo: photos[1],
+          animationType: 'flyIn',
+          showCaption: true,
+        },
+        floatingElements: {
+          enabled: true,
+          type: 'hearts',
+          count: 15,
+          startFrame: 30,
+          color: '#FF6B6B',
+        },
       });
     }
     
     // 模块 E：照片互动3（12秒 = 288帧）
+    // 完全配置驱动
     if (modules.includes('E') && photos[2]) {
       chapterList.push({
         id: 'E_photoInteraction3',
@@ -505,16 +357,12 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         backgroundType: 'gradient',
         backgroundGradient: effectiveGradient,
         overlayOpacity: 0.05,
-        children: (
-          <PhotoCard
-            photo={photos[2]}
-            index={0}
-            totalPhotos={1}
-            orientation={orientation}
-            animationType="rotateIn"
-            visible={true}
-          />
-        ),
+        photoDisplay: {
+          enabled: true,
+          photo: photos[2],
+          animationType: 'rotateIn',
+          showCaption: false,
+        },
       });
     }
     
@@ -547,15 +395,13 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
             age={age}
             subStyle={subStyle}
             orientation={orientation}
-            primaryColor={theme.primary}
-            secondaryColor={theme.secondary}
-            accentColor={theme.accent}
           />
         ),
       });
     }
     
     // 模块 G：生日歌互动（30秒 = 720帧）
+    // 复杂场景组件，保留 children
     if (modules.includes('G')) {
       chapterList.push({
         id: 'G_birthdaySong',
@@ -577,6 +423,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     }
     
     // 模块 H：未来祝福（15秒 = 360帧）
+    // 完全配置驱动
     if (modules.includes('H')) {
       chapterList.push({
         id: 'H_futureBlessing',
@@ -584,8 +431,20 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         backgroundType: 'gradient',
         backgroundGradient: 'linear-gradient(180deg, #0a0a2e 0%, #1a1a4e 50%, #2a2a6e 100%)',
         character: {
-          ...characterConfig,
-          position: 'center',
+          series: characterSeries,
+          type: typedCharacterType,
+          size: orientation === 'portrait' ? 180 : 150,
+          animate: true,
+          // 入场动画（静态居中）
+          entrance: {
+            enabled: true,
+            direction: 'bottom',
+            delay: 0,
+            distance: 0,
+            verticalPosition: 0.4,
+            horizontalPosition: 0.5,
+          },
+          expression: 'happy',
         },
         subtitles: [
           {
@@ -609,11 +468,15 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
             durationInFrames: 40,
           },
         },
-        children: <StarFieldBackground starCount={150} />,
+        starFieldBackground: {
+          enabled: true,
+          starCount: 150,
+        },
       });
     }
     
     // 模块 I：梦想种子（10秒 = 240帧）
+    // 复杂场景组件，保留 children
     if (modules.includes('I')) {
       chapterList.push({
         id: 'I_dreamSeeds',
@@ -632,6 +495,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     }
     
     // 模块 J：温暖收尾（5秒 = 120帧）
+    // 完全配置驱动
     if (modules.includes('J')) {
       chapterList.push({
         id: 'J_warmClosing',
@@ -639,8 +503,17 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         backgroundType: 'gradient',
         backgroundGradient: effectiveGradient,
         character: {
-          ...characterConfig,
-          position: 'center',
+          series: characterSeries,
+          type: typedCharacterType,
+          size: orientation === 'portrait' ? 180 : 150,
+          animate: true,
+          entrance: {
+            enabled: true,
+            direction: 'bottom',
+            distance: 0,
+            verticalPosition: 0.6,
+            horizontalPosition: 0.5,
+          },
           expression: 'waving',
         },
         subtitles: [
@@ -654,7 +527,21 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
             animationType: 'bounce',
           },
         ],
-        children: <ChapterJContent name={name} />,
+        textElements: [
+          {
+            type: 'custom',
+            text: '✨ Remo-Fects ✨',
+            fontSize: 24,
+            color: PRIMARY_COLORS.violet,
+            verticalPosition: 0.95,
+            startFrame: 60,
+            animationType: 'fade',
+          },
+        ],
+        name,
+        age,
+        subStyle,
+        orientation,
       });
     }
     
@@ -662,7 +549,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   }, [
     videoVersion, fps, photos, dreams, name, age, subStyle, orientation, 
     confettiLevel, theme, characterSeries, typedCharacterType, effectiveGradient,
-    birthdaySongSource, birthdaySongVolume, characterConfig
+    birthdaySongSource, birthdaySongVolume
   ]);
   
   return (

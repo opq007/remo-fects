@@ -235,6 +235,19 @@ export const StoryShootingStarConfigSchema = z.object({
 export type StoryShootingStarConfigProps = z.infer<typeof StoryShootingStarConfigSchema>;
 
 /**
+ * 黑屏过渡配置 Schema
+ */
+export const BlackScreenTransitionSchema = z.object({
+  /** 是否启用 */
+  enabled: z.boolean(),
+  /** 持续帧数 */
+  durationInFrames: z.number().min(10).max(60).optional(),
+  /** 开始帧（默认为0） */
+  startFrame: z.number().min(0).optional(),
+});
+export type BlackScreenTransitionProps = z.infer<typeof BlackScreenTransitionSchema>;
+
+/**
  * 魔法效果集合 Schema
  */
 export const StoryMagicEffectsConfigSchema = z.object({
@@ -245,8 +258,125 @@ export const StoryMagicEffectsConfigSchema = z.object({
   balloonBurst: StoryBalloonBurstConfigSchema.optional(),
   whiteFlash: StoryWhiteFlashConfigSchema.optional(),
   shootingStar: StoryShootingStarConfigSchema.optional(),
+  /** 黑屏过渡效果 */
+  blackScreen: BlackScreenTransitionSchema.optional(),
 });
 export type StoryMagicEffectsConfigProps = z.infer<typeof StoryMagicEffectsConfigSchema>;
+
+// ==================== 文字元素 Schema ====================
+
+/**
+ * 文字元素类型
+ */
+export const TextElementTypeSchema = z.enum(['name', 'blessing', 'age', 'custom']);
+export type TextElementType = z.infer<typeof TextElementTypeSchema>;
+
+/**
+ * 文字动画类型
+ */
+export const TextAnimationTypeSchema = z.enum(['bounce', 'glow', 'float', 'fade', 'typewriter', 'none']);
+export type TextAnimationType = z.infer<typeof TextAnimationTypeSchema>;
+
+/**
+ * 文字元素配置 Schema
+ */
+export const TextElementSchema = z.object({
+  /** 文字类型 */
+  type: TextElementTypeSchema,
+  /** 自定义文字内容（type为custom时使用） */
+  text: z.string().optional(),
+  /** 字体大小 */
+  fontSize: z.number().min(12).max(300).optional(),
+  /** 颜色 */
+  color: z.string().optional(),
+  /** 垂直位置（0-1，相对于高度） */
+  verticalPosition: z.number().min(0).max(1).optional(),
+  /** 水平位置（0-1，相对于宽度） */
+  horizontalPosition: z.number().min(0).max(1).optional(),
+  /** 开始帧 */
+  startFrame: z.number().min(0).optional(),
+  /** 动画类型 */
+  animationType: TextAnimationTypeSchema.optional(),
+  /** 是否显示年龄 */
+  showAge: z.boolean().optional(),
+  /** 是否显示阴影 */
+  showShadow: z.boolean().optional(),
+  /** 文字对齐 */
+  textAlign: z.enum(['left', 'center', 'right']).optional(),
+});
+export type TextElementProps = z.infer<typeof TextElementSchema>;
+
+// ==================== 照片展示 Schema ====================
+
+/**
+ * 照片动画类型
+ */
+export const PhotoAnimationTypeSchema = z.enum(['flyIn', 'rotateIn', 'fadeIn', 'scaleIn', 'magicCircle']);
+export type PhotoAnimationType = z.infer<typeof PhotoAnimationTypeSchema>;
+
+/**
+ * 照片展示配置 Schema
+ */
+export const PhotoDisplaySchema = z.object({
+  /** 是否启用 */
+  enabled: z.boolean(),
+  /** 照片数据 */
+  photo: z.object({
+    src: z.string(),
+    caption: z.string().optional(),
+  }),
+  /** 动画类型 */
+  animationType: PhotoAnimationTypeSchema.optional(),
+  /** 是否显示标题 */
+  showCaption: z.boolean().optional(),
+  /** 开始帧 */
+  startFrame: z.number().min(0).optional(),
+  /** 持续帧数（0表示显示到章节结束） */
+  durationInFrames: z.number().min(0).optional(),
+});
+export type PhotoDisplayProps = z.infer<typeof PhotoDisplaySchema>;
+
+// ==================== 漂浮元素 Schema ====================
+
+/**
+ * 漂浮元素类型
+ */
+export const FloatingElementTypeSchema = z.enum(['hearts', 'stars', 'confetti', 'bubbles', 'sparkles']);
+export type FloatingElementType = z.infer<typeof FloatingElementTypeSchema>;
+
+/**
+ * 漂浮元素配置 Schema
+ */
+export const FloatingElementsSchema = z.object({
+  /** 是否启用 */
+  enabled: z.boolean(),
+  /** 元素类型 */
+  type: FloatingElementTypeSchema,
+  /** 数量 */
+  count: z.number().min(5).max(50).optional(),
+  /** 开始帧 */
+  startFrame: z.number().min(0).optional(),
+  /** 颜色 */
+  color: z.string().optional(),
+});
+export type FloatingElementsProps = z.infer<typeof FloatingElementsSchema>;
+
+// ==================== 星空背景 Schema ====================
+
+/**
+ * 星空背景配置 Schema
+ */
+export const StarFieldBackgroundSchema = z.object({
+  /** 是否启用 */
+  enabled: z.boolean(),
+  /** 星星数量 */
+  starCount: z.number().min(50).max(500).optional(),
+  /** 星星颜色 */
+  starColor: z.string().optional(),
+  /** 星星大小范围 */
+  starSizeRange: z.tuple([z.number(), z.number()]).optional(),
+});
+export type StarFieldBackgroundProps = z.infer<typeof StarFieldBackgroundSchema>;
 
 // ==================== 故事章节 Schema ====================
 
@@ -284,6 +414,20 @@ export const StoryChapterSchema = z.object({
   
   // 字幕
   subtitles: z.array(SubtitleItemSchema).optional(),
+  
+  // ===== 新增配置项 =====
+  
+  // 文字元素（名字、祝福语等）
+  textElements: z.array(TextElementSchema).optional(),
+  
+  // 照片展示
+  photoDisplay: PhotoDisplaySchema.optional(),
+  
+  // 漂浮元素（爱心、星星等）
+  floatingElements: FloatingElementsSchema.optional(),
+  
+  // 星空背景
+  starFieldBackground: StarFieldBackgroundSchema.optional(),
 });
 export type StoryChapterSchemaType = z.infer<typeof StoryChapterSchema>;
 
