@@ -1,11 +1,9 @@
 import React from 'react';
 import { 
-  AbsoluteFill, 
   useCurrentFrame, 
   useVideoConfig,
   spring,
-  interpolate,
-  Sequence
+  interpolate
 } from 'remotion';
 import { getColorTheme } from '../utils/colors';
 import { KidsSubStyle } from '../types';
@@ -45,25 +43,28 @@ const BouncingChar: React.FC<{
     }
   });
   
-  // 入场缩放
+  // 入场缩放 - 添加 clamp
   const scale = interpolate(
     bounce,
     [0, 0.5, 1],
-    [0, 1.3, 1]
+    [0, 1.3, 1],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
   
-  // Y 轴弹跳
+  // Y 轴弹跳 - 添加 clamp
   const y = interpolate(
     bounce,
     [0, 0.3, 0.5, 0.7, 1],
-    [-50, 10, -5, 2, 0]
+    [-50, 10, -5, 2, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
   
-  // 轻微旋转
+  // 轻微旋转 - 添加 clamp
   const rotation = interpolate(
     bounce,
     [0, 0.5, 1],
-    [-15, 5, 0]
+    [-15, 5, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
   
   return (
@@ -108,8 +109,14 @@ const AgeBadge: React.FC<{
     }
   });
   
-  const scale = interpolate(progress, [0, 0.5, 1], [0, 1.2, 1]);
-  const rotation = interpolate(progress, [0, 1], [-30, 0]);
+  const scale = interpolate(progress, [0, 0.5, 1], [0, 1.2, 1], { 
+    extrapolateLeft: 'clamp', 
+    extrapolateRight: 'clamp' 
+  });
+  const rotation = interpolate(progress, [0, 1], [-30, 0], { 
+    extrapolateLeft: 'clamp', 
+    extrapolateRight: 'clamp' 
+  });
   
   return (
     <div
@@ -148,57 +155,51 @@ export const BouncingName: React.FC<BouncingNameProps> = ({
   color
 }) => {
   const frame = useCurrentFrame();
-  const { fps, height, width } = useVideoConfig();
+  const { fps } = useVideoConfig();
   const theme = getColorTheme(subStyle);
   const textColor = color || theme.primary;
   
   const chars = name.split('');
   
-  // 整体出现动画
+  // 整体出现动画 - 添加 extrapolateLeft
   const containerOpacity = interpolate(
     frame,
     [0, 10],
     [0, 1],
-    { extrapolateRight: 'clamp' }
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
   );
   
   return (
-    <AbsoluteFill
+    <div
       style={{
-        justifyContent: 'center',
+        position: 'relative',
+        display: 'flex',
         alignItems: 'center',
-        top: '25%',
-        opacity: containerOpacity
+        justifyContent: 'center',
+        flexDirection: 'row',
+        opacity: containerOpacity,
+        width: '100%'
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'row'
-        }}
-      >
-        {chars.map((char, index) => (
-          <BouncingChar
-            key={index}
-            char={char}
-            index={index}
-            total={chars.length}
-            fontSize={fontSize}
-            color={textColor}
-            themeColor={theme.secondary}
-            frame={frame}
-            fps={fps}
-          />
-        ))}
-        
-        {/* 年龄标签 */}
-        {showAge && age && frame > 15 && (
-          <AgeBadge age={age} frame={frame} fps={fps} color={theme.accent} />
-        )}
-      </div>
-    </AbsoluteFill>
+      {chars.map((char, index) => (
+        <BouncingChar
+          key={index}
+          char={char}
+          index={index}
+          total={chars.length}
+          fontSize={fontSize}
+          color={textColor}
+          themeColor={theme.secondary}
+          frame={frame}
+          fps={fps}
+        />
+      ))}
+      
+      {/* 年龄标签 */}
+      {showAge && age && frame > 15 && (
+        <AgeBadge age={age} frame={frame} fps={fps} color={theme.accent} />
+      )}
+    </div>
   );
 };
 

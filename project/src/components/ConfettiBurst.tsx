@@ -95,12 +95,12 @@ export const ConfettiBurst: React.FC<ConfettiBurstProps> = ({
         const currentY = piece.y + piece.velocityY * frame + 
           0.5 * 0.3 * frame * frame; // 重力
         
-        // 淡出
+        // 淡出 - 添加 clamp 确保值在有效范围内
         const opacity = interpolate(
           frame,
           [0, 40, 80, 120],
           [0, 1, 1, 0],
-          { extrapolateRight: 'clamp' }
+          { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
         );
         
         // 缩放
@@ -108,13 +108,16 @@ export const ConfettiBurst: React.FC<ConfettiBurstProps> = ({
           frame,
           [0, 10, 60],
           [0, 1.5, 1],
-          { extrapolateRight: 'clamp' }
+          { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }
         );
         
         // 旋转
         const rotation = piece.rotation + piece.rotationSpeed * frame;
         
-        if (currentY > height + 50 || opacity <= 0) return null;
+        // 确保 opacity 是有效数值
+        const validOpacity = Math.max(0, Math.min(1, opacity));
+        
+        if (currentY > height + 50 || validOpacity <= 0 || isNaN(validOpacity)) return null;
         
         return (
           <div
@@ -124,7 +127,7 @@ export const ConfettiBurst: React.FC<ConfettiBurstProps> = ({
               left: currentX,
               top: currentY,
               transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
-              opacity
+              opacity: validOpacity
             }}
           >
             <ConfettiShape shape={piece.shape} color={piece.color} size={15} />

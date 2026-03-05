@@ -329,13 +329,8 @@ export const Firework: React.FC<FireworkProps> = ({
   const { width, height } = useVideoConfig();
   
   const localFrame = frame - triggerFrame;
-  if (localFrame < 0) return null;
   
-  const progress = Math.min(localFrame / 60, 1);
-  const centerX = width * x;
-  const centerY = height * y;
-  
-  // 生成粒子
+  // 生成粒子 - 必须在 early return 之前调用，遵循 Hooks 规则
   const particles = useMemo(() => {
     return Array.from({ length: particleCount }, (_, i) => ({
       id: i,
@@ -346,6 +341,13 @@ export const Firework: React.FC<FireworkProps> = ({
     }));
   }, [particleCount]);
   
+  // early return 移到 useMemo 之后
+  if (localFrame < 0) return null;
+  
+  const progress = Math.min(localFrame / 60, 1);
+  const centerX = width * x;
+  const centerY = height * y;
+  
   const gravity = 0.5;
   
   return (
@@ -355,9 +357,15 @@ export const Firework: React.FC<FireworkProps> = ({
         const currentX = centerX + Math.cos(p.angle) * distance;
         const currentY = centerY + Math.sin(p.angle) * distance + gravity * progress * progress * 100;
         
-        const opacity = interpolate(progress, [0, 0.3, 1], [1, 1, 0]);
+        const opacity = interpolate(progress, [0, 0.3, 1], [1, 1, 0], { 
+          extrapolateLeft: 'clamp', 
+          extrapolateRight: 'clamp' 
+        });
+        const validOpacity = Math.max(0, Math.min(1, opacity));
         const hue = (parseInt(color.slice(1), 16) % 360 + p.hue + 360) % 360;
         const particleColor = `hsl(${hue}, 100%, 70%)`;
+        
+        if (validOpacity <= 0 || isNaN(validOpacity)) return null;
         
         return (
           <div
@@ -371,7 +379,7 @@ export const Firework: React.FC<FireworkProps> = ({
               borderRadius: '50%',
               backgroundColor: particleColor,
               boxShadow: `0 0 ${p.size}px ${particleColor}`,
-              opacity,
+              opacity: validOpacity,
               transform: 'translate(-50%, -50%)',
             }}
           />

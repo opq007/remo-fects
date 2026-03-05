@@ -5,10 +5,25 @@ import {
   useVideoConfig,
   interpolate,
   spring,
-  Sequence
+  Sequence,
+  Audio,
+  staticFile,
+  Img
 } from 'remotion';
-import { PRIMARY_COLORS, KidsSubStyle } from '../types';
+import { PRIMARY_COLORS, KidsSubStyle, PhotoData } from '../types';
 import { getColorTheme, generateGlow, generate3DTextShadow } from '../utils/colors';
+
+/**
+ * 处理照片源路径
+ */
+const getPhotoSrc = (src: string | undefined): string | undefined => {
+  if (!src) return undefined;
+  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
+    return src;
+  }
+  const cleanPath = src.replace(/^\.?\//, '');
+  return staticFile(cleanPath);
+};
 
 // ==================== 生日蛋糕 ====================
 
@@ -178,84 +193,76 @@ export const BirthdayCake: React.FC<BirthdayCakeProps> = ({
   );
 };
 
-// ==================== 歌词弹跳字幕 ====================
+// ==================== 生日快乐跳动文字 ====================
 
-interface BouncingLyricsProps {
-  lyrics: string[];
-  currentIndex: number;
+interface BouncingBirthdayTextProps {
   color?: string;
   fontSize?: number;
-  highlightColor?: string;
+  subStyle?: KidsSubStyle;
 }
 
-export const BouncingLyrics: React.FC<BouncingLyricsProps> = ({
-  lyrics,
-  currentIndex,
-  color = '#333333',
-  fontSize = 32,
-  highlightColor = PRIMARY_COLORS.strawberryPink
+export const BouncingBirthdayText: React.FC<BouncingBirthdayTextProps> = ({
+  color,
+  fontSize = 72,
+  subStyle = 'general'
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const theme = getColorTheme(subStyle);
+  const textColor = color || theme.primary;
+  
+  const chars = ['生', '日', '快', '乐'];
   
   return (
     <div
       style={{
         display: 'flex',
-        flexWrap: 'wrap',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: '8px',
-        padding: '0 20px',
+        gap: '10px',
       }}
     >
-      {lyrics.map((line, lineIndex) => {
-        const chars = line.split('');
-        const isActive = lineIndex === currentIndex;
+      {chars.map((char, index) => {
+        // 每个字符有独立的弹跳动画，错开时间
+        const bounce = spring({
+          frame: Math.max(frame - index * 6, 0),
+          fps,
+          config: { damping: 8, stiffness: 150, mass: 0.5 }
+        });
+        
+        // 持续的跳动效果
+        const continuousBounce = Math.sin(frame * 0.15 + index * 0.8) * 0.1;
+        
+        const scale = interpolate(bounce, [0, 0.5, 1], [0.5, 1.3, 1]) + continuousBounce;
+        const y = interpolate(bounce, [0, 0.3, 0.6, 1], [50, -30, 10, 0]) + Math.sin(frame * 0.1 + index) * 8;
+        const rotation = Math.sin(frame * 0.08 + index * 1.5) * 5;
+        
+        // 颜色变化（每个字有轻微不同的色调）
+        const hue = parseInt(textColor.slice(1), 16);
+        const charHueOffset = (index * 30) % 360;
         
         return (
-          <div
-            key={lineIndex}
+          <span
+            key={index}
             style={{
-              display: 'flex',
-              justifyContent: 'center',
-              width: '100%',
-              marginBottom: '10px',
+              display: 'inline-block',
+              fontSize,
+              fontWeight: 800,
+              color: textColor,
+              transform: `translateY(${y}px) scale(${scale}) rotate(${rotation}deg)`,
+              textShadow: `
+                3px 3px 0 white,
+                -3px -3px 0 white,
+                3px -3px 0 white,
+                -3px 3px 0 white,
+                0 0 30px ${colorWithOpacity(textColor, 0.6)},
+                0 0 60px ${colorWithOpacity(textColor, 0.3)}
+              `,
+              fontFamily: '"Comic Sans MS", "PingFang SC", cursive',
             }}
           >
-            {chars.map((char, charIndex) => {
-              // 弹跳动画
-              const bounce = isActive 
-                ? spring({
-                    frame: Math.max(frame - charIndex * 2, 0),
-                    fps,
-                    config: { damping: 10, stiffness: 200 }
-                  })
-                : 0.8;
-              
-              const scale = isActive ? interpolate(bounce, [0, 0.5, 1], [0.8, 1.2, 1]) : 1;
-              const y = isActive ? interpolate(bounce, [0, 0.5, 1], [10, -15, 0]) : 0;
-              
-              return (
-                <span
-                  key={charIndex}
-                  style={{
-                    display: 'inline-block',
-                    fontSize: isActive ? fontSize * 1.2 : fontSize,
-                    fontWeight: isActive ? 700 : 500,
-                    color: isActive ? highlightColor : color,
-                    transform: `translateY(${y}px) scale(${scale})`,
-                    textShadow: isActive 
-                      ? `2px 2px 4px rgba(0,0,0,0.2), 0 0 20px ${colorWithOpacity(highlightColor, 0.5)}`
-                      : 'none',
-                    transition: 'all 0.1s ease',
-                  }}
-                >
-                  {char}
-                </span>
-              );
-            })}
-          </div>
+            {char}
+          </span>
         );
       })}
     </div>
@@ -270,7 +277,127 @@ function colorWithOpacity(color: string, opacity: number): string {
   return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 
-// ==================== 许愿界面 ====================
+// ==================== 照片显示（带发光效果） ====================
+
+interface PhotoWithGlowProps {
+  photoSrc?: string;
+  position: 'left' | 'right';
+  size?: number;
+  delay?: number;
+}
+
+const PhotoWithGlow: React.FC<PhotoWithGlowProps> = ({
+  photoSrc,
+  position,
+  size = 120,
+  delay = 0
+}) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  
+  // 飞入动画
+  const flyIn = spring({
+    frame: Math.max(frame - delay, 0),
+    fps,
+    config: { damping: 15, stiffness: 80 }
+  });
+  
+  // 处理照片源
+  const src = getPhotoSrc(photoSrc);
+  
+  // 位置计算
+  const xOffset = position === 'left' ? -180 : 180;
+  const startX = position === 'left' ? -300 : 300;
+  const x = interpolate(flyIn, [0, 1], [startX, xOffset]);
+  
+  // 轻微浮动
+  const floatY = Math.sin(frame * 0.05 + (position === 'left' ? 0 : Math.PI)) * 5;
+  const rotation = Math.sin(frame * 0.03 + (position === 'left' ? 0 : Math.PI)) * 3;
+  
+  // 发光脉冲
+  const glowPulse = 0.8 + Math.sin(frame * 0.1) * 0.2;
+  
+  if (!src) return null;
+  
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: '50%',
+        top: '35%',
+        transform: `translate(calc(-50% + ${x}px), -50%) translateY(${floatY}px) rotate(${rotation}deg)`,
+        opacity: flyIn,
+        zIndex: 10,
+      }}
+    >
+      {/* 发光背景 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          top: '50%',
+          width: size * 1.4,
+          height: size * 1.4,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${colorWithOpacity(PRIMARY_COLORS.creamYellow, 0.4 * glowPulse)} 0%, transparent 70%)`,
+          transform: 'translate(-50%, -50%)',
+        }}
+      />
+      
+      {/* 照片容器 */}
+      <div
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: `4px solid white`,
+          boxShadow: `
+            0 8px 25px rgba(0,0,0,0.25),
+            0 0 30px ${colorWithOpacity(PRIMARY_COLORS.strawberryPink, 0.3 * glowPulse)}
+          `,
+          backgroundColor: '#f0f0f0',
+        }}
+      >
+        <Img
+          src={src}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      </div>
+      
+      {/* 装饰星星 */}
+      {Array.from({ length: 3 }).map((_, i) => {
+        const angle = (i / 3) * Math.PI * 2 + frame * 0.05;
+        const radius = size * 0.7;
+        const starX = Math.cos(angle) * radius;
+        const starY = Math.sin(angle) * radius;
+        const starOpacity = 0.5 + Math.sin(frame * 0.2 + i) * 0.5;
+        
+        return (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: size / 2 + starX,
+              top: size / 2 + starY,
+              fontSize: 16,
+              opacity: starOpacity,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            ✨
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// ==================== 许愿界面（独立使用） ====================
 
 interface MakeWishProps {
   visible?: boolean;
@@ -279,6 +406,178 @@ interface MakeWishProps {
 
 export const MakeWish: React.FC<MakeWishProps> = ({
   visible = true,
+  name = '小朋友'
+}) => {
+  if (!visible) return null;
+  
+  return (
+    <AbsoluteFill
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        pointerEvents: 'none',
+      }}
+    >
+      <MakeWishContent name={name} />
+    </AbsoluteFill>
+  );
+};
+
+// ==================== 完整生日歌场景 ====================
+
+interface BirthdaySongSceneProps {
+  age?: number;
+  name?: string;
+  durationInFrames: number;
+  /** 生日歌音频文件路径（相对于 public 目录），有值时才渲染音频 */
+  birthdaySongSource?: string;
+  /** 音频音量 (0-1) */
+  birthdaySongVolume?: number;
+  /** 主角照片列表（最多显示2张） */
+  photos?: PhotoData[];
+  /** 风格主题 */
+  subStyle?: KidsSubStyle;
+}
+
+export const BirthdaySongScene: React.FC<BirthdaySongSceneProps> = ({
+  age = 1,
+  name = '小朋友',
+  durationInFrames,
+  birthdaySongSource,
+  birthdaySongVolume = 0.6,
+  photos = [],
+  subStyle = 'general'
+}) => {
+  const frame = useCurrentFrame();
+  const { width, height, fps } = useVideoConfig();
+  const theme = getColorTheme(subStyle);
+  
+  // 许愿阶段（最后5秒）
+  const showWish = frame > durationInFrames - 120;
+  
+  // 许愿阶段的动画过渡
+  const wishTransition = showWish 
+    ? spring({
+        frame: frame - (durationInFrames - 120),
+        fps,
+        config: { damping: 15, stiffness: 60 }
+      })
+    : 0;
+  
+  // 是否播放音频：只看 birthdaySongSource 是否有值
+  const shouldPlayAudio = Boolean(birthdaySongSource);
+  
+  // 照片数据（最多取2张）
+  const displayPhotos = photos.slice(0, 2);
+  const hasPhotos = displayPhotos.length > 0;
+  
+  // 蛋糕位置和大小（许愿时上移并缩小）
+  const cakeScale = showWish ? interpolate(wishTransition, [0, 1], [1, 0.7]) : 1;
+  const cakeY = showWish ? interpolate(wishTransition, [0, 1], [0, -80]) : 0;
+  
+  return (
+    <AbsoluteFill
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {/* 音频播放 - 生日歌（仅当 birthdaySongSource 有值时渲染） */}
+      {shouldPlayAudio && birthdaySongSource && (
+        <Audio
+          src={staticFile(birthdaySongSource)}
+          volume={birthdaySongVolume}
+          loop={false}
+        />
+      )}
+      
+      {/* 照片显示（蛋糕两侧） */}
+      {!showWish && hasPhotos && displayPhotos[0] && (
+        <PhotoWithGlow
+          photoSrc={displayPhotos[0].src}
+          position="left"
+          size={100}
+          delay={15}
+        />
+      )}
+      {!showWish && hasPhotos && displayPhotos[1] && (
+        <PhotoWithGlow
+          photoSrc={displayPhotos[1].src}
+          position="right"
+          size={100}
+          delay={25}
+        />
+      )}
+      {/* 只有一张照片时，右侧显示相同照片 */}
+      {!showWish && hasPhotos && displayPhotos.length === 1 && displayPhotos[0] && (
+        <PhotoWithGlow
+          photoSrc={displayPhotos[0].src}
+          position="right"
+          size={100}
+          delay={25}
+        />
+      )}
+      
+      {/* 蛋糕 */}
+      <div style={{ 
+        marginBottom: 30, 
+        zIndex: 20,
+        transform: `translateY(${cakeY}px) scale(${cakeScale})`,
+      }}>
+        <BirthdayCake
+          candles={5}
+          age={age}
+          lit={!showWish}
+          size={220}
+        />
+      </div>
+      
+      {/* 生日快乐跳动文字 */}
+      {!showWish && (
+        <div style={{
+          position: 'absolute',
+          bottom: height * 0.18,
+          width: '100%',
+          zIndex: 25,
+        }}>
+          <BouncingBirthdayText
+            color={theme.primary}
+            fontSize={64}
+            subStyle={subStyle}
+          />
+        </div>
+      )}
+      
+      {/* 许愿界面 - 放在画面下方，确保不被遮挡 */}
+      {showWish && (
+        <div style={{
+          position: 'absolute',
+          top: '55%',
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          zIndex: 30,
+          opacity: wishTransition,
+          transform: `translateY(${interpolate(wishTransition, [0, 1], [30, 0])}px)`,
+        }}>
+          <MakeWishContent name={name} />
+        </div>
+      )}
+    </AbsoluteFill>
+  );
+};
+
+// ==================== 许愿内容组件 ====================
+
+interface MakeWishContentProps {
+  name?: string;
+}
+
+const MakeWishContent: React.FC<MakeWishContentProps> = ({
   name = '小朋友'
 }) => {
   const frame = useCurrentFrame();
@@ -290,54 +589,70 @@ export const MakeWish: React.FC<MakeWishProps> = ({
   // 闪烁星星
   const sparkle = 0.5 + Math.sin(frame * 0.3) * 0.5;
   
-  if (!visible) return null;
-  
   return (
-    <AbsoluteFill
+    <div
       style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        pointerEvents: 'none',
+        padding: '20px 40px',
+        background: `linear-gradient(135deg, ${colorWithOpacity(PRIMARY_COLORS.strawberryPink, 0.9)} 0%, ${colorWithOpacity(PRIMARY_COLORS.violet, 0.9)} 100%)`,
+        borderRadius: 30,
+        boxShadow: `
+          0 10px 40px rgba(0,0,0,0.3),
+          0 0 60px ${colorWithOpacity(PRIMARY_COLORS.creamYellow, 0.4)},
+          inset 0 1px 0 rgba(255,255,255,0.3)
+        `,
       }}
     >
       {/* 主文字 */}
       <div
         style={{
-          fontSize: 48,
+          fontSize: 52,
           fontWeight: 700,
-          color: PRIMARY_COLORS.creamYellow,
+          color: 'white',
           textShadow: `
-            2px 2px 0 white,
-            -2px -2px 0 white,
-            2px -2px 0 white,
-            -2px 2px 0 white,
-            0 0 30px ${PRIMARY_COLORS.creamYellow}
+            0 2px 4px rgba(0,0,0,0.2),
+            0 0 20px rgba(255,255,255,0.5)
           `,
           transform: `scale(${pulse})`,
           fontFamily: '"Comic Sans MS", "PingFang SC", cursive',
           textAlign: 'center',
+          letterSpacing: 2,
         }}
       >
         ✨ 快许个愿吧！✨
       </div>
       
+      {/* 副文字 */}
+      <div
+        style={{
+          fontSize: 24,
+          fontWeight: 500,
+          color: 'rgba(255,255,255,0.9)',
+          marginTop: 10,
+          fontFamily: '"PingFang SC", cursive',
+        }}
+      >
+        {name}，闭上眼睛许个愿望
+      </div>
+      
       {/* 装饰星星 */}
-      {Array.from({ length: 8 }).map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2 + frame * 0.02;
-        const radius = 150 + Math.sin(frame * 0.05 + i) * 20;
+      {Array.from({ length: 6 }).map((_, i) => {
+        const angle = (i / 6) * Math.PI * 2 + frame * 0.03;
+        const radius = 120 + Math.sin(frame * 0.05 + i) * 15;
         const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
+        const y = Math.sin(angle) * radius * 0.4;
         
         return (
           <div
             key={i}
             style={{
               position: 'absolute',
-              left: width / 2 + x,
-              top: height / 2 + y,
-              fontSize: 20,
+              left: `calc(50% + ${x}px)`,
+              top: `calc(50% + ${y}px)`,
+              fontSize: 18,
               opacity: sparkle,
               transform: 'translate(-50%, -50%)',
             }}
@@ -346,84 +661,7 @@ export const MakeWish: React.FC<MakeWishProps> = ({
           </div>
         );
       })}
-    </AbsoluteFill>
-  );
-};
-
-// ==================== 完整生日歌场景 ====================
-
-interface BirthdaySongSceneProps {
-  age?: number;
-  name?: string;
-  durationInFrames: number;
-}
-
-// 生日歌歌词（标准30秒）
-const BIRTHDAY_SONG_LYRICS = [
-  '祝你生日快乐',
-  '祝你生日快乐',
-  '祝你生日快乐',
-  '祝你生日快乐',
-  'Happy Birthday to You',
-  'Happy Birthday to You',
-  'Happy Birthday to You',
-  'Happy Birthday to You',
-];
-
-export const BirthdaySongScene: React.FC<BirthdaySongSceneProps> = ({
-  age = 1,
-  name = '小朋友',
-  durationInFrames
-}) => {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
-  
-  // 计算当前歌词索引（每行约3.75秒 = 90帧）
-  const lyricsInterval = Math.floor(durationInFrames / BIRTHDAY_SONG_LYRICS.length);
-  const currentLyricIndex = Math.min(
-    Math.floor(frame / lyricsInterval),
-    BIRTHDAY_SONG_LYRICS.length - 1
-  );
-  
-  // 许愿阶段（最后5秒）
-  const showWish = frame > durationInFrames - 120;
-  
-  return (
-    <AbsoluteFill
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      {/* 蛋糕 */}
-      <div style={{ marginBottom: 30 }}>
-        <BirthdayCake
-          candles={5}
-          age={age}
-          lit={!showWish}
-          size={250}
-        />
-      </div>
-      
-      {/* 歌词 */}
-      {!showWish && (
-        <div style={{
-          position: 'absolute',
-          bottom: height * 0.2,
-          width: '100%',
-        }}>
-          <BouncingLyrics
-            lyrics={BIRTHDAY_SONG_LYRICS.slice(0, currentLyricIndex + 1)}
-            currentIndex={currentLyricIndex}
-          />
-        </div>
-      )}
-      
-      {/* 许愿 */}
-      {showWish && <MakeWish name={name} />}
-    </AbsoluteFill>
+    </div>
   );
 };
 

@@ -32,7 +32,7 @@ export {
 } from './PhotoInteraction';
 
 // 新增生日歌
-export { BirthdayCake, BouncingLyrics, MakeWish, BirthdaySongScene } from './BirthdaySong';
+export { BirthdayCake, BouncingBirthdayText, MakeWish, BirthdaySongScene } from './BirthdaySong';
 
 // 新增梦想泡泡
 export { DreamBubblesScene, DreamIcon } from './DreamBubbles';

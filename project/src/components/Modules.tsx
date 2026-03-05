@@ -59,7 +59,7 @@ export const ModuleA_MagicOpening: React.FC<ModuleAProps> = ({
   characterType
 }) => {
   const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+  const { width, height, fps } = useVideoConfig();
   
   // 黑屏渐隐
   const blackOpacity = interpolate(frame, [0, 24], [1, 0], { extrapolateRight: 'clamp' });
@@ -67,8 +67,24 @@ export const ModuleA_MagicOpening: React.FC<ModuleAProps> = ({
   // 光粒聚集进度
   const particlesProgress = Math.min(frame / 48, 1);
   
-  // 角色声音出现
-  const showGreeting = frame > 30;
+  // 角色入场动画
+  const characterEntrance = spring({
+    frame: Math.max(frame - 20, 0),
+    fps,
+    config: { damping: 12, stiffness: 80 }
+  });
+  
+  // 气泡显示
+  const showGreeting = frame > 35;
+  
+  // 气泡动画
+  const bubbleScale = showGreeting 
+    ? spring({
+        frame: frame - 35,
+        fps,
+        config: { damping: 10, stiffness: 200 }
+      })
+    : 0;
   
   return (
     <AbsoluteFill>
@@ -88,25 +104,46 @@ export const ModuleA_MagicOpening: React.FC<ModuleAProps> = ({
         color={PRIMARY_COLORS.violet}
       />
       
-      {/* 角色问候 */}
-      {showGreeting && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '30%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            textAlign: 'center',
-            zIndex: 30,
-          }}
-        >
-          <SpeechBubble
-            text={`亲爱的${name}小朋友——\n生日快乐呀！`}
-            visible={true}
-            color="#FFFFFF"
-          />
-        </div>
-      )}
+      {/* 角色和气泡组合 */}
+      <div
+        style={{
+          position: 'absolute',
+          left: '50%',
+          bottom: '12%',
+          transform: `translateX(-50%) translateY(${interpolate(characterEntrance, [0, 1], [100, 0])}px)`,
+          opacity: characterEntrance,
+          zIndex: 30,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        {/* 气泡 - 在角色上方 */}
+        {showGreeting && (
+          <div
+            style={{
+              marginBottom: 15,
+              transform: `scale(${bubbleScale})`,
+            }}
+          >
+            <SpeechBubble
+              text={`亲爱的${name}小朋友——\n生日快乐呀！`}
+              visible={true}
+              color="#FFFFFF"
+            />
+          </div>
+        )}
+        
+        {/* 角色 */}
+        <Character
+          series={characterSeries}
+          type={characterType}
+          size={180}
+          expression="happy"
+          position="center"
+          animate={true}
+        />
+      </div>
     </AbsoluteFill>
   );
 };
@@ -330,7 +367,7 @@ export const ModuleF_GrowthCelebration: React.FC<ModuleFProps> = ({
       )}
       
       {/* 名字+年龄大字 */}
-      <div style={{ position: 'absolute', top: '35%', width: '100%', zIndex: 20 }}>
+      <div style={{ position: 'absolute', top: '30%', width: '100%', zIndex: 20 }}>
         <BouncingName
           name={name}
           age={age}
@@ -340,8 +377,16 @@ export const ModuleF_GrowthCelebration: React.FC<ModuleFProps> = ({
         />
       </div>
       
-      {/* 生日快乐文字 */}
-      <div style={{ position: 'absolute', top: '55%', width: '100%', zIndex: 15 }}>
+      {/* 生日快乐文字 - 调整位置确保完整显示 */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '50%', 
+        width: '100%', 
+        zIndex: 15,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
         <BlessingText
           text="生日快乐"
           fontSize={orientation === 'portrait' ? 50 : 40}
@@ -360,11 +405,19 @@ export const ModuleF_GrowthCelebration: React.FC<ModuleFProps> = ({
 interface ModuleGProps {
   age?: number;
   name?: string;
+  birthdaySongSource?: string;
+  birthdaySongVolume?: number;
+  photos?: PhotoData[];
+  subStyle: KidsSubStyle;
 }
 
 export const ModuleG_BirthdaySong: React.FC<ModuleGProps> = ({
   age,
-  name
+  name,
+  birthdaySongSource,
+  birthdaySongVolume = 0.6,
+  photos = [],
+  subStyle
 }) => {
   return (
     <AbsoluteFill>
@@ -372,6 +425,10 @@ export const ModuleG_BirthdaySong: React.FC<ModuleGProps> = ({
         age={age}
         name={name}
         durationInFrames={720}  // 30秒
+        birthdaySongSource={birthdaySongSource}
+        birthdaySongVolume={birthdaySongVolume}
+        photos={photos}
+        subStyle={subStyle}
       />
     </AbsoluteFill>
   );

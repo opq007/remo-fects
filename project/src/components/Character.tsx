@@ -497,56 +497,62 @@ export const SpeechBubble: React.FC<SpeechBubbleProps> = ({
   });
   
   // 轻微摇晃
-  const wobble = Math.sin(frame * 0.1) * 2;
+  const wobble = Math.sin(frame * 0.1) * 1.5;
   
   if (!visible) return null;
   
   const getPositionStyle = (): React.CSSProperties => {
     switch (position) {
       case 'right':
-        return { left: '100%', top: '30%', marginLeft: '20px' };
+        return { left: '100%', top: '25%', marginLeft: '15px' };
       case 'left':
-        return { right: '100%', top: '30%', marginRight: '20px' };
+        return { right: '100%', top: '25%', marginRight: '15px' };
       default:
-        return { bottom: '100%', marginBottom: '15px', left: '50%', transform: `translateX(-50%) rotate(${wobble}deg)` };
+        return { marginBottom: '10px' };
     }
   };
   
   return (
     <div style={{
-      position: 'absolute',
+      position: 'relative',
       ...getPositionStyle(),
       backgroundColor: color,
-      padding: '15px 25px',
-      borderRadius: '25px',
-      boxShadow: '0 5px 20px rgba(0,0,0,0.15)',
-      transform: `scale(${scale})`,
-      maxWidth: '280px',
+      padding: '16px 24px',
+      borderRadius: '20px',
+      boxShadow: `
+        0 4px 15px rgba(0,0,0,0.1),
+        0 8px 30px rgba(0,0,0,0.08),
+        inset 0 1px 0 rgba(255,255,255,0.8)
+      `,
+      transform: `scale(${scale}) rotate(${wobble}deg)`,
+      maxWidth: '320px',
+      minWidth: '180px',
       zIndex: 20,
     }}>
       <span style={{
-        fontSize: '18px',
+        fontSize: '20px',
         fontWeight: 600,
         color: textColor,
         whiteSpace: 'pre-wrap',
         textAlign: 'center',
         display: 'block',
-        fontFamily: '"Comic Sans MS", "PingFang SC", cursive'
+        fontFamily: '"Comic Sans MS", "PingFang SC", cursive',
+        lineHeight: 1.5,
       }}>
         {text}
       </span>
-      {/* 气泡尖角 */}
+      {/* 气泡尖角 - 指向角色 */}
       {position === 'top' && (
         <div style={{
           position: 'absolute',
-          bottom: '-10px',
+          bottom: '-8px',
           left: '50%',
           transform: 'translateX(-50%)',
           width: 0,
           height: 0,
-          borderLeft: '12px solid transparent',
-          borderRight: '12px solid transparent',
-          borderTop: `12px solid ${color}`,
+          borderLeft: '10px solid transparent',
+          borderRight: '10px solid transparent',
+          borderTop: `10px solid ${color}`,
         }} />
       )}
     </div>
