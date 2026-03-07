@@ -380,6 +380,68 @@ export const StarFieldBackgroundSchema = z.object({
 });
 export type StarFieldBackgroundProps = z.infer<typeof StarFieldBackgroundSchema>;
 
+// ==================== 透明视频 Schema ====================
+
+/**
+ * 透明模式类型 Schema
+ */
+export const TransparencyModeSchema = z.enum(['greenScreen', 'blueScreen', 'chromaKey', 'webmAlpha']);
+export type TransparencyModeType = z.infer<typeof TransparencyModeSchema>;
+
+/**
+ * 色度键配置 Schema
+ */
+export const ChromaKeyConfigSchema = z.object({
+  /** 目标颜色 */
+  keyColor: z.string().optional(),
+  /** 容差范围 */
+  tolerance: z.number().min(0).max(255).optional(),
+  /** 边缘柔和度 */
+  softness: z.number().min(0).max(1).optional(),
+});
+export type ChromaKeyConfigProps = z.infer<typeof ChromaKeyConfigSchema>;
+
+/**
+ * 透明视频项 Schema
+ */
+export const TransparentVideoItemSchema = z.object({
+  /** 视频源 */
+  src: z.string(),
+  /** 透明模式 */
+  mode: TransparencyModeSchema.optional(),
+  /** 色度键配置 */
+  chromaKey: ChromaKeyConfigSchema.optional(),
+  /** 视频透明度 */
+  opacity: z.number().min(0).max(1).optional(),
+  /** 缩放比例 */
+  scale: z.number().min(0.1).max(2).optional(),
+  /** 水平位置 */
+  x: z.number().min(0).max(1).optional(),
+  /** 垂直位置 */
+  y: z.number().min(0).max(1).optional(),
+  /** 播放速率 */
+  playbackRate: z.number().min(0.1).max(4).optional(),
+  /** 是否循环播放 */
+  loop: z.boolean().optional(),
+  /** 是否静音 */
+  muted: z.boolean().optional(),
+  /** 音频音量 */
+  volume: z.number().min(0).max(1).optional(),
+  /** 开始帧 */
+  startFrame: z.number().min(0).optional(),
+  /** 持续帧数 */
+  durationInFrames: z.number().min(0).optional(),
+  /** 水平翻转 */
+  flipX: z.boolean().optional(),
+  /** 垂直翻转 */
+  flipY: z.boolean().optional(),
+  /** 旋转角度 */
+  rotation: z.number().optional(),
+  /** z-index 层级 */
+  zIndex: z.number().optional(),
+});
+export type TransparentVideoItemProps = z.infer<typeof TransparentVideoItemSchema>;
+
 // ==================== 故事章节 Schema ====================
 
 /**
@@ -430,6 +492,9 @@ export const StoryChapterSchema = z.object({
   
   // 星空背景
   starFieldBackground: StarFieldBackgroundSchema.optional(),
+  
+  // 透明视频列表
+  transparentVideos: z.array(TransparentVideoItemSchema).optional(),
 });
 export type StoryChapterSchemaType = z.infer<typeof StoryChapterSchema>;
 

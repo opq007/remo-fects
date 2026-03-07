@@ -248,6 +248,15 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         durationInFrames: 10 * fps,
         backgroundType: 'gradient',
         backgroundGradient: effectiveGradient,
+        transparentVideos: [
+       // 绿幕视频
+       {
+          src: 'https://anondrop.net/1479675121605148723/vid.mp4',
+          mode: 'greenScreen',
+          scale: 0.6,
+          x: 0.5,
+          y: 0.7
+       }],
         magicEffects: {
           balloonBurst: {
             enabled: true,

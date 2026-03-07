@@ -1,5 +1,5 @@
-import React, { ReactNode, useMemo } from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, Sequence, interpolate, spring } from 'remotion';
+import React, { ReactNode, useMemo, useRef, useCallback } from 'react';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, Sequence, interpolate, spring, staticFile, OffthreadVideo } from 'remotion';
 import { Background, Overlay, RadialBurst } from './index';
 import { BackgroundType } from '../schemas';
 import { 
@@ -16,7 +16,13 @@ import {
   WhiteFlashTransition,
   ShootingStar,
   StarFieldBackground,
+  TransparentVideo,
 } from './index';
+import { 
+  TransparentVideoConfig,
+  TransparencyMode,
+  ChromaKeyConfig,
+} from './TransparentVideo';
 import { SubtitleList, SubtitleItem } from './Subtitle';
 import { 
   CharacterSeries,
@@ -134,6 +140,48 @@ export interface BlackScreenTransitionConfig {
   durationInFrames?: number;
   /** 开始帧 */
   startFrame?: number;
+}
+
+// ==================== 透明视频配置 ====================
+
+/**
+ * 透明视频项配置（用于 StoryChapter）
+ */
+export interface TransparentVideoItem {
+  /** 视频源（本地路径或网络 URL） */
+  src: string;
+  /** 透明模式：greenScreen（绿幕）、blueScreen（蓝幕）、chromaKey（自定义色度键）、webmAlpha（WebM透明） */
+  mode?: TransparencyMode;
+  /** 色度键配置（仅 mode 为 'chromaKey' 时使用） */
+  chromaKey?: ChromaKeyConfig;
+  /** 视频透明度（0-1），默认 1 */
+  opacity?: number;
+  /** 缩放比例（0.1-2），默认 1 */
+  scale?: number;
+  /** 水平位置（0-1），默认 0.5 */
+  x?: number;
+  /** 垂直位置（0-1），默认 0.5 */
+  y?: number;
+  /** 播放速率，默认 1 */
+  playbackRate?: number;
+  /** 是否循环播放，默认 false */
+  loop?: boolean;
+  /** 是否静音，默认 false（允许音频播放） */
+  muted?: boolean;
+  /** 音频音量（0-1），默认 1 */
+  volume?: number;
+  /** 开始帧（相对于章节开始） */
+  startFrame?: number;
+  /** 持续帧数（0 表示播放到章节结束） */
+  durationInFrames?: number;
+  /** 水平翻转 */
+  flipX?: boolean;
+  /** 垂直翻转 */
+  flipY?: boolean;
+  /** 旋转角度 */
+  rotation?: number;
+  /** z-index 层级，默认 20 */
+  zIndex?: number;
 }
 
 // ==================== 角色动画配置 ====================
@@ -516,6 +564,15 @@ export interface StoryChapterProps {
   
   /** 屏幕方向 */
   orientation?: 'portrait' | 'landscape';
+  
+  // ===== 透明视频配置 =====
+  
+  /** 
+   * 透明视频列表
+   * 支持绿幕、蓝幕、自定义色度键和 WebM 透明视频
+   * 可叠加多个透明视频层
+   */
+  transparentVideos?: TransparentVideoItem[];
 }
 
 /**
@@ -598,6 +655,8 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
   photoDisplay,
   floatingElements,
   starFieldBackground,
+  // 透明视频配置
+  transparentVideos,
   // 上下文数据
   name,
   age,
@@ -1111,6 +1170,50 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     );
   };
   
+  // 渲染透明视频
+  const renderTransparentVideos = () => {
+    if (!transparentVideos || transparentVideos.length === 0) return null;
+    
+    return (
+      <>
+        {transparentVideos.map((videoConfig, index) => {
+          const videoStartFrame = videoConfig.startFrame ?? 0;
+          const videoDuration = videoConfig.durationInFrames ?? 0;
+          
+          // 如果当前帧未到达视频开始帧，不渲染
+          if (frame < videoStartFrame) return null;
+          
+          // 如果设置了持续时间且已超时，不渲染
+          if (videoDuration > 0 && frame >= videoStartFrame + videoDuration) return null;
+          
+          return (
+            <TransparentVideo
+              key={`transparent-video-${index}`}
+              enabled={true}
+              src={videoConfig.src}
+              mode={videoConfig.mode ?? 'greenScreen'}
+              chromaKey={videoConfig.chromaKey}
+              opacity={videoConfig.opacity ?? 1}
+              scale={videoConfig.scale ?? 1}
+              x={videoConfig.x ?? 0.5}
+              y={videoConfig.y ?? 0.5}
+              playbackRate={videoConfig.playbackRate ?? 1}
+              loop={videoConfig.loop ?? false}
+              muted={videoConfig.muted ?? false}
+              volume={videoConfig.volume ?? 1}
+              startFrame={videoStartFrame}
+              durationInFrames={videoDuration}
+              flipX={videoConfig.flipX ?? false}
+              flipY={videoConfig.flipY ?? false}
+              rotation={videoConfig.rotation ?? 0}
+              zIndex={videoConfig.zIndex ?? 20}
+            />
+          );
+        })}
+      </>
+    );
+  };
+  
   return (
     <AbsoluteFill>
       {/* 背景层 */}
@@ -1139,6 +1242,9 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
       
       {/* 魔法效果层 */}
       {renderMagicEffects()}
+      
+      {/* 透明视频层 */}
+      {renderTransparentVideos()}
       
       {/* 漂浮元素层 */}
       {renderFloatingElements()}
