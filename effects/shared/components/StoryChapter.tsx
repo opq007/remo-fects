@@ -205,11 +205,11 @@ export interface ExpressionTimelineItem {
 export interface StoryCharacterConfig {
   /** 角色系列 */
   series: CharacterSeries;
-  /** 角色类型 */
-  type: ZodiacType | PetType | HeroType;
+  /** 角色类型（image 模式下可忽略） */
+  type?: ZodiacType | PetType | HeroType;
   /** 位置 */
   position?: 'center' | 'left' | 'right';
-  /** 表情 */
+  /** 表情（image 模式下可忽略） */
   expression?: 'happy' | 'excited' | 'waving' | 'hugging';
   /** 大小 */
   size?: number;
@@ -235,6 +235,10 @@ export interface StoryCharacterConfig {
   // ===== 新增：表情变化时序 =====
   /** 表情变化时序列表 */
   expressionTimeline?: ExpressionTimelineItem[];
+  
+  // ===== 新增：图片角色配置 =====
+  /** 图片资源路径（本地路径或网络URL），仅当 series='image' 时使用 */
+  imageSrc?: string;
 }
 
 /**
@@ -756,6 +760,7 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           expression={currentExpression}
           inline={true}
           animate={character.animate ?? true}
+          imageSrc={character.imageSrc}
         />
       </div>
     );

@@ -139,6 +139,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     subStyle = 'general',
     characterSeries = 'zodiac',
     characterType = 'tiger',
+    characterImageSrc,
     photos = [],
     dreams = ['astronaut', 'artist', 'racer'],
     orientation = 'portrait',
@@ -213,6 +214,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           type: typedCharacterType,
           size: 180,
           animate: true,
+          imageSrc: characterImageSrc,
           // 入场动画配置
           entrance: {
             enabled: true,
@@ -265,6 +267,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           type: typedCharacterType,
           size: orientation === 'portrait' ? 180 : 150,
           animate: true,
+          imageSrc: characterImageSrc,
           // 入场动画配置
           entrance: {
             enabled: true,
@@ -435,6 +438,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           type: typedCharacterType,
           size: orientation === 'portrait' ? 180 : 150,
           animate: true,
+          imageSrc: characterImageSrc,
           // 入场动画（静态居中）
           entrance: {
             enabled: true,
@@ -507,6 +511,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           type: typedCharacterType,
           size: orientation === 'portrait' ? 180 : 150,
           animate: true,
+          imageSrc: characterImageSrc,
           entrance: {
             enabled: true,
             direction: 'bottom',
@@ -549,7 +554,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   }, [
     videoVersion, fps, photos, dreams, name, age, subStyle, orientation, 
     confettiLevel, theme, characterSeries, typedCharacterType, effectiveGradient,
-    birthdaySongSource, birthdaySongVolume
+    birthdaySongSource, birthdaySongVolume, characterImageSrc
   ]);
   
   return (

@@ -57,7 +57,7 @@ export const SubtitleListSchema = z.array(SubtitleItemSchema);
 /**
  * 角色系列 Schema
  */
-export const CharacterSeriesSchema = z.enum(['zodiac', 'pet', 'hero']);
+export const CharacterSeriesSchema = z.enum(['zodiac', 'pet', 'hero', 'image']);
 export type CharacterSeriesType = z.infer<typeof CharacterSeriesSchema>;
 
 /**
@@ -99,11 +99,11 @@ export type CharacterPositionType = z.infer<typeof CharacterPositionSchema>;
 export const StoryCharacterConfigSchema = z.object({
   /** 角色系列 */
   series: CharacterSeriesSchema,
-  /** 角色类型 */
-  type: z.string(), // 简化类型，实际使用时验证
+  /** 角色类型（image 模式下可忽略） */
+  type: z.string().optional(), // 简化类型，实际使用时验证
   /** 位置 */
   position: CharacterPositionSchema.optional(),
-  /** 表情 */
+  /** 表情（image 模式下可忽略） */
   expression: CharacterExpressionSchema.optional(),
   /** 大小 */
   size: z.number().min(50).max(500).optional(),
@@ -115,6 +115,8 @@ export const StoryCharacterConfigSchema = z.object({
   showSpeech: z.boolean().optional(),
   /** 是否内联布局 */
   inline: z.boolean().optional(),
+  /** 图片资源路径（本地路径或网络URL），仅当 series='image' 时使用 */
+  imageSrc: z.string().optional(),
 });
 export type StoryCharacterConfigProps = z.infer<typeof StoryCharacterConfigSchema>;
 

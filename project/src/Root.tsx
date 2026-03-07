@@ -15,6 +15,7 @@ import { KidsBirthdaySchema } from './schemas';
  * - 生肖守护神系列（12生肖）
  * - 萌宠精灵系列（兔子、猫咪、小狗、熊、狐狸、熊猫）
  * - 勇气超人系列（超级英雄、宇航员、骑士、巫师、海盗）
+ * - 自定义图片系列（支持本地图片或网络图片）
  */
 export const RemotionRoot: React.FC = () => {
   return (
@@ -194,6 +195,44 @@ export const RemotionRoot: React.FC = () => {
             characterType: 'astronaut',
             photos: [],
             dreams: ['astronaut', 'racer', 'scientist'],
+            orientation: 'portrait',
+            nameFontSize: 120,
+            showAge: true,
+            blessingText: '生日快乐',
+            blessingFontSize: 60,
+            confettiLevel: 'high',
+            animationSpeed: 'normal',
+            musicEnabled: true,
+            musicTrack: 'JoyfulChildren',
+            birthdaySongSource: 'birthday_audio.mp3',
+            birthdaySongVolume: 0.6
+          }}
+        />
+        
+        {/* 自定义图片角色风格 */}
+        <Composition
+          id="KidsBirthdayCustomImage"
+          component={KidsBirthdayComposition}
+          durationInFrames={2880}
+          fps={24}
+          width={720}
+          height={1280}
+          schema={KidsBirthdaySchema}
+          defaultProps={{
+            name: '宝贝',
+            age: 5,
+            message: '生日快乐！',
+            videoVersion: '120s',
+            duration: 120,
+            fps: 24,
+            width: 720,
+            height: 1280,
+            subStyle: 'general',
+            characterSeries: 'image',
+            // characterType 在 image 模式下可忽略
+            characterImageSrc: '熊猫.png', // 本地图片路径（相对于 public 目录）
+            photos: [],
+            dreams: ['artist', 'musician', 'teacher'],
             orientation: 'portrait',
             nameFontSize: 120,
             showAge: true,

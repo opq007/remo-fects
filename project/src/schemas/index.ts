@@ -9,8 +9,8 @@ export const VideoVersionSchema = z.enum(['60s', '90s', '120s']).meta({
 });
 
 // 角色系列
-export const CharacterSeriesSchema = z.enum(['zodiac', 'pet', 'hero']).meta({
-  description: '角色系列：生肖守护神/萌宠精灵/勇气超人'
+export const CharacterSeriesSchema = z.enum(['zodiac', 'pet', 'hero', 'image']).meta({
+  description: '角色系列：生肖守护神/萌宠精灵/勇气超人/自定义图片'
 });
 
 // 生肖类型
@@ -107,7 +107,10 @@ export const KidsBirthdaySchema = CompleteCompositionSchema.extend({
     description: '角色系列'
   }),
   characterType: z.string().default('tiger').meta({
-    description: '角色类型（根据series选择对应的生肖/萌宠/超人类型）'
+    description: '角色类型（根据series选择对应的生肖/萌宠/超人类型，image模式下可忽略）'
+  }),
+  characterImageSrc: z.string().optional().meta({
+    description: '自定义角色图片路径（本地路径或网络URL），仅当 characterSeries="image" 时使用'
   }),
   
   // ========== 照片系统 ==========
@@ -214,7 +217,7 @@ export const getDurationByVersion = (version: '60s' | '90s' | '120s'): number =>
 /**
  * 根据角色系列获取可选的角色类型
  */
-export const getCharacterTypes = (series: 'zodiac' | 'pet' | 'hero'): string[] => {
+export const getCharacterTypes = (series: 'zodiac' | 'pet' | 'hero' | 'image'): string[] => {
   switch (series) {
     case 'zodiac':
       return ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'];
@@ -222,6 +225,8 @@ export const getCharacterTypes = (series: 'zodiac' | 'pet' | 'hero'): string[] =
       return ['bunny', 'kitten', 'puppy', 'bear', 'fox', 'panda'];
     case 'hero':
       return ['superhero', 'astronaut', 'knight', 'wizard', 'pirate'];
+    case 'image':
+      return []; // image 模式不需要类型，使用 characterImageSrc 指定图片
     default:
       return ['tiger'];
   }
