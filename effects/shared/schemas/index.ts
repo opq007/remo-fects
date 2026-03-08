@@ -210,6 +210,24 @@ export {
   type PlusEffectsProps,
 } from "./story";
 
+// 倒计时配置
+export {
+  CountdownTypeSchema,
+  CountdownEffectTypeSchema,
+  CountdownTextStyleSchema,
+  CountdownAudioConfigSchema,
+  CountdownFinalTextSchema,
+  CountdownSchema,
+  StoryCountdownConfigSchema,
+  type CountdownType,
+  type CountdownEffectType,
+  type CountdownTextStyleProps,
+  type CountdownAudioConfigProps,
+  type CountdownFinalTextProps,
+  type CountdownSchemaType,
+  type StoryCountdownConfigProps,
+} from "./story";
+
 // 重新导出完整背景 Schema（合并背景和遮罩）
 import { z } from "zod";
 import { BackgroundSchema } from "./background";

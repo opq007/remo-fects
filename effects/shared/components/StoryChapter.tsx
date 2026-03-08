@@ -17,6 +17,7 @@ import {
   ShootingStar,
   StarFieldBackground,
   TransparentVideo,
+  Countdown,
 } from './index';
 import { 
   TransparentVideoConfig,
@@ -30,7 +31,7 @@ import {
   PetType,
   HeroType,
 } from '../types/character';
-import { PlusEffectItemProps } from '../schemas/story';
+import { PlusEffectItemProps, StoryCountdownConfigProps } from '../schemas/story';
 
 // ==================== 类型定义 ====================
 
@@ -598,6 +599,14 @@ export interface StoryChapterProps {
     fallbackWords: string[],
     options?: { width: number; height: number }
   ) => ReactNode;
+  
+  // ===== 倒计时配置 =====
+  
+  /**
+   * 倒计时配置
+   * 支持数字倒计时和时间倒计时两种模式
+   */
+  countdown?: StoryCountdownConfigProps;
 }
 
 /**
@@ -685,6 +694,8 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
   // PlusEffects 特效扩展配置
   plusEffects,
   renderPlusEffects,
+  // 倒计时配置
+  countdown,
   // 上下文数据
   name,
   age,
@@ -1257,6 +1268,27 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     return renderPlusEffects(plusEffects, fallbackWords, { width, height });
   };
   
+  // 渲染倒计时
+  const renderCountdown = () => {
+    if (!countdown || !countdown.enabled) return null;
+    
+    return (
+      <Countdown
+        type={countdown.type ?? 'number'}
+        startNumber={countdown.startNumber ?? 5}
+        totalSeconds={countdown.totalSeconds ?? 10}
+        durationPerNumber={countdown.durationPerNumber}
+        effectType={countdown.effectType ?? 'scale'}
+        effectIntensity={countdown.effectIntensity ?? 1}
+        textStyle={countdown.textStyle}
+        audio={countdown.audio}
+        finalText={countdown.finalText}
+        x={countdown.x ?? 0.5}
+        y={countdown.y ?? 0.5}
+      />
+    );
+  };
+  
   return (
     <AbsoluteFill>
       {/* 背景层 */}
@@ -1285,6 +1317,9 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
       
       {/* 魔法效果层 */}
       {renderMagicEffects()}
+      
+      {/* 倒计时层 */}
+      {renderCountdown()}
       
       {/* 透明视频层 */}
       {renderTransparentVideos()}

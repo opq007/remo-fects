@@ -209,13 +209,15 @@ export const getModulesByVersion = (version: '60s' | '90s' | '120s'): string[] =
 
 /**
  * 根据视频版本获取总时长（秒）
+ * 注意：倒计时章节占用 4 秒（3秒倒计时 + 1秒最终文字）
  */
 export const getDurationByVersion = (version: '60s' | '90s' | '120s'): number => {
+  const countdownDuration = 4; // 倒计时章节时长
   switch (version) {
-    case '60s': return 60;
-    case '90s': return 90;
-    case '120s': return 120;
-    default: return 120;
+    case '60s': return 60 + countdownDuration;
+    case '90s': return 90 + countdownDuration;
+    case '120s': return 120 + countdownDuration;
+    default: return 120 + countdownDuration;
   }
 };
 

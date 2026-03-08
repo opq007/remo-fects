@@ -195,6 +195,61 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     
     // ==================== 构建默认章节配置 ====================
     
+    // 模块 0：倒计时开场（4秒 = 96帧）
+    // 数字倒计时 3-2-1 后显示开始文字，留出 1 秒给最终文字和结束音效
+    chapterList.push({
+      id: '0_countdown',
+      durationInFrames: 4 * fps, // 3秒倒计时 + 1秒最终文字/音效
+      backgroundType: 'gradient',
+      backgroundGradient: 'linear-gradient(180deg, #0a0a20 0%, #1a1a3e 50%, #2a2a5e 100%)',
+      countdown: {
+        enabled: true,
+        type: 'number',
+        startNumber: 3,
+        durationPerNumber: fps, // 每个数字 1 秒
+        effectType: 'bounce',
+        effectIntensity: 1.2,
+        audio: {
+          enabled:true,
+          tickSound: 'countDown_common.mp3',
+          endSound: 'countDown_game.mp3',
+        },
+        textStyle: {
+          fontSize: orientation === 'portrait' ? 280 : 200,
+          fontWeight: 900,
+          color: '#FFFFFF',
+          strokeColor: theme.primary,
+          strokeWidth: 6,
+          glowColor: theme.primary,
+          glowIntensity: 1.5,
+        },
+        finalText: {
+          enabled: true,
+          text: '开始!',
+          scaleMultiplier: 1.8,
+          extraGlow: true,
+          colorChange: theme.primary,
+          durationInFrames: fps, // 最终文字显示 1 秒
+        },
+        x: 0.5,
+        y: 0.5,
+      },
+      // 添加魔法粒子效果
+      magicEffects: {
+        particles: {
+          enabled: true,
+          particleCount: 60,
+          color: theme.primary,
+          durationInFrames: 3 * fps,
+        },
+      },
+      // 星空背景
+      starFieldBackground: {
+        enabled: true,
+        starCount: 100,
+      },
+    });
+    
     // 模块 A：魔法开场（2秒 = 48帧）
     // 完全配置驱动：黑屏过渡 + 角色入场 + 对话时序
     if (modules.includes('A')) {

@@ -566,6 +566,96 @@ export type PlusEffectItemProps = z.infer<typeof PlusEffectItemSchema>;
 export const PlusEffectsSchema = z.array(PlusEffectItemSchema);
 export type PlusEffectsProps = z.infer<typeof PlusEffectsSchema>;
 
+// ==================== 倒计时 Schema ====================
+
+/**
+ * 倒计时类型 Schema
+ */
+export const CountdownTypeSchema = z.enum(['number', 'time']);
+export type CountdownType = z.infer<typeof CountdownTypeSchema>;
+
+/**
+ * 倒计时特效类型 Schema
+ */
+export const CountdownEffectTypeSchema = z.enum([
+  'scale', 'rotate', 'bounce', 'shake', 'glow',
+  'flip3d', 'zoomIn', 'spiral', 'heartbeat', 'pulse'
+]);
+export type CountdownEffectType = z.infer<typeof CountdownEffectTypeSchema>;
+
+/**
+ * 倒计时文字样式 Schema
+ */
+export const CountdownTextStyleSchema = z.object({
+  fontSize: z.number().min(20).max(500).optional(),
+  fontWeight: z.union([z.number(), z.string()]).optional(),
+  color: z.string().optional(),
+  strokeColor: z.string().optional(),
+  strokeWidth: z.number().min(0).max(20).optional(),
+  glowColor: z.string().optional(),
+  glowIntensity: z.number().min(0).max(3).optional(),
+  depth3D: z.number().min(0).max(20).optional(),
+  fontFamily: z.string().optional(),
+  textShadow: z.string().optional(),
+});
+export type CountdownTextStyleProps = z.infer<typeof CountdownTextStyleSchema>;
+
+/**
+ * 倒计时音效配置 Schema
+ */
+export const CountdownAudioConfigSchema = z.object({
+  enabled: z.boolean().optional(),
+  tickSound: z.string().optional(),
+  endSound: z.string().optional(),
+  volume: z.number().min(0).max(1).optional(),
+});
+export type CountdownAudioConfigProps = z.infer<typeof CountdownAudioConfigSchema>;
+
+/**
+ * 倒计时最终文字特效 Schema
+ */
+export const CountdownFinalTextSchema = z.object({
+  enabled: z.boolean().optional(),
+  text: z.string().optional(),
+  scaleMultiplier: z.number().min(1).max(3).optional(),
+  extraGlow: z.boolean().optional(),
+  colorChange: z.string().optional(),
+  durationInFrames: z.number().min(10).optional(),
+});
+export type CountdownFinalTextProps = z.infer<typeof CountdownFinalTextSchema>;
+
+/**
+ * 故事章节倒计时配置 Schema
+ * 用于在 StoryChapter 中集成倒计时
+ */
+export const StoryCountdownConfigSchema = z.object({
+  /** 是否启用倒计时 */
+  enabled: z.boolean(),
+  /** 倒计时类型 */
+  type: CountdownTypeSchema.optional(),
+  /** 起始数字 */
+  startNumber: z.number().min(1).max(60).optional(),
+  /** 总秒数 */
+  totalSeconds: z.number().min(1).max(3600).optional(),
+  /** 每个数字持续帧数 */
+  durationPerNumber: z.number().min(1).optional(),
+  /** 特效类型 */
+  effectType: CountdownEffectTypeSchema.optional(),
+  /** 特效强度 */
+  effectIntensity: z.number().min(0.1).max(2).optional(),
+  /** 文字样式 */
+  textStyle: CountdownTextStyleSchema.optional(),
+  /** 音效配置 */
+  audio: CountdownAudioConfigSchema.optional(),
+  /** 最终文字 */
+  finalText: CountdownFinalTextSchema.optional(),
+  /** 水平位置 */
+  x: z.number().min(0).max(1).optional(),
+  /** 垂直位置 */
+  y: z.number().min(0).max(1).optional(),
+});
+export type StoryCountdownConfigProps = z.infer<typeof StoryCountdownConfigSchema>;
+
 // ==================== 故事章节 Schema ====================
 
 /**
@@ -622,6 +712,9 @@ export const StoryChapterSchema = z.object({
   
   // PlusEffects 特效列表
   plusEffects: PlusEffectsSchema.optional(),
+  
+  // 倒计时配置
+  countdown: StoryCountdownConfigSchema.optional(),
 });
 export type StoryChapterSchemaType = z.infer<typeof StoryChapterSchema>;
 
@@ -764,3 +857,39 @@ export function extractStoryPanelProps(props: Record<string, unknown>): StoryPan
     audioLoop: props.audioLoop as boolean,
   };
 }
+
+/**
+ * 倒计时组件 Schema（完整配置）
+ */
+export const CountdownSchema = z.object({
+  // 基础配置
+  type: CountdownTypeSchema.optional().default('number'),
+  startNumber: z.number().min(1).max(60).optional().default(5),
+  totalSeconds: z.number().min(1).max(3600).optional().default(10),
+  durationPerNumber: z.number().min(1).optional(),
+  durationInFrames: z.number().min(1).optional(),
+  
+  // 展示特效
+  effectType: CountdownEffectTypeSchema.optional().default('scale'),
+  effectIntensity: z.number().min(0.1).max(2).optional().default(1),
+  transitionFrames: z.number().min(1).max(30).optional().default(8),
+  
+  // 文字样式
+  textStyle: CountdownTextStyleSchema.optional(),
+  
+  // 音效配置
+  audio: CountdownAudioConfigSchema.optional(),
+  
+  // 最终文字
+  finalText: CountdownFinalTextSchema.optional(),
+  
+  // 位置配置
+  x: z.number().min(0).max(1).optional().default(0.5),
+  y: z.number().min(0).max(1).optional().default(0.5),
+  
+  // 其他配置
+  showBackground: z.boolean().optional().default(false),
+  backgroundColor: z.string().optional(),
+  backgroundBlur: z.number().min(0).max(50).optional(),
+});
+export type CountdownSchemaType = z.infer<typeof CountdownSchema>;

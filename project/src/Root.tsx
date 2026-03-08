@@ -26,7 +26,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthday120s"
           component={KidsBirthdayComposition}
-          durationInFrames={2880} // 120秒 @ 24fps
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -36,7 +36,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '愿你每天开心成长，梦想成真！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -63,7 +63,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthday90s"
           component={KidsBirthdayComposition}
-          durationInFrames={2160} // 90秒 @ 24fps
+          durationInFrames={2256} // 94秒 @ 24fps (90秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -73,7 +73,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '愿你每天开心成长！',
             videoVersion: '90s',
-            duration: 90,
+            duration: 94, // 更新为94秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -100,7 +100,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthday60s"
           component={KidsBirthdayComposition}
-          durationInFrames={1440} // 60秒 @ 24fps
+          durationInFrames={1536} // 64秒 @ 24fps (60秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -110,7 +110,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '生日快乐！',
             videoVersion: '60s',
-            duration: 60,
+            duration: 64, // 更新为64秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -129,8 +129,22 @@ export const RemotionRoot: React.FC = () => {
             musicEnabled: true,
             musicTrack: 'JoyfulChildren',
             birthdaySongVolume: 0.6,
-            // 自定义章节列表：为生日歌章节添加多个特效
+            // 自定义章节列表
             chapterList: [
+              // 倒计时开场章节（精简配置，其余使用默认值）
+              {
+                id: '0_countdown',
+                countdown: {
+                  enabled: true,
+                  audio: {
+                    enabled: true,
+                    tickSound: 'countDown_common.mp3',
+                    endSound: 'countDown_game.mp3',
+                    volume: 0.6,
+                  },
+                },
+              },
+              // 生日歌章节特效配置
               {
                 id: 'G_birthdaySong',
                 plusEffects: [
@@ -184,7 +198,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayGirl"
           component={KidsBirthdayComposition}
-          durationInFrames={2880}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -194,7 +208,7 @@ export const RemotionRoot: React.FC = () => {
             age: 5,
             message: '小公主生日快乐！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -221,7 +235,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayBoy"
           component={KidsBirthdayComposition}
-          durationInFrames={2880}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -231,7 +245,7 @@ export const RemotionRoot: React.FC = () => {
             age: 7,
             message: '小小男子汉生日快乐！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -258,7 +272,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayCustomImage"
           component={KidsBirthdayComposition}
-          durationInFrames={2880}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -268,7 +282,7 @@ export const RemotionRoot: React.FC = () => {
             age: 5,
             message: '生日快乐！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -299,7 +313,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayLandscape"
           component={KidsBirthdayComposition}
-          durationInFrames={2880}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={1280}
           height={720}
@@ -309,7 +323,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '生日快乐！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 1280,
             height: 720,

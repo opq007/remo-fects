@@ -134,3 +134,12 @@ export type {
   ChapterTransition,
   ChapterTransitionType,
 } from "./StoryPanel";
+
+// 倒计时组件
+export { Countdown } from "./Countdown";
+export type {
+  CountdownProps,
+  CountdownTextStyle,
+  CountdownAudioConfig,
+  FinalTextEffect,
+} from "./Countdown";
