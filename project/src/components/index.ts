@@ -39,9 +39,9 @@ export {
   PhotoFromMagicCircle, 
   FloatingHearts, 
   AgeBalloon,
-  PhotoInteractionScene,
-  PhotoFrameType
+  PhotoInteractionScene
 } from './PhotoInteraction';
+export type { PhotoFrameType } from './PhotoInteraction';
 
 // 生日歌
 export { BirthdayCake, BouncingBirthdayText, MakeWish, BirthdaySongScene } from './BirthdaySong';

@@ -559,13 +559,37 @@ export interface StoryChapterProps {
   radialBurst?: StoryRadialBurstConfig;
   
   /**
-   * 字幕列表
+   * 字幕列表（与 srtContent 二选一）
    * @example
    * subtitles={[
    *   { text: '欢迎来到魔法世界', startFrame: 0, durationInFrames: 60 }
    * ]}
    */
   subtitles?: SubtitleItem[];
+  
+  /**
+   * SRT 格式字幕内容（与 subtitles 二选一）
+   * @example
+   * srtContent={`1
+   * 00:00:01,000 --> 00:00:04,000
+   * 欢迎来到魔法世界
+   * 
+   * 2
+   * 00:00:05,000 --> 00:00:08,000
+   * 祝你生日快乐`}
+   */
+  srtContent?: string;
+  
+  /**
+   * SRT 转换时的默认字幕样式配置
+   * @example
+   * srtDefaultOptions={{
+   *   fontSize: 32,
+   *   color: '#FFFFFF',
+   *   position: 'bottom'
+   * }}
+   */
+  srtDefaultOptions?: Partial<SubtitleItem>;
   
   /**
    * 文字元素配置（名字、祝福语等）
@@ -726,6 +750,8 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
   magicEffects,
   radialBurst,
   subtitles = [],
+  srtContent,
+  srtDefaultOptions,
   children,
   extraLayers,
   extraLayersPosition = 'before-content',
@@ -1019,8 +1045,15 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
   };
   
   const renderSubtitles = () => {
-    if (!subtitles || subtitles.length === 0) return null;
-    return <SubtitleList subtitles={subtitles} />;
+    // 如果提供了 subtitles 或 srtContent，则渲染字幕
+    if (!subtitles?.length && !srtContent) return null;
+    return (
+      <SubtitleList 
+        subtitles={subtitles} 
+        srtContent={srtContent}
+        srtDefaultOptions={srtDefaultOptions}
+      />
+    );
   };
   
   const renderBlackScreen = () => {
