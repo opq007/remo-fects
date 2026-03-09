@@ -15,6 +15,7 @@ import { KidsBirthdaySchema } from './schemas';
  * - 生肖守护神系列（12生肖）
  * - 萌宠精灵系列（兔子、猫咪、小狗、熊、狐狸、熊猫）
  * - 勇气超人系列（超级英雄、宇航员、骑士、巫师、海盗）
+ * - 自定义图片系列（支持本地图片或网络图片）
  */
 export const RemotionRoot: React.FC = () => {
   return (
@@ -25,7 +26,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthday120s"
           component={KidsBirthdayComposition}
-          durationInFrames={2880} // 120秒 @ 24fps
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -35,7 +36,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '愿你每天开心成长，梦想成真！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -52,7 +53,7 @@ export const RemotionRoot: React.FC = () => {
             confettiLevel: 'high',
             animationSpeed: 'normal',
             musicEnabled: true,
-            musicTrack: 'kids_party_01',
+            musicTrack: 'JoyfulChildren',
             birthdaySongSource: 'birthday_audio.mp3',
             birthdaySongVolume: 0.6
           }}
@@ -62,7 +63,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthday90s"
           component={KidsBirthdayComposition}
-          durationInFrames={2160} // 90秒 @ 24fps
+          durationInFrames={2256} // 94秒 @ 24fps (90秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -72,7 +73,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '愿你每天开心成长！',
             videoVersion: '90s',
-            duration: 90,
+            duration: 94, // 更新为94秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -89,7 +90,7 @@ export const RemotionRoot: React.FC = () => {
             confettiLevel: 'high',
             animationSpeed: 'normal',
             musicEnabled: true,
-            musicTrack: 'kids_party_01',
+            musicTrack: 'JoyfulChildren',
             birthdaySongSource: 'birthday_audio.mp3',
             birthdaySongVolume: 0.6
           }}
@@ -99,7 +100,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthday60s"
           component={KidsBirthdayComposition}
-          durationInFrames={1440} // 60秒 @ 24fps
+          durationInFrames={1536} // 64秒 @ 24fps (60秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -109,7 +110,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '生日快乐！',
             videoVersion: '60s',
-            duration: 60,
+            duration: 64, // 更新为64秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -126,8 +127,67 @@ export const RemotionRoot: React.FC = () => {
             confettiLevel: 'high',
             animationSpeed: 'normal',
             musicEnabled: true,
-            musicTrack: 'kids_party_01',
-            birthdaySongVolume: 0.6
+            musicTrack: 'JoyfulChildren',
+            birthdaySongVolume: 0.6,
+            // 自定义章节列表
+            chapterList: [
+              // 倒计时开场章节（精简配置，其余使用默认值）
+              {
+                id: '0_countdown',
+                countdown: {
+                  enabled: true,
+                  audio: {
+                    enabled: true,
+                    tickSound: 'countDown_common.mp3',
+                    endSound: 'countDown_game.mp3',
+                    volume: 0.6,
+                  },
+                },
+              },
+              // 生日歌章节特效配置
+              {
+                id: 'G_birthdaySong',
+                plusEffects: [
+                  // 文字烟花特效
+                  {
+                    effectType: 'textFirework',
+                    contentType: 'mixed',
+                    words: ['生日快乐', 'Happy Birthday', '快乐成长', '梦想成真'],
+                    images: [],
+                    imageWeight: 0.3,
+                    blessingTypes: ['goldCoin', 'star', 'heart'],
+                    fontSize: 80,
+                    colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'],
+                    glowColor: '#FFD700',
+                    glowIntensity: 1.2,
+                    x: 0.5,
+                    y: 0.4,
+                    scale: 1,
+                    opacity: 0.9,
+                    seed: 12345,
+                  },
+                  // 文字雨特效
+                  {
+                    effectType: 'textRain',
+                    contentType: 'mixed',
+                    words: ['福', '寿', '喜', '乐'],
+                    images: [],
+                    imageWeight: 0.3,
+                    blessingTypes: ['goldCoin', 'star'],
+                    fontSize: 60,
+                    colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#96CEB4'],
+                    glowColor: '#FFD700',
+                    glowIntensity: 0.8,
+                    x: 0.5,
+                    y: 0.5,
+                    scale: 1,
+                    opacity: 0.7,
+                    animationSpeed: 0.3,
+                    seed: 54321,
+                  },
+                ],
+              },
+            ],
           }}
         />
       </Folder>
@@ -138,7 +198,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayGirl"
           component={KidsBirthdayComposition}
-          durationInFrames={2880}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -148,7 +208,7 @@ export const RemotionRoot: React.FC = () => {
             age: 5,
             message: '小公主生日快乐！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -165,7 +225,7 @@ export const RemotionRoot: React.FC = () => {
             confettiLevel: 'high',
             animationSpeed: 'normal',
             musicEnabled: true,
-            musicTrack: 'kids_party_01',
+            musicTrack: 'JoyfulChildren',
             birthdaySongSource: 'birthday_audio.mp3',
             birthdaySongVolume: 0.6
           }}
@@ -175,7 +235,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayBoy"
           component={KidsBirthdayComposition}
-          durationInFrames={2880}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={720}
           height={1280}
@@ -185,7 +245,7 @@ export const RemotionRoot: React.FC = () => {
             age: 7,
             message: '小小男子汉生日快乐！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 720,
             height: 1280,
@@ -202,7 +262,45 @@ export const RemotionRoot: React.FC = () => {
             confettiLevel: 'high',
             animationSpeed: 'normal',
             musicEnabled: true,
-            musicTrack: 'kids_party_01',
+            musicTrack: 'JoyfulChildren',
+            birthdaySongSource: 'birthday_audio.mp3',
+            birthdaySongVolume: 0.6
+          }}
+        />
+        
+        {/* 自定义图片角色风格 */}
+        <Composition
+          id="KidsBirthdayCustomImage"
+          component={KidsBirthdayComposition}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
+          fps={24}
+          width={720}
+          height={1280}
+          schema={KidsBirthdaySchema}
+          defaultProps={{
+            name: '宝贝',
+            age: 5,
+            message: '生日快乐！',
+            videoVersion: '120s',
+            duration: 124, // 更新为124秒
+            fps: 24,
+            width: 720,
+            height: 1280,
+            subStyle: 'general',
+            characterSeries: 'image',
+            characterType: 'tiger', // image 模式下使用默认值
+            characterImageSrc: '熊猫.png', // 本地图片路径（相对于 public 目录）
+            photos: [],
+            dreams: ['artist', 'musician', 'teacher'],
+            orientation: 'portrait',
+            nameFontSize: 120,
+            showAge: true,
+            blessingText: '生日快乐',
+            blessingFontSize: 60,
+            confettiLevel: 'high',
+            animationSpeed: 'normal',
+            musicEnabled: true,
+            musicTrack: 'JoyfulChildren',
             birthdaySongSource: 'birthday_audio.mp3',
             birthdaySongVolume: 0.6
           }}
@@ -215,7 +313,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayLandscape"
           component={KidsBirthdayComposition}
-          durationInFrames={2880}
+          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
           fps={24}
           width={1280}
           height={720}
@@ -225,7 +323,7 @@ export const RemotionRoot: React.FC = () => {
             age: 6,
             message: '生日快乐！',
             videoVersion: '120s',
-            duration: 120,
+            duration: 124, // 更新为124秒
             fps: 24,
             width: 1280,
             height: 720,
@@ -242,7 +340,7 @@ export const RemotionRoot: React.FC = () => {
             confettiLevel: 'high',
             animationSpeed: 'normal',
             musicEnabled: true,
-            musicTrack: 'kids_party_01',
+            musicTrack: 'JoyfulChildren',
             birthdaySongSource: 'birthday_audio.mp3',
             birthdaySongVolume: 0.6
           }}

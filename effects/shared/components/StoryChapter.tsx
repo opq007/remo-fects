@@ -1,7 +1,7 @@
-import React, { ReactNode, useMemo } from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, Sequence, interpolate, spring } from 'remotion';
+import React, { ReactNode, useMemo, useRef, useCallback, lazy, Suspense } from 'react';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, Sequence, interpolate, spring, staticFile, OffthreadVideo } from 'remotion';
 import { Background, Overlay, RadialBurst } from './index';
-import { BackgroundType } from '../schemas';
+import { BackgroundType, NestedBackgroundProps, NestedOverlayProps } from '../schemas';
 import { 
   Character, 
   CharacterWithSpeech, 
@@ -16,7 +16,14 @@ import {
   WhiteFlashTransition,
   ShootingStar,
   StarFieldBackground,
+  TransparentVideo,
+  Countdown,
 } from './index';
+import { 
+  TransparentVideoConfig,
+  TransparencyMode,
+  ChromaKeyConfig,
+} from './TransparentVideo';
 import { SubtitleList, SubtitleItem } from './Subtitle';
 import { 
   CharacterSeries,
@@ -24,6 +31,7 @@ import {
   PetType,
   HeroType,
 } from '../types/character';
+import { PlusEffectItemProps, StoryCountdownConfigProps } from '../schemas/story';
 
 // ==================== 类型定义 ====================
 
@@ -71,6 +79,11 @@ export interface TextElementConfig {
 export type PhotoAnimationType = 'flyIn' | 'rotateIn' | 'fadeIn' | 'scaleIn' | 'magicCircle';
 
 /**
+ * 照片外框类型
+ */
+export type PhotoFrameType = 'none' | 'simple' | 'glow' | 'magic' | 'neon' | 'golden' | 'polaroid';
+
+/**
  * 照片展示配置
  */
 export interface PhotoDisplayConfig {
@@ -79,12 +92,13 @@ export interface PhotoDisplayConfig {
   /** 照片数据 */
   photo: {
     src: string;
-    caption?: string;
   };
   /** 动画类型 */
   animationType?: PhotoAnimationType;
-  /** 是否显示标题 */
-  showCaption?: boolean;
+  /** 外框类型，默认 none 无外框 */
+  frameType?: PhotoFrameType;
+  /** 外框主色调 */
+  frameColor?: string;
   /** 开始帧 */
   startFrame?: number;
   /** 持续帧数 */
@@ -134,6 +148,48 @@ export interface BlackScreenTransitionConfig {
   durationInFrames?: number;
   /** 开始帧 */
   startFrame?: number;
+}
+
+// ==================== 透明视频配置 ====================
+
+/**
+ * 透明视频项配置（用于 StoryChapter）
+ */
+export interface TransparentVideoItem {
+  /** 视频源（本地路径或网络 URL） */
+  src: string;
+  /** 透明模式：greenScreen（绿幕）、blueScreen（蓝幕）、chromaKey（自定义色度键）、webmAlpha（WebM透明） */
+  mode?: TransparencyMode;
+  /** 色度键配置（仅 mode 为 'chromaKey' 时使用） */
+  chromaKey?: ChromaKeyConfig;
+  /** 视频透明度（0-1），默认 1 */
+  opacity?: number;
+  /** 缩放比例（0.1-2），默认 1 */
+  scale?: number;
+  /** 水平位置（0-1），默认 0.5 */
+  x?: number;
+  /** 垂直位置（0-1），默认 0.5 */
+  y?: number;
+  /** 播放速率，默认 1 */
+  playbackRate?: number;
+  /** 是否循环播放，默认 false */
+  loop?: boolean;
+  /** 是否静音，默认 false（允许音频播放） */
+  muted?: boolean;
+  /** 音频音量（0-1），默认 1 */
+  volume?: number;
+  /** 开始帧（相对于章节开始） */
+  startFrame?: number;
+  /** 持续帧数（0 表示播放到章节结束） */
+  durationInFrames?: number;
+  /** 水平翻转 */
+  flipX?: boolean;
+  /** 垂直翻转 */
+  flipY?: boolean;
+  /** 旋转角度 */
+  rotation?: number;
+  /** z-index 层级，默认 20 */
+  zIndex?: number;
 }
 
 // ==================== 角色动画配置 ====================
@@ -205,11 +261,11 @@ export interface ExpressionTimelineItem {
 export interface StoryCharacterConfig {
   /** 角色系列 */
   series: CharacterSeries;
-  /** 角色类型 */
-  type: ZodiacType | PetType | HeroType;
+  /** 角色类型（image 模式下可忽略） */
+  type?: ZodiacType | PetType | HeroType;
   /** 位置 */
   position?: 'center' | 'left' | 'right';
-  /** 表情 */
+  /** 表情（image 模式下可忽略） */
   expression?: 'happy' | 'excited' | 'waving' | 'hugging';
   /** 大小 */
   size?: number;
@@ -223,18 +279,14 @@ export interface StoryCharacterConfig {
   inline?: boolean;
   /** 自定义样式 */
   style?: React.CSSProperties;
-  
-  // ===== 新增：入场动画配置 =====
   /** 入场动画配置 */
   entrance?: CharacterEntranceConfig;
-  
-  // ===== 新增：对话时序配置 =====
   /** 对话时序列表（支持多段对话） */
   speechTimeline?: SpeechTimelineItem[];
-  
-  // ===== 新增：表情变化时序 =====
   /** 表情变化时序列表 */
   expressionTimeline?: ExpressionTimelineItem[];
+  /** 图片资源路径（本地路径或网络URL），仅当 series='image' 时使用 */
+  imageSrc?: string;
 }
 
 /**
@@ -413,91 +465,224 @@ export interface StoryRadialBurstConfig {
 }
 
 /**
- * 故事章节 Props
+ * 故事章节 Props（嵌套参数结构）
+ * 
+ * 使用嵌套对象组织各子组件的参数：
+ * - background: 背景配置
+ * - overlay: 遮罩配置
+ * - character: 角色配置
+ * - confetti: 彩带效果配置
+ * - magicEffects: 魔法效果配置
+ * - radialBurst: 发散粒子配置
+ * - subtitles: 字幕列表
+ * - textElements: 文字元素配置
+ * - photoDisplay: 照片展示配置
+ * - floatingElements: 漂浮元素配置
+ * - starFieldBackground: 星空背景配置
+ * - transparentVideos: 透明视频列表
+ * - plusEffects: PlusEffects 特效列表
+ * - countdown: 倒计时配置
  */
 export interface StoryChapterProps {
   /** 章节持续时间（帧） */
   durationInFrames?: number;
   
-  // ===== 背景配置 =====
-  /** 背景类型 */
-  backgroundType?: BackgroundType;
-  /** 背景颜色 */
-  backgroundColor?: string;
-  /** 背景渐变 */
-  backgroundGradient?: string;
-  /** 背景源 */
-  backgroundSource?: string;
-  /** 背景视频循环 */
-  backgroundVideoLoop?: boolean;
-  /** 背景视频静音 */
-  backgroundVideoMuted?: boolean;
+  // ===== 嵌套参数配置 =====
   
-  // ===== 遮罩配置 =====
-  /** 遮罩颜色 */
-  overlayColor?: string;
-  /** 遮罩透明度 */
-  overlayOpacity?: number;
+  /**
+   * 背景配置对象
+   * @example
+   * background={{
+   *   type: 'gradient',
+   *   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+   * }}
+   */
+  background?: NestedBackgroundProps;
+  
+  /**
+   * 遮罩配置对象
+   * @example
+   * overlay={{
+   *   color: '#000000',
+   *   opacity: 0.2
+   * }}
+   */
+  overlay?: NestedOverlayProps;
+  
   /** 是否显示遮罩 */
   showOverlay?: boolean;
   
-  // ===== 角色配置 =====
-  /** 角色配置 */
+  /**
+   * 角色配置对象
+   * @example
+   * character={{
+   *   series: 'zodiac',
+   *   type: 'tiger',
+   *   position: 'center',
+   *   expression: 'happy',
+   *   speech: '你好呀！',
+   *   showSpeech: true,
+   * }}
+   */
   character?: StoryCharacterConfig;
   
-  // ===== 彩带效果配置 =====
-  /** 彩带效果配置 */
+  /**
+   * 彩带效果配置对象
+   * @example
+   * confetti={{
+   *   enabled: true,
+   *   level: 'medium',
+   *   primaryColor: '#FFD76A'
+   * }}
+   */
   confetti?: StoryConfettiConfig;
   
-  // ===== 魔法效果配置 =====
-  /** 魔法效果配置 */
+  /**
+   * 魔法效果配置对象
+   * @example
+   * magicEffects={{
+   *   particles: { enabled: true, particleCount: 50 },
+   *   firework: { enabled: true, x: 0.5, y: 0.4 }
+   * }}
+   */
   magicEffects?: StoryMagicEffectsConfig;
   
-  // ===== 发散粒子配置 =====
-  /** 发散粒子配置 */
+  /**
+   * 发散粒子配置对象
+   * @example
+   * radialBurst={{
+   *   enabled: true,
+   *   effectType: 'sparkleBurst',
+   *   color: '#FFD76A'
+   * }}
+   */
   radialBurst?: StoryRadialBurstConfig;
   
-  // ===== 字幕配置 =====
-  /** 字幕列表 */
+  /**
+   * 字幕列表（与 srtContent 二选一）
+   * @example
+   * subtitles={[
+   *   { text: '欢迎来到魔法世界', startFrame: 0, durationInFrames: 60 }
+   * ]}
+   */
   subtitles?: SubtitleItem[];
   
+  /**
+   * SRT 格式字幕内容（与 subtitles 二选一）
+   * @example
+   * srtContent={`1
+   * 00:00:01,000 --> 00:00:04,000
+   * 欢迎来到魔法世界
+   * 
+   * 2
+   * 00:00:05,000 --> 00:00:08,000
+   * 祝你生日快乐`}
+   */
+  srtContent?: string;
+  
+  /**
+   * SRT 转换时的默认字幕样式配置
+   * @example
+   * srtDefaultOptions={{
+   *   fontSize: 32,
+   *   color: '#FFFFFF',
+   *   position: 'bottom'
+   * }}
+   */
+  srtDefaultOptions?: Partial<SubtitleItem>;
+  
+  /**
+   * 文字元素配置（名字、祝福语等）
+   * @example
+   * textElements={[
+   *   { type: 'name', showAge: true, fontSize: 80, verticalPosition: 0.3 }
+   * ]}
+   */
+  textElements?: TextElementConfig[];
+  
+  /**
+   * 照片展示配置
+   * @example
+   * photoDisplay={{
+   *   enabled: true,
+   *   photo: { src: 'photo.jpg' },
+   *   animationType: 'flyIn',
+   *   frameType: 'glow'
+   * }}
+   */
+  photoDisplay?: PhotoDisplayConfig;
+  
+  /**
+   * 漂浮元素配置（爱心、星星等）
+   * @example
+   * floatingElements={{
+   *   enabled: true,
+   *   type: 'hearts',
+   *   count: 15
+   * }}
+   */
+  floatingElements?: FloatingElementsConfig;
+  
+  /**
+   * 星空背景配置
+   * @example
+   * starFieldBackground={{
+   *   enabled: true,
+   *   starCount: 150
+   * }}
+   */
+  starFieldBackground?: StarFieldBackgroundConfig;
+  
+  /**
+   * 透明视频列表
+   * @example
+   * transparentVideos={[
+   *   { src: 'video.mp4', mode: 'greenScreen', scale: 0.6 }
+   * ]}
+   */
+  transparentVideos?: TransparentVideoItem[];
+  
+  /**
+   * PlusEffects 特效列表
+   * @example
+   * plusEffects={[
+   *   { effectType: 'textFirework', words: ['生日快乐'] }
+   * ]}
+   */
+  plusEffects?: PlusEffectItemProps[];
+  
+  /**
+   * 渲染 PlusEffects 的回调函数
+   */
+  renderPlusEffects?: (
+    effects: PlusEffectItemProps[],
+    fallbackWords: string[],
+    options?: { width: number; height: number }
+  ) => ReactNode;
+  
+  /**
+   * 倒计时配置
+   * @example
+   * countdown={{
+   *   enabled: true,
+   *   type: 'number',
+   *   startNumber: 3
+   * }}
+   */
+  countdown?: StoryCountdownConfigProps;
+  
   // ===== 内容配置 =====
+  
   /** 自定义内容 */
   children?: ReactNode;
   
-  // ===== 额外层配置 =====
   /** 额外层 */
   extraLayers?: ReactNode;
   /** 额外层位置 */
   extraLayersPosition?: 'before-content' | 'after-content';
   
-  // ===== 音频配置 =====
   /** 音频元素 */
   audioElement?: ReactNode;
-  
-  // ===== 新增配置项 =====
-  
-  /** 
-   * 文字元素配置（名字、祝福语等）
-   * 支持配置驱动的文字显示，无需自定义 children
-   */
-  textElements?: TextElementConfig[];
-  
-  /** 
-   * 照片展示配置
-   * 支持照片卡片动画展示
-   */
-  photoDisplay?: PhotoDisplayConfig;
-  
-  /** 
-   * 漂浮元素配置（爱心、星星等）
-   */
-  floatingElements?: FloatingElementsConfig;
-  
-  /** 
-   * 星空背景配置
-   */
-  starFieldBackground?: StarFieldBackgroundConfig;
   
   // ===== 上下文数据（用于文字元素渲染）=====
   
@@ -529,8 +714,14 @@ export interface StoryChapterProps {
  * ```tsx
  * <StoryChapter
  *   durationInFrames={120}
- *   backgroundType="gradient"
- *   backgroundGradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+ *   background={{
+ *     type: 'gradient',
+ *     gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+ *   }}
+ *   overlay={{
+ *     color: '#000000',
+ *     opacity: 0.2
+ *   }}
  *   character={{
  *     series: 'zodiac',
  *     type: 'tiger',
@@ -550,51 +741,29 @@ export interface StoryChapterProps {
  */
 export const StoryChapter: React.FC<StoryChapterProps> = ({
   durationInFrames,
-  
-  // 背景配置
-  backgroundType = 'color',
-  backgroundColor = '#1a1a2e',
-  backgroundGradient,
-  backgroundSource,
-  backgroundVideoLoop = true,
-  backgroundVideoMuted = true,
-  
-  // 遮罩配置
-  overlayColor = '#000000',
-  overlayOpacity = 0.2,
+  // 嵌套参数
+  background,
+  overlay,
   showOverlay = true,
-  
-  // 角色配置
   character,
-  
-  // 彩带配置
   confetti,
-  
-  // 魔法效果配置
   magicEffects,
-  
-  // 发散粒子配置
   radialBurst,
-  
-  // 字幕配置
   subtitles = [],
-  
-  // 内容配置
+  srtContent,
+  srtDefaultOptions,
   children,
-  
-  // 额外层配置
   extraLayers,
   extraLayersPosition = 'before-content',
-  
-  // 音频
   audioElement,
-  
-  // ===== 新增配置项 =====
   textElements,
   photoDisplay,
   floatingElements,
   starFieldBackground,
-  // 上下文数据
+  transparentVideos,
+  plusEffects,
+  renderPlusEffects,
+  countdown,
   name,
   age,
   subStyle,
@@ -602,6 +771,20 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
 }) => {
   const frame = useCurrentFrame();
   const { width, height, fps } = useVideoConfig();
+  
+  // ===== 提取参数（带默认值） =====
+  
+  // 背景参数
+  const bgType = background?.type ?? 'color';
+  const bgColor = background?.color ?? '#1a1a2e';
+  const bgGradient = background?.gradient;
+  const bgSource = background?.source;
+  const bgVideoLoop = background?.videoLoop ?? true;
+  const bgVideoMuted = background?.videoMuted ?? true;
+  
+  // 遮罩参数
+  const ovColor = overlay?.color ?? '#000000';
+  const ovOpacity = overlay?.opacity ?? 0.2;
   
   // 渲染角色（支持入场动画、对话时序、表情变化）
   const renderCharacter = () => {
@@ -651,7 +834,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     // 计算当前表情（支持时序变化）
     let currentExpression = character.expression ?? 'happy';
     if (character.expressionTimeline && character.expressionTimeline.length > 0) {
-      // 找到当前帧应该显示的表情
       const sortedTimeline = [...character.expressionTimeline].sort((a, b) => a.startFrame - b.startFrame);
       for (const item of sortedTimeline) {
         if (frame >= item.startFrame) {
@@ -666,7 +848,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     let speechBubbleOpacity = 1;
     
     if (character.speechTimeline && character.speechTimeline.length > 0) {
-      // 找到当前帧应该显示的对话
       for (const item of character.speechTimeline) {
         const startFrame = item.startFrame;
         const endFrame = item.endFrame ?? Infinity;
@@ -679,7 +860,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
             animationType: item.animationType ?? 'scale',
           };
           
-          // 计算气泡动画
           const speechFrame = frame - startFrame;
           if (currentSpeech.animationType === 'scale') {
             speechBubbleScale = spring({
@@ -700,7 +880,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
         }
       }
     } else if (character.speech && character.showSpeech) {
-      // 简单模式：单一对话
       currentSpeech = {
         text: character.speech,
         animationType: 'scale',
@@ -712,11 +891,9 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
       });
     }
     
-    // 计算角色位置
     const verticalPosition = character.entrance?.verticalPosition ?? 0.45;
     const horizontalPosition = character.entrance?.horizontalPosition ?? 0.5;
     
-    // 渲染角色和对话组合
     return (
       <div
         style={{
@@ -731,7 +908,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           alignItems: 'center',
         }}
       >
-        {/* 对话气泡 */}
         {currentSpeech && (
           <div 
             style={{ 
@@ -748,7 +924,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           </div>
         )}
         
-        {/* 角色 */}
         <Character
           series={character.series}
           type={character.type}
@@ -756,12 +931,12 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           expression={currentExpression}
           inline={true}
           animate={character.animate ?? true}
+          imageSrc={character.imageSrc}
         />
       </div>
     );
   };
   
-  // 渲染彩带
   const renderConfetti = () => {
     if (!confetti || !confetti.enabled) return null;
     
@@ -775,13 +950,11 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     );
   };
   
-  // 渲染魔法效果
   const renderMagicEffects = () => {
     if (!magicEffects) return null;
     
     return (
       <>
-        {/* 魔法粒子 */}
         {magicEffects.particles?.enabled && (
           <MagicParticles
             particleCount={magicEffects.particles.particleCount ?? 50}
@@ -792,7 +965,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           />
         )}
         
-        {/* 魔法棒 */}
         {magicEffects.magicWand?.enabled && (
           <MagicWand
             x={magicEffects.magicWand.x ?? 0.5}
@@ -803,7 +975,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           />
         )}
         
-        {/* 魔法圆环 */}
         {magicEffects.magicCircle?.enabled && (
           <MagicCircle
             radius={magicEffects.magicCircle.radius ?? 150}
@@ -813,7 +984,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           />
         )}
         
-        {/* 烟花 */}
         {magicEffects.firework?.enabled && (
           <Firework
             x={magicEffects.firework.x ?? 0.5}
@@ -824,7 +994,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           />
         )}
         
-        {/* 气球爆炸 */}
         {magicEffects.balloonBurst?.enabled && (
           <BalloonBurst
             x={magicEffects.balloonBurst.x ?? 0.5}
@@ -835,7 +1004,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           />
         )}
         
-        {/* 白闪转场 */}
         {magicEffects.whiteFlash?.enabled && (
           <WhiteFlashTransition
             durationInFrames={magicEffects.whiteFlash.durationInFrames ?? 12}
@@ -843,7 +1011,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           />
         )}
         
-        {/* 流星 */}
         {magicEffects.shootingStar?.enabled && (
           <ShootingStar
             startX={magicEffects.shootingStar.startX ?? 0.8}
@@ -859,8 +1026,7 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     );
   };
   
-  // 渲染发散粒子
-  const renderRadialBurst = () => {
+  const renderRadialBurstContent = () => {
     if (!radialBurst || !radialBurst.enabled) return null;
     
     return (
@@ -878,16 +1044,18 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     );
   };
   
-  // 渲染字幕
   const renderSubtitles = () => {
-    if (!subtitles || subtitles.length === 0) return null;
-    
-    return <SubtitleList subtitles={subtitles} />;
+    // 如果提供了 subtitles 或 srtContent，则渲染字幕
+    if (!subtitles?.length && !srtContent) return null;
+    return (
+      <SubtitleList 
+        subtitles={subtitles} 
+        srtContent={srtContent}
+        srtDefaultOptions={srtDefaultOptions}
+      />
+    );
   };
   
-  // ===== 新增渲染函数 =====
-  
-  // 渲染黑屏过渡
   const renderBlackScreen = () => {
     if (!magicEffects?.blackScreen?.enabled) return null;
     
@@ -914,7 +1082,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     );
   };
   
-  // 渲染文字元素
   const renderTextElements = () => {
     if (!textElements || textElements.length === 0) return null;
     
@@ -926,7 +1093,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           
           if (!isVisible) return null;
           
-          // 计算动画
           const elementFrame = frame - startFrame;
           let animatedStyle: React.CSSProperties = {};
           
@@ -952,7 +1118,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
             };
           }
           
-          // 获取文字内容
           let text = element.text ?? '';
           if (element.type === 'name' && name) {
             text = name;
@@ -992,7 +1157,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     );
   };
   
-  // 渲染照片展示
   const renderPhotoDisplay = () => {
     if (!photoDisplay?.enabled || !photoDisplay.photo) return null;
     
@@ -1001,16 +1165,131 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     
     if (!isVisible) return null;
     
-    // 简单的照片展示（基础实现）
     const elementFrame = frame - startFrame;
-    const fadeIn = interpolate(elementFrame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
-    const scale = photoDisplay.animationType === 'scaleIn' 
-      ? spring({ frame: elementFrame, fps, config: { damping: 12, stiffness: 80 } })
+    const animationType = photoDisplay.animationType ?? 'fadeIn';
+    const frameType = photoDisplay.frameType ?? 'none';
+    const frameColor = photoDisplay.frameColor ?? '#FFD76A';
+    
+    const fadeIn = interpolate(elementFrame, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
+    
+    const scale = animationType === 'scaleIn' 
+      ? spring({ frame: Math.max(elementFrame, 0), fps, config: { damping: 12, stiffness: 80 } })
       : 1;
     
-    const rotation = photoDisplay.animationType === 'rotateIn'
+    const rotation = animationType === 'rotateIn'
       ? interpolate(elementFrame, [0, 30], [-15, 0], { extrapolateRight: 'clamp' })
       : 0;
+    
+    const flyInX = animationType === 'flyIn'
+      ? interpolate(elementFrame, [0, 30], [300, 0], { extrapolateRight: 'clamp' })
+      : 0;
+    
+    const imgSrc = photoDisplay.photo.src.startsWith('http') 
+      ? photoDisplay.photo.src 
+      : staticFile(photoDisplay.photo.src);
+    
+    const getFrameStyle = (): React.CSSProperties => {
+      switch (frameType) {
+        case 'none':
+          return {};
+        case 'simple':
+          return {
+            backgroundColor: 'white',
+            borderRadius: 12,
+            padding: 8,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          };
+        case 'glow': {
+          const glowIntensity = 0.5 + Math.sin(frame * 0.1) * 0.3;
+          const glowSize = 20 + Math.sin(frame * 0.08) * 10;
+          return {
+            backgroundColor: 'white',
+            borderRadius: 12,
+            padding: 8,
+            boxShadow: `
+              0 0 ${glowSize}px ${frameColor}${Math.floor(glowIntensity * 255).toString(16).padStart(2, '0')},
+              0 4px 20px rgba(0,0,0,0.15)
+            `,
+          };
+        }
+        case 'magic': {
+          const hue = (frame * 2) % 360;
+          return {
+            backgroundColor: 'white',
+            borderRadius: 12,
+            padding: 8,
+            boxShadow: `
+              0 0 30px hsla(${hue}, 80%, 70%, 0.5),
+              0 0 60px hsla(${(hue + 60) % 360}, 80%, 70%, 0.3),
+              0 4px 20px rgba(0,0,0,0.15)
+            `,
+          };
+        }
+        case 'neon': {
+          const breathe = 0.6 + Math.sin(frame * 0.05) * 0.4;
+          const colorShift = Math.floor(frame * 0.5) % 360;
+          return {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            borderRadius: 12,
+            padding: 8,
+            border: `2px solid hsl(${colorShift}, 100%, 50%)`,
+            boxShadow: `
+              0 0 10px hsl(${colorShift}, 100%, 50%),
+              0 0 20px hsl(${colorShift}, 100%, 50%),
+              0 0 40px hsl(${colorShift}, 100%, 50%)
+            `,
+          };
+        }
+        case 'golden': {
+          return {
+            backgroundColor: '#1a1a1a',
+            borderRadius: 12,
+            padding: 10,
+            border: '2px solid #bf953f',
+            boxShadow: `
+              0 0 20px rgba(191, 149, 63, 0.5),
+              0 4px 20px rgba(0,0,0,0.3)
+            `,
+          };
+        }
+        case 'polaroid':
+          return {
+            backgroundColor: '#fefefe',
+            borderRadius: 4,
+            padding: '12px 12px 40px 12px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          };
+        default:
+          return {};
+      }
+    };
+    
+    const frameStyle = getFrameStyle();
+    
+    if (frameType === 'none') {
+      return (
+        <div
+          style={{
+            position: 'absolute',
+            top: '40%',
+            left: '50%',
+            transform: `translate(calc(-50% + ${flyInX}px), -50%) scale(${scale}) rotate(${rotation}deg)`,
+            opacity: fadeIn,
+            zIndex: 25,
+          }}
+        >
+          <img 
+            src={imgSrc}
+            alt=""
+            style={{
+              maxWidth: '70%',
+              maxHeight: '50%',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+      );
+    }
     
     return (
       <div
@@ -1018,36 +1297,27 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
           position: 'absolute',
           top: '40%',
           left: '50%',
-          transform: `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`,
+          transform: `translate(calc(-50% + ${flyInX}px), -50%) scale(${scale}) rotate(${rotation}deg)`,
           opacity: fadeIn,
           zIndex: 25,
         }}
       >
-        <img 
-          src={photoDisplay.photo.src}
-          alt={photoDisplay.photo.caption ?? ''}
-          style={{
-            maxWidth: '70%',
-            maxHeight: '50%',
-            borderRadius: 16,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
-          }}
-        />
-        {photoDisplay.showCaption && photoDisplay.photo.caption && (
-          <div style={{
-            textAlign: 'center',
-            marginTop: 16,
-            fontSize: 24,
-            color: '#FFFFFF',
-          }}>
-            {photoDisplay.photo.caption}
-          </div>
-        )}
+        <div style={{ ...frameStyle, maxWidth: '70%' }}>
+          <img 
+            src={imgSrc}
+            alt=""
+            style={{
+              maxWidth: '100%',
+              maxHeight: '50vh',
+              objectFit: 'contain',
+              borderRadius: frameType === 'polaroid' ? 2 : 8,
+            }}
+          />
+        </div>
       </div>
     );
   };
   
-  // 渲染漂浮元素
   const renderFloatingElements = () => {
     if (!floatingElements?.enabled) return null;
     
@@ -1057,14 +1327,12 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     if (!isVisible) return null;
     
     const count = floatingElements.count ?? 15;
-    const color = floatingElements.color ?? '#FF6B6B';
     
-    // 生成漂浮元素
     const elements = Array.from({ length: count }, (_, i) => {
       const elementFrame = frame - startFrame - i * 3;
       if (elementFrame < 0) return null;
       
-      const x = ((i * 137.5) % 100) / 100; // 伪随机分布
+      const x = ((i * 137.5) % 100) / 100;
       const y = interpolate(elementFrame, [0, 120], [1.2, -0.2], { extrapolateRight: 'clamp' });
       const opacity = elementFrame < 10 ? elementFrame / 10 : 1;
       
@@ -1094,7 +1362,6 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     return <>{elements}</>;
   };
   
-  // 渲染星空背景
   const renderStarFieldBackground = () => {
     if (!starFieldBackground?.enabled) return null;
     
@@ -1106,34 +1373,116 @@ export const StoryChapter: React.FC<StoryChapterProps> = ({
     );
   };
   
+  const renderTransparentVideos = () => {
+    if (!transparentVideos || transparentVideos.length === 0) return null;
+    
+    return (
+      <>
+        {transparentVideos.map((videoConfig, index) => {
+          const videoStartFrame = videoConfig.startFrame ?? 0;
+          const videoDuration = videoConfig.durationInFrames ?? 0;
+          
+          if (frame < videoStartFrame) return null;
+          if (videoDuration > 0 && frame >= videoStartFrame + videoDuration) return null;
+          
+          return (
+            <TransparentVideo
+              key={`transparent-video-${index}`}
+              enabled={true}
+              src={videoConfig.src}
+              mode={videoConfig.mode ?? 'greenScreen'}
+              chromaKey={videoConfig.chromaKey}
+              opacity={videoConfig.opacity ?? 1}
+              scale={videoConfig.scale ?? 1}
+              x={videoConfig.x ?? 0.5}
+              y={videoConfig.y ?? 0.5}
+              playbackRate={videoConfig.playbackRate ?? 1}
+              loop={videoConfig.loop ?? false}
+              muted={videoConfig.muted ?? false}
+              volume={videoConfig.volume ?? 1}
+              startFrame={videoStartFrame}
+              durationInFrames={videoDuration}
+              flipX={videoConfig.flipX ?? false}
+              flipY={videoConfig.flipY ?? false}
+              rotation={videoConfig.rotation ?? 0}
+              zIndex={videoConfig.zIndex ?? 20}
+            />
+          );
+        })}
+      </>
+    );
+  };
+  
+  const renderPlusEffectsContent = () => {
+    if (!plusEffects || plusEffects.length === 0) return null;
+    if (!renderPlusEffects) {
+      console.warn('StoryChapter: plusEffects provided but renderPlusEffects callback is missing');
+      return null;
+    }
+    
+    const fallbackText = name ?? '福';
+    const fallbackWords = [fallbackText, '禄', '寿', '喜'];
+    
+    return renderPlusEffects(plusEffects, fallbackWords, { width, height });
+  };
+  
+  const renderCountdown = () => {
+    if (!countdown || !countdown.enabled) return null;
+    
+    return (
+      <Countdown
+        type={countdown.type ?? 'number'}
+        startNumber={countdown.startNumber ?? 5}
+        totalSeconds={countdown.totalSeconds ?? 10}
+        durationPerNumber={countdown.durationPerNumber}
+        effectType={countdown.effectType ?? 'scale'}
+        effectIntensity={countdown.effectIntensity ?? 1}
+        textStyle={countdown.textStyle}
+        audio={countdown.audio}
+        finalText={countdown.finalText}
+        x={countdown.x ?? 0.5}
+        y={countdown.y ?? 0.5}
+      />
+    );
+  };
+  
   return (
     <AbsoluteFill>
       {/* 背景层 */}
       <Background
-        type={backgroundType}
-        source={backgroundSource}
-        color={backgroundColor}
-        gradient={backgroundGradient}
-        videoLoop={backgroundVideoLoop}
-        videoMuted={backgroundVideoMuted}
+        type={bgType as BackgroundType}
+        source={bgSource}
+        color={bgColor}
+        gradient={bgGradient}
+        videoLoop={bgVideoLoop}
+        videoMuted={bgVideoMuted}
       />
       
       {/* 星空背景层 */}
       {renderStarFieldBackground()}
       
       {/* 发散粒子效果层 */}
-      {renderRadialBurst()}
+      {renderRadialBurstContent()}
       
       {/* 额外层（内容前） */}
       {extraLayersPosition === 'before-content' && extraLayers}
       
       {/* 遮罩层 */}
-      {showOverlay && overlayOpacity > 0 && (
-        <Overlay color={overlayColor} opacity={overlayOpacity} />
+      {showOverlay && ovOpacity > 0 && (
+        <Overlay color={ovColor} opacity={ovOpacity} />
       )}
       
       {/* 魔法效果层 */}
       {renderMagicEffects()}
+      
+      {/* 倒计时层 */}
+      {renderCountdown()}
+      
+      {/* 透明视频层 */}
+      {renderTransparentVideos()}
+      
+      {/* PlusEffects 特效层 */}
+      {renderPlusEffectsContent()}
       
       {/* 漂浮元素层 */}
       {renderFloatingElements()}

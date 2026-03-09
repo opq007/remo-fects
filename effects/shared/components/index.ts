@@ -82,6 +82,15 @@ export { CartoonElements } from "./CartoonElements";
 
 // ==================== 故事系统组件 ====================
 
+// 透明视频组件
+export { TransparentVideo } from "./TransparentVideo";
+export type {
+  TransparentVideoProps,
+  TransparentVideoConfig,
+  TransparencyMode,
+  ChromaKeyConfig,
+} from "./TransparentVideo";
+
 // 字幕组件
 export { Subtitle, SubtitleList } from "./Subtitle";
 export type { SubtitleItem, SubtitleProps, SubtitleListProps } from "./Subtitle";
@@ -107,6 +116,8 @@ export type {
   FloatingElementsConfig,
   StarFieldBackgroundConfig,
   BlackScreenTransitionConfig,
+  // 透明视频类型
+  TransparentVideoItem,
   // 角色动画相关类型
   CharacterEntranceDirection,
   CharacterEntranceConfig,
@@ -123,3 +134,12 @@ export type {
   ChapterTransition,
   ChapterTransitionType,
 } from "./StoryPanel";
+
+// 倒计时组件
+export { Countdown } from "./Countdown";
+export type {
+  CountdownProps,
+  CountdownTextStyle,
+  CountdownAudioConfig,
+  FinalTextEffect,
+} from "./Countdown";

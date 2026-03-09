@@ -3,7 +3,7 @@
  */
 
 // 角色系列类型
-export type CharacterSeries = 'zodiac' | 'pet' | 'hero';
+export type CharacterSeries = 'zodiac' | 'pet' | 'hero' | 'image';
 
 // 生肖类型（12生肖）
 export type ZodiacType = 'rat' | 'ox' | 'tiger' | 'rabbit' | 'dragon' | 'snake' 
@@ -24,6 +24,8 @@ export interface CharacterConfig {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  /** 图片资源路径（本地路径或网络URL），仅当 series='image' 时使用 */
+  imageSrc?: string;
 }
 
 // 屏幕方向

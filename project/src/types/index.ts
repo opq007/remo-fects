@@ -6,7 +6,7 @@
 // ==================== 角色系统 ====================
 
 // 角色系列类型
-export type CharacterSeries = 'zodiac' | 'pet' | 'hero';
+export type CharacterSeries = 'zodiac' | 'pet' | 'hero' | 'image';
 
 // 生肖类型（12生肖）
 export type ZodiacType = 'rat' | 'ox' | 'tiger' | 'rabbit' | 'dragon' | 'snake' 
@@ -27,6 +27,8 @@ export interface CharacterConfig {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  /** 图片资源路径（本地路径或网络URL），仅当 series='image' 时使用 */
+  imageSrc?: string;
 }
 
 // ==================== 颜色系统 ====================
@@ -108,8 +110,6 @@ export interface LayoutConfig {
 export interface PhotoData {
   id?: string;
   src: string;
-  caption?: string;
-  memory?: string;       // 角色说的回忆文案
 }
 
 // ==================== 梦想系统 ====================
@@ -181,6 +181,8 @@ export interface KidsBirthdayParams extends BaseBlessingParams {
   // 新增：角色系统
   characterSeries: CharacterSeries;
   characterType: ZodiacType | PetType | HeroType;
+  /** 自定义角色图片路径（本地路径或网络URL），仅当 characterSeries='image' 时使用 */
+  characterImageSrc?: string;
   
   // 新增：照片系统
   photos: PhotoData[];

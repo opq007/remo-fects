@@ -5,7 +5,8 @@ import {
   useVideoConfig,
   interpolate,
   spring,
-  random
+  random,
+  staticFile
 } from 'remotion';
 import { 
   CharacterConfig, 
@@ -362,11 +363,24 @@ const HeroCharacterSVG: React.FC<{
 
 // ==================== 辅助函数 ====================
 
+// image 系列的默认配置
+const IMAGE_CHARACTER_DEFAULT_CONFIG: CharacterConfig = {
+  series: 'image',
+  type: 'tiger', // 占位值，image 模式下不使用
+  name: '自定义角色',
+  greeting: '你好！',
+  primaryColor: '#FFD76A',
+  secondaryColor: '#7EC8FF',
+  accentColor: '#FF8FA3',
+};
+
 export const getCharacterConfig = (
   series: CharacterSeries, 
-  type: ZodiacType | PetType | HeroType
+  type?: ZodiacType | PetType | HeroType
 ): CharacterConfig => {
   switch (series) {
+    case 'image':
+      return IMAGE_CHARACTER_DEFAULT_CONFIG;
     case 'zodiac':
       return ZODIAC_CHARACTERS[type as ZodiacType] || ZODIAC_CHARACTERS.tiger;
     case 'pet':
@@ -382,14 +396,18 @@ export const getCharacterConfig = (
 
 interface CharacterProps {
   series: CharacterSeries;
-  type: ZodiacType | PetType | HeroType;
+  /** 角色类型，image 模式下可忽略 */
+  type?: ZodiacType | PetType | HeroType;
   size?: number;
+  /** 表情，image 模式下可忽略 */
   expression?: 'happy' | 'excited' | 'waving' | 'hugging';
   position?: 'center' | 'left' | 'right';
   animate?: boolean;
   customConfig?: Partial<CharacterConfig>;
   /** 是否使用内联布局（由父容器控制位置），默认 false */
   inline?: boolean;
+  /** 图片资源路径（本地路径或网络URL），仅当 series='image' 时使用 */
+  imageSrc?: string;
 }
 
 export const Character: React.FC<CharacterProps> = ({
@@ -400,7 +418,8 @@ export const Character: React.FC<CharacterProps> = ({
   position = 'center',
   animate = true,
   customConfig,
-  inline = false
+  inline = false,
+  imageSrc
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -422,7 +441,7 @@ export const Character: React.FC<CharacterProps> = ({
   // 呼吸效果
   const breathe = 1 + Math.sin(frame * 0.08) * 0.02;
   
-  // 表情切换动画
+  // 表情切换动画（仅对非 image 模式生效）
   const expressionScale = expression === 'excited' 
     ? 1 + Math.sin(frame * 0.3) * 0.05 
     : 1;
@@ -454,6 +473,47 @@ export const Character: React.FC<CharacterProps> = ({
     }
   };
   
+  // 渲染图片角色（image 模式）
+  const renderImageCharacter = () => {
+    if (!imageSrc) {
+      return (
+        <div style={{
+          width: size,
+          height: size,
+          backgroundColor: '#f0f0f0',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 14,
+          color: '#999',
+        }}>
+          未指定图片
+        </div>
+      );
+    }
+    
+    // 判断是否为网络 URL
+    const isNetworkUrl = imageSrc.startsWith('http://') || imageSrc.startsWith('https://');
+    // 判断是否为 base64 数据
+    const isBase64 = imageSrc.startsWith('data:');
+    // 本地文件路径使用 staticFile 包装
+    const imageSource = (isNetworkUrl || isBase64) ? imageSrc : staticFile(imageSrc);
+    
+    return (
+      <img 
+        src={imageSource} 
+        alt="角色图片"
+        style={{
+          width: size,
+          height: 'auto',
+          maxHeight: size * 1.5,
+          objectFit: 'contain',
+        }}
+      />
+    );
+  };
+  
   // 渲染角色SVG
   const renderCharacterSVG = () => {
     const props = {
@@ -466,6 +526,8 @@ export const Character: React.FC<CharacterProps> = ({
     };
     
     switch (series) {
+      case 'image':
+        return renderImageCharacter();
       case 'zodiac':
         return <ZodiacCharacterSVG {...props} type={type as ZodiacType} />;
       case 'pet':

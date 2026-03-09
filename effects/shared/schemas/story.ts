@@ -1,7 +1,19 @@
 import { z } from 'zod';
-import { BackgroundSchema } from './background';
-import { OverlaySchema } from './overlay';
-import { AudioSchema } from './audio';
+import { 
+  BackgroundSchema, 
+  NestedBackgroundSchema,
+  type NestedBackgroundProps 
+} from './background';
+import { 
+  OverlaySchema, 
+  NestedOverlaySchema,
+  type NestedOverlayProps 
+} from './overlay';
+import { 
+  AudioSchema, 
+  NestedAudioSchema,
+  type NestedAudioProps 
+} from './audio';
 import { RadialBurstSchema } from './radial-burst';
 
 // ==================== 字幕 Schema ====================
@@ -57,7 +69,7 @@ export const SubtitleListSchema = z.array(SubtitleItemSchema);
 /**
  * 角色系列 Schema
  */
-export const CharacterSeriesSchema = z.enum(['zodiac', 'pet', 'hero']);
+export const CharacterSeriesSchema = z.enum(['zodiac', 'pet', 'hero', 'image']);
 export type CharacterSeriesType = z.infer<typeof CharacterSeriesSchema>;
 
 /**
@@ -99,11 +111,11 @@ export type CharacterPositionType = z.infer<typeof CharacterPositionSchema>;
 export const StoryCharacterConfigSchema = z.object({
   /** 角色系列 */
   series: CharacterSeriesSchema,
-  /** 角色类型 */
-  type: z.string(), // 简化类型，实际使用时验证
+  /** 角色类型（image 模式下可忽略） */
+  type: z.string().optional(), // 简化类型，实际使用时验证
   /** 位置 */
   position: CharacterPositionSchema.optional(),
-  /** 表情 */
+  /** 表情（image 模式下可忽略） */
   expression: CharacterExpressionSchema.optional(),
   /** 大小 */
   size: z.number().min(50).max(500).optional(),
@@ -115,6 +127,8 @@ export const StoryCharacterConfigSchema = z.object({
   showSpeech: z.boolean().optional(),
   /** 是否内联布局 */
   inline: z.boolean().optional(),
+  /** 图片资源路径（本地路径或网络URL），仅当 series='image' 时使用 */
+  imageSrc: z.string().optional(),
 });
 export type StoryCharacterConfigProps = z.infer<typeof StoryCharacterConfigSchema>;
 
@@ -315,6 +329,12 @@ export const PhotoAnimationTypeSchema = z.enum(['flyIn', 'rotateIn', 'fadeIn', '
 export type PhotoAnimationType = z.infer<typeof PhotoAnimationTypeSchema>;
 
 /**
+ * 照片外框类型 Schema
+ */
+export const PhotoFrameTypeSchema = z.enum(['none', 'simple', 'glow', 'magic', 'neon', 'golden', 'polaroid']);
+export type PhotoFrameType = z.infer<typeof PhotoFrameTypeSchema>;
+
+/**
  * 照片展示配置 Schema
  */
 export const PhotoDisplaySchema = z.object({
@@ -323,12 +343,13 @@ export const PhotoDisplaySchema = z.object({
   /** 照片数据 */
   photo: z.object({
     src: z.string(),
-    caption: z.string().optional(),
   }),
   /** 动画类型 */
   animationType: PhotoAnimationTypeSchema.optional(),
-  /** 是否显示标题 */
-  showCaption: z.boolean().optional(),
+  /** 外框类型，默认 none 无外框 */
+  frameType: PhotoFrameTypeSchema.optional(),
+  /** 外框主色调 */
+  frameColor: z.string().optional(),
   /** 开始帧 */
   startFrame: z.number().min(0).optional(),
   /** 持续帧数（0表示显示到章节结束） */
@@ -378,27 +399,325 @@ export const StarFieldBackgroundSchema = z.object({
 });
 export type StarFieldBackgroundProps = z.infer<typeof StarFieldBackgroundSchema>;
 
+// ==================== 透明视频 Schema ====================
+
+/**
+ * 透明模式类型 Schema
+ */
+export const TransparencyModeSchema = z.enum(['greenScreen', 'blueScreen', 'chromaKey', 'webmAlpha']);
+export type TransparencyModeType = z.infer<typeof TransparencyModeSchema>;
+
+/**
+ * 色度键配置 Schema
+ */
+export const ChromaKeyConfigSchema = z.object({
+  /** 目标颜色 */
+  keyColor: z.string().optional(),
+  /** 容差范围 */
+  tolerance: z.number().min(0).max(255).optional(),
+  /** 边缘柔和度 */
+  softness: z.number().min(0).max(1).optional(),
+});
+export type ChromaKeyConfigProps = z.infer<typeof ChromaKeyConfigSchema>;
+
+/**
+ * 透明视频项 Schema
+ */
+export const TransparentVideoItemSchema = z.object({
+  /** 视频源 */
+  src: z.string(),
+  /** 透明模式 */
+  mode: TransparencyModeSchema.optional(),
+  /** 色度键配置 */
+  chromaKey: ChromaKeyConfigSchema.optional(),
+  /** 视频透明度 */
+  opacity: z.number().min(0).max(1).optional(),
+  /** 缩放比例 */
+  scale: z.number().min(0.1).max(2).optional(),
+  /** 水平位置 */
+  x: z.number().min(0).max(1).optional(),
+  /** 垂直位置 */
+  y: z.number().min(0).max(1).optional(),
+  /** 播放速率 */
+  playbackRate: z.number().min(0.1).max(4).optional(),
+  /** 是否循环播放 */
+  loop: z.boolean().optional(),
+  /** 是否静音 */
+  muted: z.boolean().optional(),
+  /** 音频音量 */
+  volume: z.number().min(0).max(1).optional(),
+  /** 开始帧 */
+  startFrame: z.number().min(0).optional(),
+  /** 持续帧数 */
+  durationInFrames: z.number().min(0).optional(),
+  /** 水平翻转 */
+  flipX: z.boolean().optional(),
+  /** 垂直翻转 */
+  flipY: z.boolean().optional(),
+  /** 旋转角度 */
+  rotation: z.number().optional(),
+  /** z-index 层级 */
+  zIndex: z.number().optional(),
+});
+export type TransparentVideoItemProps = z.infer<typeof TransparentVideoItemSchema>;
+
+// ==================== PlusEffects 特效扩展 Schema ====================
+
+/**
+ * 支持的特效类型枚举
+ * 对应 effects/ 目录下各特效项目的核心组件
+ */
+export const EffectTypeSchema = z.enum([
+  // 文字矢量动画
+  'textVector',
+  // 大风车
+  'windmill',
+  // 太极八卦
+  'taiChiBagua',
+  // 文字雨
+  'textRain',
+  // 文字环绕
+  'textRing',
+  // 文字烟花
+  'textFirework',
+  // 文字破屏
+  'textBreakthrough',
+  // 文字龙卷风
+  'textTornado',
+  // 文字洪水
+  'textFlood',
+  // 文字旋涡
+  'textVortex',
+  // 文字万花筒
+  'textKaleidoscope',
+  // 文字水晶球
+  'textCrystalBall',
+]);
+export type EffectType = z.infer<typeof EffectTypeSchema>;
+
+/**
+ * PlusEffectItem Schema
+ * 
+ * 基于 MixedInputSchema 扩展，添加 effectType 字段
+ * 用于在 StoryChapter 中渲染额外的特效组件
+ */
+export const PlusEffectItemSchema = z.object({
+  /** 特效类型，决定渲染哪个特效组件 */
+  effectType: EffectTypeSchema,
+  
+  // ===== 继承自 MixedInputSchema 的字段 =====
+  /** 内容类型 */
+  contentType: z.enum(["text", "image", "blessing", "mixed"]).optional().default("text"),
+  /** 文字列表 */
+  words: z.array(z.string()).optional().default([]),
+  /** 图片路径列表 */
+  images: z.array(z.string()).optional().default([]),
+  /** 祝福图案类型列表 */
+  blessingTypes: z.array(z.enum(["goldCoin", "moneyBag", "luckyBag", "redPacket", "star", "heart", "balloon"])).optional().default([]),
+  /** 图片出现权重 */
+  imageWeight: z.number().min(0).max(1).optional().default(0.5),
+  
+  // ===== 特效特定参数 =====
+  /** 核心文字/文本内容 */
+  text: z.string().optional(),
+  /** 字体大小 */
+  fontSize: z.number().min(12).max(500).optional(),
+  /** 颜色列表 */
+  colors: z.array(z.string()).optional(),
+  /** 主颜色 */
+  primaryColor: z.string().optional(),
+  /** 次颜色 */
+  secondaryColor: z.string().optional(),
+  /** 发光颜色 */
+  glowColor: z.string().optional(),
+  /** 发光强度 */
+  glowIntensity: z.number().min(0).max(2).optional(),
+  
+  // ===== 动画配置 =====
+  /** 动画速度 */
+  animationSpeed: z.number().min(0.1).max(5).optional(),
+  /** 入场动画时长（帧） */
+  entranceDuration: z.number().min(5).max(120).optional(),
+  /** 停留动画类型 */
+  stayAnimation: z.enum(['pulse', 'glow', 'float', 'none']).optional(),
+  
+  // ===== 3D效果 =====
+  /** 是否启用3D效果 */
+  enable3D: z.boolean().optional(),
+  /** 3D旋转角度 */
+  rotation3D: z.number().optional(),
+  /** 透视角度 */
+  perspective: z.number().optional(),
+  
+  // ===== 布局配置 =====
+  /** 水平位置（0-1） */
+  x: z.number().min(0).max(1).optional(),
+  /** 垂直位置（0-1） */
+  y: z.number().min(0).max(1).optional(),
+  /** 缩放比例 */
+  scale: z.number().min(0.1).max(3).optional(),
+  /** 透明度 */
+  opacity: z.number().min(0).max(1).optional(),
+  
+  // ===== 额外配置（用于特定特效） =====
+  /** 旋转速度（圈/秒） */
+  rotationSpeed: z.number().min(0.1).max(5).optional(),
+  /** 元素数量 */
+  elementCount: z.number().min(1).max(500).optional(),
+  /** 随机种子 */
+  seed: z.number().optional(),
+  
+  // ===== 自定义样式 =====
+  /** 祝福图案样式 */
+  blessingStyle: z.object({
+    primaryColor: z.string().optional(),
+    secondaryColor: z.string().optional(),
+    enable3D: z.boolean().optional(),
+    enableGlow: z.boolean().optional(),
+    glowIntensity: z.number().min(0).max(3).optional(),
+  }).optional(),
+});
+export type PlusEffectItemProps = z.infer<typeof PlusEffectItemSchema>;
+
+/**
+ * PlusEffects 配置 Schema（数组）
+ */
+export const PlusEffectsSchema = z.array(PlusEffectItemSchema);
+export type PlusEffectsProps = z.infer<typeof PlusEffectsSchema>;
+
+// ==================== 倒计时 Schema ====================
+
+/**
+ * 倒计时类型 Schema
+ */
+export const CountdownTypeSchema = z.enum(['number', 'time']);
+export type CountdownType = z.infer<typeof CountdownTypeSchema>;
+
+/**
+ * 倒计时特效类型 Schema
+ */
+export const CountdownEffectTypeSchema = z.enum([
+  'scale', 'rotate', 'bounce', 'shake', 'glow',
+  'flip3d', 'zoomIn', 'spiral', 'heartbeat', 'pulse'
+]);
+export type CountdownEffectType = z.infer<typeof CountdownEffectTypeSchema>;
+
+/**
+ * 倒计时文字样式 Schema
+ */
+export const CountdownTextStyleSchema = z.object({
+  fontSize: z.number().min(20).max(500).optional(),
+  fontWeight: z.union([z.number(), z.string()]).optional(),
+  color: z.string().optional(),
+  strokeColor: z.string().optional(),
+  strokeWidth: z.number().min(0).max(20).optional(),
+  glowColor: z.string().optional(),
+  glowIntensity: z.number().min(0).max(3).optional(),
+  depth3D: z.number().min(0).max(20).optional(),
+  fontFamily: z.string().optional(),
+  textShadow: z.string().optional(),
+});
+export type CountdownTextStyleProps = z.infer<typeof CountdownTextStyleSchema>;
+
+/**
+ * 倒计时音效配置 Schema
+ */
+export const CountdownAudioConfigSchema = z.object({
+  enabled: z.boolean().optional(),
+  tickSound: z.string().optional(),
+  endSound: z.string().optional(),
+  volume: z.number().min(0).max(1).optional(),
+});
+export type CountdownAudioConfigProps = z.infer<typeof CountdownAudioConfigSchema>;
+
+/**
+ * 倒计时最终文字特效 Schema
+ */
+export const CountdownFinalTextSchema = z.object({
+  enabled: z.boolean().optional(),
+  text: z.string().optional(),
+  scaleMultiplier: z.number().min(1).max(3).optional(),
+  extraGlow: z.boolean().optional(),
+  colorChange: z.string().optional(),
+  durationInFrames: z.number().min(10).optional(),
+});
+export type CountdownFinalTextProps = z.infer<typeof CountdownFinalTextSchema>;
+
+/**
+ * 故事章节倒计时配置 Schema
+ * 用于在 StoryChapter 中集成倒计时
+ */
+export const StoryCountdownConfigSchema = z.object({
+  /** 是否启用倒计时 */
+  enabled: z.boolean(),
+  /** 倒计时类型 */
+  type: CountdownTypeSchema.optional(),
+  /** 起始数字 */
+  startNumber: z.number().min(1).max(60).optional(),
+  /** 总秒数 */
+  totalSeconds: z.number().min(1).max(3600).optional(),
+  /** 每个数字持续帧数 */
+  durationPerNumber: z.number().min(1).optional(),
+  /** 特效类型 */
+  effectType: CountdownEffectTypeSchema.optional(),
+  /** 特效强度 */
+  effectIntensity: z.number().min(0.1).max(2).optional(),
+  /** 文字样式 */
+  textStyle: CountdownTextStyleSchema.optional(),
+  /** 音效配置 */
+  audio: CountdownAudioConfigSchema.optional(),
+  /** 最终文字 */
+  finalText: CountdownFinalTextSchema.optional(),
+  /** 水平位置 */
+  x: z.number().min(0).max(1).optional(),
+  /** 垂直位置 */
+  y: z.number().min(0).max(1).optional(),
+});
+export type StoryCountdownConfigProps = z.infer<typeof StoryCountdownConfigSchema>;
+
 // ==================== 故事章节 Schema ====================
 
 /**
- * 故事章节 Schema
+ * 故事章节 Schema（嵌套参数结构）
  */
 export const StoryChapterSchema = z.object({
   /** 章节持续时间（帧） */
   durationInFrames: z.number().min(1),
   
-  // 背景配置
-  backgroundType: z.enum(['color', 'image', 'video', 'gradient']).optional(),
-  backgroundColor: z.string().optional(),
-  backgroundGradient: z.string().optional(),
-  backgroundSource: z.string().optional(),
-  backgroundVideoLoop: z.boolean().optional(),
-  backgroundVideoMuted: z.boolean().optional(),
+  // ===== 嵌套参数配置 =====
   
-  // 遮罩配置
-  overlayColor: z.string().optional(),
-  overlayOpacity: z.number().min(0).max(1).optional(),
-  showOverlay: z.boolean().optional(),
+  /**
+   * 背景配置（嵌套结构）
+   * @example
+   * background={{
+   *   type: 'gradient',
+   *   gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+   * }}
+   */
+  background: NestedBackgroundSchema.optional(),
+  
+  /**
+   * 遮罩配置（嵌套结构）
+   * @example
+   * overlay={{
+   *   color: '#000000',
+   *   opacity: 0.3
+   * }}
+   */
+  overlay: NestedOverlaySchema.optional(),
+  
+  /**
+   * 音频配置（嵌套结构）
+   * @example
+   * audio={{
+   *   enabled: true,
+   *   source: 'bgm.mp3',
+   *   volume: 0.5
+   * }}
+   */
+  audio: NestedAudioSchema.optional(),
+  
+  // ===== 章节特有配置 =====
   
   // 角色配置
   character: StoryCharacterConfigSchema.optional(),
@@ -415,8 +734,6 @@ export const StoryChapterSchema = z.object({
   // 字幕
   subtitles: z.array(SubtitleItemSchema).optional(),
   
-  // ===== 新增配置项 =====
-  
   // 文字元素（名字、祝福语等）
   textElements: z.array(TextElementSchema).optional(),
   
@@ -428,6 +745,15 @@ export const StoryChapterSchema = z.object({
   
   // 星空背景
   starFieldBackground: StarFieldBackgroundSchema.optional(),
+  
+  // 透明视频列表
+  transparentVideos: z.array(TransparentVideoItemSchema).optional(),
+  
+  // PlusEffects 特效列表
+  plusEffects: PlusEffectsSchema.optional(),
+  
+  // 倒计时配置
+  countdown: StoryCountdownConfigSchema.optional(),
 });
 export type StoryChapterSchemaType = z.infer<typeof StoryChapterSchema>;
 
@@ -462,6 +788,24 @@ export const StoryPanelChapterSchema = StoryChapterSchema.extend({
 export type StoryPanelChapterProps = z.infer<typeof StoryPanelChapterSchema>;
 
 /**
+ * 自定义章节输入 Schema
+ * 
+ * 用于用户自定义章节配置，支持部分覆盖：
+ * - id: 必需，用于匹配预设章节
+ * - durationInFrames: 可选，匹配预设章节时自动继承，新增章节时必需
+ * - 其他字段: 可选，按需覆盖
+ */
+export const CustomChapterInputSchema = StoryChapterSchema.extend({
+  /** 章节唯一标识（必需，用于匹配预设章节） */
+  id: z.string(),
+  /** 章节持续时间（可选，匹配预设章节时自动继承） */
+  durationInFrames: z.number().min(1).optional(),
+  /** 章节过渡配置 */
+  transition: ChapterTransitionSchema.optional(),
+});
+export type CustomChapterInputProps = z.infer<typeof CustomChapterInputSchema>;
+
+/**
  * 背景音乐配置 Schema
  */
 export const BackgroundMusicSchema = z.object({
@@ -473,7 +817,7 @@ export const BackgroundMusicSchema = z.object({
 export type BackgroundMusicProps = z.infer<typeof BackgroundMusicSchema>;
 
 /**
- * 故事面板 Schema
+ * 故事面板 Schema（嵌套参数结构）
  */
 export const StoryPanelSchema = z.object({
   /** 章节列表 */
@@ -491,47 +835,55 @@ export const StoryPanelSchema = z.object({
   /** 背景音乐配置 */
   backgroundMusic: BackgroundMusicSchema.optional(),
   
-  // 基础配置（继承 BaseComposition）
-  backgroundType: z.enum(['color', 'image', 'video', 'gradient']).optional(),
-  backgroundColor: z.string().optional(),
-  backgroundGradient: z.string().optional(),
-  backgroundSource: z.string().optional(),
-  overlayColor: z.string().optional(),
-  overlayOpacity: z.number().min(0).max(1).optional(),
-  audioEnabled: z.boolean().optional(),
-  audioSource: z.string().optional(),
-  audioVolume: z.number().min(0).max(1).optional(),
-  audioLoop: z.boolean().optional(),
+  // ===== 嵌套参数配置 =====
+  
+  /**
+   * 背景配置（嵌套结构）
+   */
+  background: NestedBackgroundSchema.optional(),
+  
+  /**
+   * 遮罩配置（嵌套结构）
+   */
+  overlay: NestedOverlaySchema.optional(),
+  
+  /**
+   * 音频配置（嵌套结构）
+   */
+  audio: NestedAudioSchema.optional(),
 });
 export type StoryPanelProps = z.infer<typeof StoryPanelSchema>;
 
 // ==================== 辅助函数 ====================
 
 /**
- * 从 props 中提取故事章节参数
+ * 从 props 中提取故事章节参数（嵌套结构）
  */
 export function extractStoryChapterProps(props: Record<string, unknown>): StoryChapterSchemaType {
   return {
     durationInFrames: props.durationInFrames as number,
-    backgroundType: props.backgroundType as StoryChapterSchemaType['backgroundType'],
-    backgroundColor: props.backgroundColor as string,
-    backgroundGradient: props.backgroundGradient as string,
-    backgroundSource: props.backgroundSource as string,
-    backgroundVideoLoop: props.backgroundVideoLoop as boolean,
-    backgroundVideoMuted: props.backgroundVideoMuted as boolean,
-    overlayColor: props.overlayColor as string,
-    overlayOpacity: props.overlayOpacity as number,
-    showOverlay: props.showOverlay as boolean,
+    // 嵌套参数直接传递
+    background: props.background as NestedBackgroundProps,
+    overlay: props.overlay as NestedOverlayProps,
+    audio: props.audio as NestedAudioProps,
+    // 章节特有配置
     character: props.character as StoryChapterSchemaType['character'],
     confetti: props.confetti as StoryChapterSchemaType['confetti'],
     magicEffects: props.magicEffects as StoryChapterSchemaType['magicEffects'],
     radialBurst: props.radialBurst as StoryChapterSchemaType['radialBurst'],
     subtitles: props.subtitles as SubtitleItemProps[],
+    textElements: props.textElements as StoryChapterSchemaType['textElements'],
+    photoDisplay: props.photoDisplay as StoryChapterSchemaType['photoDisplay'],
+    floatingElements: props.floatingElements as StoryChapterSchemaType['floatingElements'],
+    starFieldBackground: props.starFieldBackground as StoryChapterSchemaType['starFieldBackground'],
+    transparentVideos: props.transparentVideos as StoryChapterSchemaType['transparentVideos'],
+    plusEffects: props.plusEffects as StoryChapterSchemaType['plusEffects'],
+    countdown: props.countdown as StoryChapterSchemaType['countdown'],
   };
 }
 
 /**
- * 从 props 中提取故事面板参数
+ * 从 props 中提取故事面板参数（嵌套结构）
  */
 export function extractStoryPanelProps(props: Record<string, unknown>): StoryPanelProps {
   return {
@@ -540,15 +892,45 @@ export function extractStoryPanelProps(props: Record<string, unknown>): StoryPan
     autoCalculateStartFrame: props.autoCalculateStartFrame as boolean,
     chapterGap: props.chapterGap as number,
     backgroundMusic: props.backgroundMusic as BackgroundMusicProps,
-    backgroundType: props.backgroundType as StoryPanelProps['backgroundType'],
-    backgroundColor: props.backgroundColor as string,
-    backgroundGradient: props.backgroundGradient as string,
-    backgroundSource: props.backgroundSource as string,
-    overlayColor: props.overlayColor as string,
-    overlayOpacity: props.overlayOpacity as number,
-    audioEnabled: props.audioEnabled as boolean,
-    audioSource: props.audioSource as string,
-    audioVolume: props.audioVolume as number,
-    audioLoop: props.audioLoop as boolean,
+    // 嵌套参数直接传递
+    background: props.background as NestedBackgroundProps,
+    overlay: props.overlay as NestedOverlayProps,
+    audio: props.audio as NestedAudioProps,
   };
 }
+
+/**
+ * 倒计时组件 Schema（完整配置）
+ */
+export const CountdownSchema = z.object({
+  // 基础配置
+  type: CountdownTypeSchema.optional().default('number'),
+  startNumber: z.number().min(1).max(60).optional().default(5),
+  totalSeconds: z.number().min(1).max(3600).optional().default(10),
+  durationPerNumber: z.number().min(1).optional(),
+  durationInFrames: z.number().min(1).optional(),
+  
+  // 展示特效
+  effectType: CountdownEffectTypeSchema.optional().default('scale'),
+  effectIntensity: z.number().min(0.1).max(2).optional().default(1),
+  transitionFrames: z.number().min(1).max(30).optional().default(8),
+  
+  // 文字样式
+  textStyle: CountdownTextStyleSchema.optional(),
+  
+  // 音效配置
+  audio: CountdownAudioConfigSchema.optional(),
+  
+  // 最终文字
+  finalText: CountdownFinalTextSchema.optional(),
+  
+  // 位置配置
+  x: z.number().min(0).max(1).optional().default(0.5),
+  y: z.number().min(0).max(1).optional().default(0.5),
+  
+  // 其他配置
+  showBackground: z.boolean().optional().default(false),
+  backgroundColor: z.string().optional(),
+  backgroundBlur: z.number().min(0).max(50).optional(),
+});
+export type CountdownSchemaType = z.infer<typeof CountdownSchema>;
