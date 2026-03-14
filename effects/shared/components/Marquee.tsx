@@ -83,6 +83,14 @@ export interface MarqueeProps {
   direction?: MarqueeDirection;
   speed?: number;
   perspectiveDepth?: number;
+  /** 
+   * 走马灯整体垂直位置（0-1，相对于画面高度）
+   * - 0: 顶部
+   * - 0.5: 中间
+   * - 1: 底部
+   * 默认为 1（底部）
+   */
+  positionY?: number;
   foregroundOffsetY?: number;
   backgroundOffsetY?: number;
   foregroundOffsetX?: number;
@@ -193,6 +201,7 @@ export const Marquee: React.FC<MarqueeProps> = ({
   textOrientation = "horizontal",
   direction = "right-to-left",
   speed = 100,
+  positionY = 1,
   foregroundOffsetY = 0,
   backgroundOffsetY = 0,
   foregroundOffsetX = 0,
@@ -207,11 +216,14 @@ export const Marquee: React.FC<MarqueeProps> = ({
     return null;
   }
 
+  // 计算垂直位置（基于 positionY 百分比）
+  const containerTop = positionY * height;
+
   return (
     <div
       style={{
         position: "absolute",
-        top: 0,
+        top: containerTop,
         left: 0,
         width,
         height,
@@ -219,6 +231,7 @@ export const Marquee: React.FC<MarqueeProps> = ({
         zIndex,
         overflow: "hidden",
         border: debugBorders ? "2px solid red" : undefined,
+        transform: "translateY(-50%)", // 居中对齐
       }}
     >
       {/* 后景层（远景） */}

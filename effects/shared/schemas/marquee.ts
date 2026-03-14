@@ -140,6 +140,13 @@ export const NestedMarqueeSchema = z.object({
   direction: MarqueeDirectionSchema.optional(),
   /** 移动速度 */
   speed: z.number().min(10).max(500).optional(),
+  /** 
+   * 走马灯整体垂直位置（0-1，相对于画面高度）
+   * - 0: 顶部
+   * - 0.5: 中间
+   * - 1: 底部
+   */
+  positionY: z.number().min(0).max(1).optional(),
   /** 3D透视深度 */
   perspectiveDepth: z.number().min(0).max(300).optional(),
   /** 前景层 X 偏移 */
@@ -181,6 +188,8 @@ export interface MarqueeComponentProps {
   textOrientation?: "horizontal" | "vertical";
   direction?: "left-to-right" | "right-to-left" | "top-to-bottom" | "bottom-to-top";
   speed?: number;
+  /** 走马灯整体垂直位置（0-1） */
+  positionY?: number;
   perspectiveDepth?: number;
   foregroundOffsetX?: number;
   foregroundOffsetY?: number;

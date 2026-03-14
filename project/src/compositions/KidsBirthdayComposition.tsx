@@ -7,6 +7,10 @@ import {
   NestedBackgroundProps,
   NestedOverlayProps,
   NestedAudioProps,
+  NestedMarqueeProps,
+  NestedWatermarkProps,
+  NestedRadialBurstProps,
+  NestedForegroundProps,
 } from '../../../effects/shared/index';
 import {
   CartoonElements,
@@ -130,6 +134,11 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     birthdaySongVolume = 0.6,
     seed,
     chapterList: customChapterList,
+    // 嵌套参数
+    marquee,
+    watermark,
+    radialBurst,
+    foreground,
   } = props;
   
   const theme = getColorTheme(subStyle);
@@ -794,6 +803,10 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
       background={panelBackground}
       overlay={panelOverlay}
       audio={panelAudio}
+      marquee={marquee}
+      watermark={watermark}
+      radialBurst={radialBurst}
+      foreground={foreground}
       renderPlusEffects={renderPlusEffects}
       overlayContent={
         cartoonElements ? (

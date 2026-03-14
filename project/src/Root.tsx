@@ -51,7 +51,47 @@ export const RemotionRoot: React.FC = () => {
             musicEnabled: true,
             musicTrack: 'JoyfulChildren',
             birthdaySongSource: 'birthday_audio.mp3',
-            birthdaySongVolume: 0.6
+            birthdaySongVolume: 0.6,
+            // 走马灯测试配置（添加 positionY 参数）
+            marquee: {
+              enabled: true,
+              positionY: 0.85,  // 新增：垂直位置（0-1）
+              foreground: {
+                texts: [
+                  { text: '生日快乐' },
+                  { text: 'Happy Birthday' },
+                  { text: '快乐成长' },
+                ],
+                fontSize: 24,
+                opacity: 0.8,
+              },
+              background: {
+                texts: [
+                  { text: '✨' },
+                  { text: '🎉' },
+                  { text: '🎂' },
+                ],
+                fontSize: 18,
+                opacity: 0.4,
+              },
+              direction: 'left-to-right',
+              speed: 50,
+            },
+            // 水印测试配置
+            watermark: {
+              enabled: true,
+              text: 'Remo-Fects',
+              fontSize: 20,
+              opacity: 0.5,
+            },
+            // 径向发散粒子测试配置
+            radialBurst: {
+              enabled: true,
+              effectType: 'sparkleBurst',
+              color: '#FFD76A',
+              secondaryColor: '#7EC8FF',
+              intensity: 0.8,
+            },
           }}
         />
         
