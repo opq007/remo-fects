@@ -1,127 +1,108 @@
-const path = require('path');
-
 /**
- * 儿童生日祝福特效配置 v3.0
- * 支持模块化分镜、角色系统、照片互动等功能
- * 使用嵌套参数结构 - 配置驱动架构
+ * 儿童生日祝福特效配置 v5.0
+ * 
+ * 更新说明：
+ * - 视频时长固定为 124 秒（4秒倒计时 + 120秒正片）
+ * - 移除 videoVersion 参数
+ * - 新增 chapterList 支持自定义章节配置
+ * - 角色系统增加 image 类型（自定义图片）
  */
 
-// 1. 特效基础信息
+const path = require('path');
+
+// 特效基础信息
 const config = {
   id: 'kids-birthday-effect',
   name: '儿童生日祝福',
-  compositionId: 'KidsBirthday120s',  // 默认使用120秒完整版
+  compositionId: 'KidsBirthday',
   path: path.join(__dirname, '../../project'),
-  description: '专为3-10岁儿童设计的生日祝福视频，支持模块化分镜、角色系统和照片互动'
+  description: '专为3-10岁儿童设计的生日祝福视频，固定时长124秒（4秒倒计时+120秒正片）'
 };
 
-// 2. 参数定义（扁平结构，用于 API 输入）
+// 参数定义
 const params = {
   // ========== 基本信息 ==========
   name: {
     type: 'string',
     defaultValue: '小明',
-    parser: (v) => typeof v === 'string' ? v.slice(0, 10) : '小明',
     required: true,
-    description: '主角名字（最多10字）'
+    description: '主角名字（1-10字）'
   },
   age: {
     type: 'number',
     defaultValue: 6,
-    parser: (v) => {
-      const num = parseInt(v);
-      return num >= 1 && num <= 18 ? num : 6;
-    },
     description: '年龄（1-18岁）'
   },
   message: {
     type: 'string',
     defaultValue: '愿你每天开心成长，梦想成真！',
-    parser: (v) => typeof v === 'string' ? v.slice(0, 100) : '愿你每天开心成长，梦想成真！',
     description: '祝福语（最多100字）'
   },
   
-  // ========== 视频版本 ==========
-  videoVersion: {
-    type: 'enum',
-    defaultValue: '120s',
-    parser: (v) => ['60s', '90s', '120s'].includes(v) ? v : '120s',
-    description: '视频时长版本：60s（短视频版）| 90s（分享版）| 120s（完整版）'
-  },
+  // ========== 视频配置（固定 124 秒） ==========
   duration: {
     type: 'number',
-    defaultValue: 120,
-    parser: (v) => {
-      const num = parseInt(v);
-      return num >= 5 && num <= 180 ? num : 120;
-    },
-    description: '视频时长（秒），会根据videoVersion自动调整'
+    defaultValue: 124,
+    description: '视频时长(秒)，固定为 124 秒（4秒倒计时 + 120秒正片）'
+  },
+  fps: {
+    type: 'number',
+    defaultValue: 24,
+    description: '帧率'
+  },
+  width: {
+    type: 'number',
+    defaultValue: 720,
+    description: '视频宽度'
+  },
+  height: {
+    type: 'number',
+    defaultValue: 1280,
+    description: '视频高度'
   },
   
-  // ========== 风格设置 ==========
+  // ========== 风格 ==========
   subStyle: {
-    type: 'enum',
+    type: 'string',
     defaultValue: 'general',
-    parser: (v) => ['girl_unicorn', 'boy_rocket', 'animal', 'general'].includes(v) ? v : 'general',
     description: '风格主题：girl_unicorn(女孩独角兽) | boy_rocket(男孩火箭) | animal(可爱动物) | general(通用派对)'
   },
   
   // ========== 角色系统 ==========
   characterSeries: {
-    type: 'enum',
+    type: 'string',
     defaultValue: 'zodiac',
-    parser: (v) => ['zodiac', 'pet', 'hero'].includes(v) ? v : 'zodiac',
-    description: '角色系列：zodiac(生肖守护神) | pet(萌宠精灵) | hero(勇气超人)'
+    description: '角色系列：zodiac(生肖守护神) | pet(萌宠精灵) | hero(勇气超人) | image(自定义图片)'
   },
   characterType: {
     type: 'string',
     defaultValue: 'tiger',
-    parser: (v, allParams) => {
-      const series = allParams?.characterSeries || 'zodiac';
-      const validTypes = getValidCharacterTypes(series);
-      return validTypes.includes(v) ? v : validTypes[0];
-    },
-    description: '角色类型（根据series选择：生肖12种/萌宠6种/超人5种）'
+    description: '角色类型（根据series选择：生肖12种/萌宠6种/超人5种，image模式可忽略）'
   },
   characterImageSrc: {
     type: 'string',
     defaultValue: null,
-    description: '自定义角色图片路径（可选）'
+    description: '自定义角色图片路径（仅当 characterSeries="image" 时使用）'
   },
   
   // ========== 照片系统 ==========
   photos: {
     type: 'array',
     defaultValue: [],
-    parser: (v) => {
-      if (!Array.isArray(v)) return [];
-      return v.slice(0, 5).map((p, i) => ({
-        id: p.id || `photo-${i}`,
-        src: p.src || '',
-        caption: p.caption || '',
-        memory: p.memory || ''
-      }));
-    },
-    description: '照片列表（最多5张，每张包含src/caption/memory）'
+    description: '照片列表（最多5张，每张包含 src 字段）'
   },
   
   // ========== 梦想泡泡 ==========
   dreams: {
     type: 'array',
     defaultValue: ['astronaut', 'artist', 'racer'],
-    parser: (v) => {
-      const validJobs = ['astronaut', 'artist', 'racer', 'doctor', 'teacher', 'scientist', 'musician', 'athlete', 'chef', 'pilot'];
-      if (!Array.isArray(v)) return ['astronaut', 'artist', 'racer'];
-      return v.filter(j => validJobs.includes(j)).slice(0, 5);
-    },
-    description: '梦想职业列表（最多5个）'
+    description: '梦想职业列表（最多5个）：astronaut | artist | racer | doctor | teacher | scientist | musician | athlete | chef | pilot'
   },
   
   // ========== 布局 ==========
   orientation: {
-    type: 'enum',
+    type: 'string',
     defaultValue: 'portrait',
-    parser: (v) => ['portrait', 'landscape'].includes(v) ? v : 'portrait',
     description: '屏幕方向：portrait(竖屏9:16) | landscape(横屏16:9)'
   },
   
@@ -129,106 +110,86 @@ const params = {
   nameFontSize: {
     type: 'number',
     defaultValue: 120,
-    parser: (v) => {
-      const num = parseInt(v);
-      return num >= 60 && num <= 200 ? num : 120;
-    },
     description: '名字字体大小（60-200）'
-  },
-  showAge: {
-    type: 'boolean',
-    defaultValue: true,
-    parser: (v) => v === 'true' || v === true,
-    description: '是否显示年龄标签'
   },
   nameColor: {
     type: 'string',
     defaultValue: null,
-    parser: (v) => v || null,
     description: '名字颜色（可选，默认跟随主题）'
+  },
+  showAge: {
+    type: 'boolean',
+    defaultValue: true,
+    description: '是否显示年龄标签'
   },
   
   // ========== 祝福语样式 ==========
   blessingText: {
     type: 'string',
     defaultValue: '生日快乐',
-    parser: (v) => v || '生日快乐',
     description: '主祝福文字'
   },
   blessingFontSize: {
     type: 'number',
     defaultValue: 60,
-    parser: (v) => {
-      const num = parseInt(v);
-      return num >= 30 && num <= 100 ? num : 60;
-    },
     description: '祝福语字体大小（30-100）'
-  },
-  
-  // ========== 特效强度 ==========
-  confettiLevel: {
-    type: 'enum',
-    defaultValue: 'high',
-    parser: (v) => ['low', 'medium', 'high'].includes(v) ? v : 'high',
-    description: '彩带粒子密度：low | medium | high'
-  },
-  animationSpeed: {
-    type: 'enum',
-    defaultValue: 'normal',
-    parser: (v) => ['slow', 'normal', 'fast'].includes(v) ? v : 'normal',
-    description: '动画速度：slow | normal | fast'
-  },
-  
-  // ========== 音频设置 ==========
-  musicEnabled: {
-    type: 'boolean',
-    defaultValue: true,
-    parser: (v) => v === 'true' || v === true,
-    description: '是否启用背景音乐'
-  },
-  musicTrack: {
-    type: 'string',
-    defaultValue: 'kids_party_01',
-    parser: (v) => v || 'kids_party_01',
-    description: '背景音乐曲目'
-  },
-  birthdaySongSource: {
-    type: 'string',
-    defaultValue: null,
-    description: '自定义生日歌路径（可选）'
-  },
-  birthdaySongVolume: {
-    type: 'number',
-    defaultValue: 0.6,
-    parser: (v) => {
-      const num = parseFloat(v);
-      return num >= 0 && num <= 1 ? num : 0.6;
-    },
-    description: '生日歌音量（0-1）'
   },
   
   // ========== 卡通元素 ==========
   cartoonElements: {
     type: 'array',
     defaultValue: null,
-    parser: (v) => v || null,
     description: '卡通元素配置（可选）'
+  },
+  
+  // ========== 粒子效果 ==========
+  confettiLevel: {
+    type: 'string',
+    defaultValue: 'high',
+    description: '彩带粒子密度：low | medium | high'
+  },
+  
+  // ========== 动画速度 ==========
+  animationSpeed: {
+    type: 'string',
+    defaultValue: 'normal',
+    description: '动画速度：slow | normal | fast'
+  },
+  
+  // ========== 音频 ==========
+  musicEnabled: {
+    type: 'boolean',
+    defaultValue: true,
+    description: '是否启用背景音乐'
+  },
+  musicTrack: {
+    type: 'string',
+    defaultValue: 'kids_party_01',
+    description: '背景音乐曲目'
+  },
+  birthdaySongSource: {
+    type: 'string',
+    defaultValue: null,
+    description: '生日歌音频文件路径（有值时在模块G播放）'
+  },
+  birthdaySongVolume: {
+    type: 'number',
+    defaultValue: 0.6,
+    description: '生日歌音量（0-1）'
   },
   
   // ========== 随机种子 ==========
   seed: {
     type: 'number',
     defaultValue: null,
-    parser: (v) => v ? parseInt(v) : null,
     description: '随机种子（可选，用于复现效果）'
   },
   
-  // ========== 自定义章节列表 ==========
+  // ========== 自定义章节 ==========
   chapterList: {
     type: 'array',
     defaultValue: null,
-    parser: (v) => v || null,
-    description: '自定义章节配置列表（可选，用于高级定制）'
+    description: '自定义章节配置列表（可选，用于高级定制，按id与默认配置合并）'
   },
 };
 
@@ -241,66 +202,49 @@ function getValidCharacterTypes(series) {
       return ['bunny', 'kitten', 'puppy', 'bear', 'fox', 'panda'];
     case 'hero':
       return ['superhero', 'astronaut', 'knight', 'wizard', 'pirate'];
+    case 'image':
+      return []; // image 模式不需要类型
     default:
       return ['tiger'];
   }
 }
 
-// 辅助函数：根据视频版本获取Composition ID
-function getCompositionId(videoVersion, orientation) {
-  if (orientation === 'landscape') {
-    return 'KidsBirthdayLandscape';
-  }
-  switch (videoVersion) {
-    case '60s': return 'KidsBirthday60s';
-    case '90s': return 'KidsBirthday90s';
-    case '120s': return 'KidsBirthday120s';
-    default: return 'KidsBirthday120s';
-  }
+// 辅助函数：获取 Composition ID
+function getCompositionId(orientation) {
+  return orientation === 'landscape' ? 'KidsBirthdayLandscape' : 'KidsBirthday';
 }
 
-// 辅助函数：根据视频版本获取时长
-function getDurationByVersion(version) {
-  switch (version) {
-    case '60s': return 60;
-    case '90s': return 90;
-    case '120s': return 120;
-    default: return 120;
-  }
-}
-
-// 3. 参数验证函数
+// 参数验证
 function validate(params) {
   if (!params.name || params.name.trim() === '') {
     return { valid: false, error: '请提供主角名字 (name)' };
   }
-  
   if (params.name.length > 10) {
     return { valid: false, error: '名字长度不能超过10个字符' };
   }
-  
   if (params.age && (params.age < 1 || params.age > 18)) {
     return { valid: false, error: '年龄必须在1-18岁之间' };
   }
-  
   if (params.message && params.message.length > 100) {
     return { valid: false, error: '祝福语长度不能超过100个字符' };
   }
   
   // 验证角色类型
-  if (params.characterType) {
+  if (params.characterSeries !== 'image' && params.characterType) {
     const validTypes = getValidCharacterTypes(params.characterSeries || 'zodiac');
-    if (!validTypes.includes(params.characterType)) {
+    if (validTypes.length > 0 && !validTypes.includes(params.characterType)) {
       return { valid: false, error: `角色类型无效，${params.characterSeries}系列可选：${validTypes.join(', ')}` };
     }
   }
   
-  // 验证照片
+  // image 模式需要提供图片
+  if (params.characterSeries === 'image' && !params.characterImageSrc) {
+    return { valid: false, error: 'image 模式需要提供 characterImageSrc 自定义图片路径' };
+  }
+  
   if (params.photos && params.photos.length > 5) {
     return { valid: false, error: '照片数量不能超过5张' };
   }
-  
-  // 验证梦想
   if (params.dreams && params.dreams.length > 5) {
     return { valid: false, error: '梦想数量不能超过5个' };
   }
@@ -309,77 +253,43 @@ function validate(params) {
 }
 
 /**
- * 4. 构建渲染参数
- * 将扁平的 API 参数转换为组件需要的格式
- * 注意：KidsBirthdayComposition 内部处理嵌套参数结构
+ * 构建渲染参数
+ * 支持嵌套参数格式
  */
 function buildRenderParams(reqParams, commonParams) {
-  const videoVersion = reqParams.videoVersion || params.videoVersion.defaultValue;
   const orientation = reqParams.orientation || params.orientation.defaultValue;
   const characterSeries = reqParams.characterSeries || params.characterSeries.defaultValue;
   
-  const result = {
-    ...commonParams,
-    
-    // 基本信息
-    name: reqParams.name || params.name.defaultValue,
-    age: reqParams.age ?? params.age.defaultValue,
-    message: reqParams.message || params.message.defaultValue,
-    
-    // 视频版本
-    videoVersion,
-    duration: reqParams.duration ?? getDurationByVersion(videoVersion),
-    
-    // 风格设置
-    subStyle: reqParams.subStyle || params.subStyle.defaultValue,
-    
-    // 角色系统
-    characterSeries,
-    characterType: reqParams.characterType || getValidCharacterTypes(characterSeries)[0],
-    characterImageSrc: reqParams.characterImageSrc || null,
-    
-    // 照片系统
-    photos: params.photos.parser(reqParams.photos),
-    
-    // 梦想泡泡
-    dreams: params.dreams.parser(reqParams.dreams),
-    
-    // 布局
-    orientation,
-    
-    // 名字样式
-    nameFontSize: reqParams.nameFontSize ?? params.nameFontSize.defaultValue,
-    showAge: reqParams.showAge ?? params.showAge.defaultValue,
-    nameColor: reqParams.nameColor || null,
-    
-    // 祝福语
-    blessingText: reqParams.blessingText || params.blessingText.defaultValue,
-    blessingFontSize: reqParams.blessingFontSize ?? params.blessingFontSize.defaultValue,
-    
-    // 特效设置
-    confettiLevel: reqParams.confettiLevel || params.confettiLevel.defaultValue,
-    animationSpeed: reqParams.animationSpeed || params.animationSpeed.defaultValue,
-    
-    // 音频设置
-    musicEnabled: reqParams.musicEnabled ?? params.musicEnabled.defaultValue,
-    musicTrack: reqParams.musicTrack || params.musicTrack.defaultValue,
-    birthdaySongSource: reqParams.birthdaySongSource || null,
-    birthdaySongVolume: reqParams.birthdaySongVolume ?? params.birthdaySongVolume.defaultValue,
-    
-    // 卡通元素
-    cartoonElements: reqParams.cartoonElements || null,
-    
-    // 随机种子
-    seed: reqParams.seed || null,
-    
-    // 自定义章节
-    chapterList: reqParams.chapterList || null,
-  };
+  const result = { ...commonParams };
+
+  // 处理特效特有参数
+  for (const [name, def] of Object.entries(params)) {
+    if (reqParams[name] !== undefined && reqParams[name] !== null) {
+      result[name] = reqParams[name];
+    } else if (def.defaultValue !== undefined) {
+      result[name] = typeof def.defaultValue === 'function' ? def.defaultValue() : def.defaultValue;
+    }
+  }
   
-  // 动态设置 Composition ID
-  result._compositionId = getCompositionId(videoVersion, orientation);
+  // 固定时长为 124 秒
+  result.duration = 124;
   
-  // 动态设置尺寸
+  // 处理角色类型默认值
+  if (characterSeries !== 'image') {
+    result.characterType = reqParams.characterType || getValidCharacterTypes(characterSeries)[0];
+  }
+  
+  // 支持嵌套参数（背景、音频等）
+  if (reqParams.background) result.background = reqParams.background;
+  if (reqParams.audio) result.audio = reqParams.audio;
+  if (reqParams.overlay) result.overlay = reqParams.overlay;
+  if (reqParams.marquee) result.marquee = reqParams.marquee;
+  if (reqParams.watermark) result.watermark = reqParams.watermark;
+  if (reqParams.radialBurst) result.radialBurst = reqParams.radialBurst;
+  if (reqParams.foreground) result.foreground = reqParams.foreground;
+  
+  // 动态设置 Composition ID 和尺寸
+  result._compositionId = getCompositionId(orientation);
   if (orientation === 'landscape') {
     result.width = 1280;
     result.height = 720;
@@ -391,56 +301,43 @@ function buildRenderParams(reqParams, commonParams) {
   return result;
 }
 
-// 5. 获取默认参数组合（用于预览）
+// 获取预设配置
 function getPresets() {
   return {
-    'general_120s': {
-      name: '通用派对（完整版）',
-      videoVersion: '120s',
-      subStyle: 'general',
-      characterSeries: 'zodiac',
-      characterType: 'tiger',
-      confettiLevel: 'high'
-    },
-    'girl_unicorn_120s': {
-      name: '女孩独角兽（完整版）',
-      videoVersion: '120s',
+    'girl_unicorn': {
+      name: '女孩独角兽',
       subStyle: 'girl_unicorn',
       characterSeries: 'pet',
       characterType: 'bunny',
       confettiLevel: 'high',
       dreams: ['artist', 'musician', 'teacher']
     },
-    'boy_rocket_120s': {
-      name: '男孩火箭（完整版）',
-      videoVersion: '120s',
+    'boy_rocket': {
+      name: '男孩火箭',
       subStyle: 'boy_rocket',
       characterSeries: 'hero',
       characterType: 'astronaut',
       confettiLevel: 'high',
       dreams: ['astronaut', 'racer', 'scientist']
     },
-    'short_60s': {
-      name: '短视频版（60秒）',
-      videoVersion: '60s',
-      subStyle: 'general',
-      characterSeries: 'zodiac',
-      characterType: 'tiger',
-      confettiLevel: 'medium'
+    'animal': {
+      name: '可爱动物',
+      subStyle: 'animal',
+      characterSeries: 'pet',
+      characterType: 'puppy',
+      confettiLevel: 'high'
     },
-    'landscape': {
-      name: '横屏版（电视投屏）',
-      videoVersion: '120s',
-      orientation: 'landscape',
+    'general': {
+      name: '通用派对',
       subStyle: 'general',
       characterSeries: 'zodiac',
       characterType: 'tiger',
       confettiLevel: 'high'
-    }
+    },
   };
 }
 
-// 6. 获取角色列表（用于前端选择）
+// 获取角色选项
 function getCharacterOptions() {
   return {
     zodiac: {
@@ -483,8 +380,23 @@ function getCharacterOptions() {
         { type: 'wizard', name: '魔法小巫师', description: '神奇魔法' },
         { type: 'pirate', name: '冒险小海盗', description: '勇敢探险' }
       ]
+    },
+    image: {
+      name: '自定义角色',
+      description: '使用自定义图片作为角色',
+      characters: []
     }
   };
+}
+
+// 获取模块列表
+function getModules() {
+  return ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+}
+
+// 获取视频时长
+function getDuration() {
+  return 124;
 }
 
 module.exports = {
@@ -494,5 +406,7 @@ module.exports = {
   buildRenderParams,
   getPresets,
   getCharacterOptions,
-  getValidCharacterTypes
+  getValidCharacterTypes,
+  getModules,
+  getDuration
 };
