@@ -163,11 +163,12 @@ export interface KidsBirthdayParams extends BaseBlessingParams {
   audience: 'kids';
   subStyle: KidsSubStyle;
   
-  // 新增：角色系统
-  characterSeries: CharacterSeries;
-  characterType: ZodiacType | PetType | HeroType;
-  /** 自定义角色图片路径（本地路径或网络URL），仅当 characterSeries='image' 时使用 */
-  characterImageSrc?: string;
+  // 祝福系列（决定角色和视频资源）
+  blessingSeries: BlessingSeries;
+  /** 自定义角色图片路径列表，覆盖祝福系列的默认角色图片 */
+  customCharacterImages?: string[];
+  /** 自定义角色视频路径列表，覆盖祝福系列的默认角色视频 */
+  customCharacterVideos?: string[];
   
   // 新增：照片系统
   photos: PhotoData[];
@@ -186,6 +187,134 @@ export interface KidsBirthdayParams extends BaseBlessingParams {
   blessingFontSize: number;
   cartoonElements: CartoonElement[];
   animationSpeed: AnimationSpeed;
+}
+
+// ==================== 祝福系列系统 ====================
+
+// 祝福系列类型
+export type BlessingSeries = 'journey_to_the_west' | 'zodiac' | 'fairy_tale' | 'custom';
+
+// 系列角色配置
+export interface SeriesCharacter {
+  /** 角色类型标识 */
+  type: string;
+  /** 角色图片路径 */
+  imageSrc: string;
+  /** 角色视频路径（绿幕视频） */
+  videoSrc?: string;
+  /** 角色名 */
+  name: string;
+  /** 祝福语 */
+  greeting: string;
+}
+
+// 祝福系列配置
+export interface BlessingSeriesConfig {
+  /** 系列ID */
+  id: BlessingSeries;
+  /** 系列名称 */
+  name: string;
+  /** 角色列表 */
+  characters: SeriesCharacter[];
+  /** 默认主色调 */
+  primaryColor: string;
+  /** 默认次色调 */
+  secondaryColor: string;
+}
+
+// 西游系列角色配置
+export const JOURNEY_TO_THE_WEST_SERIES: BlessingSeriesConfig = {
+  id: 'journey_to_the_west',
+  name: '西游记系列',
+  primaryColor: '#FFD76A',
+  secondaryColor: '#7EC8FF',
+  characters: [
+    { type: 'sun_wukong', imageSrc: 'pic/孙悟空.png', videoSrc: '孙悟空.mp4', name: '孙悟空', greeting: '俺老孙来也！祝你生日快乐！' },
+    { type: 'tang_seng', imageSrc: 'pic/唐僧.png', videoSrc: '唐僧.mp4', name: '唐僧', greeting: '阿弥陀佛，祝你健康成长！' },
+    { type: 'zhu_bajie', imageSrc: 'pic/猪八戒.png', videoSrc: '猪八戒.mp4', name: '猪八戒', greeting: '嘿嘿，生日快乐！' },
+    { type: 'sha_wujing', imageSrc: 'pic/沙和尚.png', videoSrc: '沙和尚.mp4', name: '沙和尚', greeting: '祝你天天开心！' },
+    { type: 'white_dragon_horse', imageSrc: 'pic/白龙马.png', videoSrc: '白龙马.mp4', name: '白龙马', greeting: '祝你一马当先！' },
+  ],
+};
+
+// 生肖系列（使用内置生肖角色）
+export const ZODIAC_SERIES: BlessingSeriesConfig = {
+  id: 'zodiac',
+  name: '生肖守护神系列',
+  primaryColor: '#FFD76A',
+  secondaryColor: '#B892FF',
+  characters: [
+    { type: 'tiger', imageSrc: 'pic/小老虎.png', name: '小老虎', greeting: '嗷呜～祝你生日快乐！' },
+    { type: 'rabbit', imageSrc: 'pic/小兔子.png', name: '小兔子', greeting: '蹦蹦跳～祝你快乐成长！' },
+    { type: 'dragon', imageSrc: 'pic/小龙龙.png', name: '小龙龙', greeting: '吼～祝你心想事成！' },
+    { type: 'snake', imageSrc: 'pic/小蛇蛇.png', name: '小蛇蛇', greeting: '祝你天天开心！' },
+    { type: 'horse', imageSrc: 'pic/小马驹.png', name: '小马驹', greeting: '祝你前程似锦！' },
+    { type: 'goat', imageSrc: 'pic/小山羊.png', name: '小山羊', greeting: '祝你喜气洋洋！' },
+    { type: 'monkey', imageSrc: 'pic/小猴子.png', name: '小猴子', greeting: '祝你聪明伶俐！' },
+    { type: 'rooster', imageSrc: 'pic/小公鸡.png', name: '小公鸡', greeting: '祝你勤奋向上！' },
+    { type: 'dog', imageSrc: 'pic/小狗汪.png', name: '小狗汪', greeting: '祝你忠诚勇敢！' },
+    { type: 'pig', imageSrc: 'pic/小猪猪.png', name: '小猪猪', greeting: '祝你福气满满！' },
+    { type: 'rat', imageSrc: 'pic/小老鼠.png', name: '小老鼠', greeting: '祝你聪明机智！' },
+    { type: 'ox', imageSrc: 'pic/小牛牛.png', name: '小牛牛', greeting: '祝你踏实努力！' },
+  ],
+};
+
+// 童话系列
+export const FAIRY_TALE_SERIES: BlessingSeriesConfig = {
+  id: 'fairy_tale',
+  name: '童话系列',
+  primaryColor: '#FF8FA3',
+  secondaryColor: '#B892FF',
+  characters: [
+    { type: 'cinderella', imageSrc: 'pic/灰姑娘.png', name: '灰姑娘', greeting: '祝你梦想成真！' },
+    { type: 'snow_white', imageSrc: 'pic/白雪公主.png', name: '白雪公主', greeting: '祝你永远快乐！' },
+    { type: 'mickey', imageSrc: 'pic/米奇.png', name: '米奇', greeting: '祝你生日快乐！' },
+  ],
+};
+
+// 所有系列配置
+export const BLESSING_SERIES_CONFIGS: Record<BlessingSeries, BlessingSeriesConfig> = {
+  journey_to_the_west: JOURNEY_TO_THE_WEST_SERIES,
+  zodiac: ZODIAC_SERIES,
+  fairy_tale: FAIRY_TALE_SERIES,
+  custom: {
+    id: 'custom',
+    name: '自定义系列',
+    primaryColor: '#FFD76A',
+    secondaryColor: '#7EC8FF',
+    characters: [],
+  },
+};
+
+// ==================== 简化参数接口 ====================
+
+/**
+ * 简化版儿童生日祝福参数
+ * 只需要传入核心参数，其余使用默认配置
+ */
+export interface SimplifiedKidsBirthdayProps {
+  /** 屏幕方向：竖屏/横屏 */
+  orientation?: ScreenOrientation;
+  /** 主角名字 */
+  name: string;
+  /** 年龄 */
+  age?: number;
+  /** 照片列表 */
+  photos?: PhotoData[];
+  /** ��福系列 */
+  blessingSeries?: BlessingSeries;
+  
+  // ========== 可选的高级配置 ==========
+  /** 风格子类型 */
+  subStyle?: KidsSubStyle;
+  /** 自定义角色图片（覆盖系列默认） */
+  customCharacterImages?: string[];
+  /** 自定义角色视频（覆盖系列默认） */
+  customCharacterVideos?: string[];
+  /** 是否启用背景音乐 */
+  musicEnabled?: boolean;
+  /** 生日歌音频路径 */
+  birthdaySongSource?: string;
 }
 
 // ==================== 默认配置 ====================
@@ -442,8 +571,7 @@ export const DEFAULT_KIDS_BIRTHDAY_PARAMS: Partial<KidsBirthdayParams> = {
   width: 720,
   height: 1280,
   subStyle: 'general',
-  characterSeries: 'zodiac',
-  characterType: 'tiger',
+  blessingSeries: 'journey_to_the_west',
   photos: [],
   dreams: ['astronaut', 'artist', 'racer'],
   orientation: 'portrait',

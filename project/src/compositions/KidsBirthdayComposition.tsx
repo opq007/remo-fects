@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { 
   StoryPanel,
   StoryChapterConfig,
+  StoryCharacterConfig,
   NestedBackgroundProps,
   NestedOverlayProps,
   NestedAudioProps,
@@ -25,7 +26,6 @@ import { getColorTheme } from '../utils/colors';
 import { mergeChapterConfigs } from '../utils/mergeChapterConfig';
 import { 
   KidsSubStyle, 
-  CharacterSeries,
   ZodiacType,
   PetType,
   HeroType,
@@ -36,7 +36,8 @@ import {
 import { 
   KidsBirthdaySchema, 
   getModules, 
-  getDuration 
+  getDuration,
+  getBlessingSeriesConfig,
 } from '../schemas';
 
 export type KidsBirthdayProps = z.infer<typeof KidsBirthdaySchema>;
@@ -120,9 +121,6 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     age,
     duration = getDuration(),
     subStyle = 'general',
-    characterSeries = 'zodiac',
-    characterType = 'tiger',
-    characterImageSrc,
     photos = [],
     dreams = ['astronaut', 'artist', 'racer'],
     orientation = 'portrait',
@@ -134,6 +132,10 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     birthdaySongVolume = 0.6,
     seed,
     chapterList: customChapterList,
+    // 简化参数：祝福系列
+    blessingSeries = 'journey_to_the_west',
+    customCharacterImages,
+    customCharacterVideos,
     // 嵌套参数
     marquee,
     watermark,
@@ -142,6 +144,28 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
   } = props;
   
   const theme = getColorTheme(subStyle);
+  
+  // 获取祝福系列配置
+  const seriesConfig = useMemo(() => getBlessingSeriesConfig(blessingSeries), [blessingSeries]);
+  
+  // 构建角色资源（自定义资源覆盖默认配置）
+  const characterResources = useMemo(() => {
+    const defaultCharacters = seriesConfig.characters;
+    
+    // 如果提供了自定义图片，覆盖默认配置
+    if (customCharacterImages && customCharacterImages.length > 0) {
+      return defaultCharacters.map((char, index) => ({
+        ...char,
+        imageSrc: customCharacterImages[index] || char.imageSrc,
+        videoSrc: customCharacterVideos?.[index] || char.videoSrc,
+      }));
+    }
+    
+    return defaultCharacters;
+  }, [seriesConfig, customCharacterImages, customCharacterVideos]);
+  
+  // 获取主要角色（用于开场和模块A）
+  const mainCharacter = characterResources[0];
   
   // 构建面板级嵌套参数配置
   const panelBackground: NestedBackgroundProps = {
@@ -160,9 +184,6 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     volume: 0.5,
     loop: true,
   };
-  
-  // 类型断言
-  const typedCharacterType = characterType as ZodiacType & PetType & HeroType;
   
   // 构建章节配置
   const chapters = useMemo((): StoryChapterConfig[] => {
@@ -247,10 +268,10 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         },
         character: {
           series: "image",
-          type: typedCharacterType,
+          type: mainCharacter?.type as ZodiacType | PetType | HeroType | undefined,
           size: 500,
           animate: true,
-          imageSrc: "pic/孙悟空.png",
+          imageSrc: mainCharacter?.imageSrc || "pic/孙悟空.png",
           entrance: {
             enabled: true,
             direction: 'bottom',
@@ -265,8 +286,11 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
       });
     }
     
- // 模块 F：成长庆祝高潮
+    // 模块 F：成长庆祝高潮
     if (modules.includes('F')) {
+      // 获取第一个有视频的角色
+      const videoCharacter = characterResources.find(c => c.videoSrc);
+      
       chapterList.push({
         id: 'F_growthCelebration',
         durationInFrames: 10 * fps,
@@ -290,15 +314,15 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
             triggerFrame: 20,
           },
         },
-        transparentVideos: [
+        transparentVideos: videoCharacter?.videoSrc ? [
           {
-            src: '孙悟空.mp4',
+            src: videoCharacter.videoSrc,
             mode: 'greenScreen',
             scale: 0.6,
             x: 0.5,
             y: 0.7,
           },
-        ],
+        ] : undefined,
         children: (
           <ChapterFContent
             name={name}
@@ -366,6 +390,21 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     
     // 模块 D：照片互动2
     if (modules.includes('D') && photos.length > 0) {
+      // 构建透明视频配置（使用系列角色视频）
+      const transparentVideoConfigs = characterResources
+        .filter(c => c.videoSrc)
+        .slice(0, 5)
+        .map((char, index) => ({
+          src: char.videoSrc!,
+          mode: 'greenScreen' as const,
+          startFrame: index * 120,
+          durationInFrames: index === 4 ? 144 : 120,
+          scale: 0.6,
+          x: 0.5,
+          y: 0.7,
+          flipX: index % 2 === 0,
+        }));
+      
       chapterList.push({
         id: 'D_photoInteraction2',
         durationInFrames: 30 * fps,
@@ -377,13 +416,6 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           opacity: 0.05,
         },
         children: <PhotoFromMagicCircle targetY={0.3}  photo={photos[1 % photos.length]} visible={true} orientation={orientation} />,
-        // photoDisplay: {
-        //   enabled: true,
-        //   photo: photos[1 % photos.length],
-        //   animationType: 'flyIn',
-        //   frameType: 'magic',
-        //   frameColor: theme.primary,
-        // },
         floatingElements: {
           enabled: true,
           type: 'hearts',
@@ -391,62 +423,54 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           startFrame: 30,
           color: '#FF6B6B',
         },
-        transparentVideos: [
-          {
-            src: '孙悟空.mp4',
-            mode: 'greenScreen',
-            startFrame: 0,
-            durationInFrames:120,
-            scale: 0.6,
-            x: 0.5,
-            y: 0.7,
-            flipX:true,
-          },
-          {
-            src: '唐僧.mp4',
-            mode: 'greenScreen',
-            startFrame: 120,
-            durationInFrames:120,
-            scale: 0.6,
-            x: 0.5,
-            y: 0.7,
-          },
-          {
-            src: '猪八戒.mp4',
-            mode: 'greenScreen',
-            startFrame: 240,
-            durationInFrames:120,
-            scale: 0.6,
-            x: 0.5,
-            y: 0.7,
-            flipX:true,
-          },
-          {
-            src: '沙和尚.mp4',
-            mode: 'greenScreen',
-            startFrame: 360,
-            durationInFrames: 120,
-            scale: 0.6,
-            x: 0.5,
-            y: 0.7,
-            flipX:true,
-          },
-          {
-            src: '白龙马.mp4',
-            mode: 'greenScreen',
-            startFrame: 480,
-            durationInFrames: 144,
-            scale: 0.6,
-            x: 0.5,
-            y: 0.7,
-            flipX:true,           
-          },
-        ],
+        transparentVideos: transparentVideoConfigs.length > 0 ? transparentVideoConfigs : undefined,
       });
     }
     
     // 模块 G：生日歌互动
     if (modules.includes('G')) {
+      // 构建庆祝角色（使用系列角色）
+      const celebrationCharacters: StoryCharacterConfig[] = characterResources.slice(0, 4).map((char, index) => {
+        const positions = [
+          { direction: 'left', horizontalPosition: 0.15, verticalPosition: 0.1 },
+          { direction: 'right', horizontalPosition: 0.85, verticalPosition: 0.1 },
+          { direction: 'bottom', horizontalPosition: 0.15, verticalPosition: 0.65 },
+          { direction: 'bottom', horizontalPosition: 0.85, verticalPosition: 0.65 },
+        ];
+        const greetings = ['生日快乐！', '天天开心！', '健康成长！', '万事如意！'];
+        const bubbleColors = ['#FFD76A', '#FF8FA3', '#7EC8FF', '#B892FF'];
+        
+        return {
+          type: char.type as ZodiacType | PetType | HeroType,
+          series: 'image' as const,
+          imageSrc: char.imageSrc,
+          size: orientation === 'portrait' ? 120 : 100,
+          animate: true,
+          entrance: {
+            enabled: true,
+            direction: positions[index].direction as 'left' | 'right' | 'bottom',
+            delay: index * 20,
+            distance: 150,
+            springConfig: { damping: 12, stiffness: 80 },
+            horizontalPosition: positions[index].horizontalPosition,
+            verticalPosition: positions[index].verticalPosition,
+          },
+          expressionTimeline: [
+            { expression: 'happy', startFrame: 0 },
+            { expression: 'excited', startFrame: 120 + index * 20 },
+            { expression: 'waving', startFrame: 300 + index * 20 },
+          ],
+          speechTimeline: [
+            {
+              text: char.greeting || greetings[index],
+              startFrame: 60 + index * 40,
+              animationType: 'scale' as const,
+              bubbleColor: bubbleColors[index],
+            },
+          ],
+        };
+      });
+      
       chapterList.push({
         id: 'G_birthdaySong',
         durationInFrames: 35 * fps,
@@ -455,130 +479,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           gradient: theme.gradient,
         },
         // 多个角色围绕四周，先后入场为孩童庆祝
-        characters: [
-          // 角色1：左上角 - 小老虎（位置调整避免遮挡照片）
-          {
-            type: 'tiger',
-            series: 'image',
-            imageSrc: "pic/孙悟空.png",
-            size: orientation === 'portrait' ? 120 : 100,
-            animate: true,
-            entrance: {
-              enabled: true,
-              direction: 'left',
-              delay: 0,
-              distance: 150,
-              springConfig: { damping: 12, stiffness: 80 },
-              horizontalPosition: 0.15,
-              verticalPosition: 0.1,
-            },
-            expressionTimeline: [
-              { expression: 'happy', startFrame: 0 },
-              { expression: 'excited', startFrame: 120 },
-              { expression: 'waving', startFrame: 300 },
-            ],
-            speechTimeline: [
-              {
-                text: '生日快乐！',
-                startFrame: 60,
-                animationType: 'scale',
-                bubbleColor: '#FFD76A',
-              },
-            ],
-          },
-          // 角色2：右上角 - 小兔子
-          {
-            type: 'rabbit',
-            series: 'image',
-            imageSrc: "pic/唐僧.png",
-            size: orientation === 'portrait' ? 120 : 100,
-            animate: true,
-            entrance: {
-              enabled: true,
-              direction: 'right',
-              delay: 20,
-              distance: 150,
-              springConfig: { damping: 12, stiffness: 80 },
-              horizontalPosition: 0.85,
-              verticalPosition: 0.1,
-            },
-            expressionTimeline: [
-              { expression: 'happy', startFrame: 0 },
-              { expression: 'excited', startFrame: 140 },
-              { expression: 'waving', startFrame: 320 },
-            ],
-            speechTimeline: [
-              {
-                text: '天天开心！',
-                startFrame: 100,
-                animationType: 'scale',
-                bubbleColor: '#FF8FA3',
-              },
-            ],
-          },
-          // 角色3：左下角 - 小龙（位置调整到更底部）
-          {
-            // series: 'zodiac',
-            type: 'dragon',
-            series: 'image',
-            imageSrc: "pic/猪八戒.png",            
-            size: orientation === 'portrait' ? 120 : 100,
-            animate: true,
-            entrance: {
-              enabled: true,
-              direction: 'bottom',
-              delay: 40,
-              distance: 150,
-              springConfig: { damping: 12, stiffness: 80 },
-              horizontalPosition: 0.15,
-              verticalPosition: 0.65,
-            },
-            expressionTimeline: [
-              { expression: 'happy', startFrame: 0 },
-              { expression: 'excited', startFrame: 160 },
-              { expression: 'waving', startFrame: 340 },
-            ],
-            speechTimeline: [
-              {
-                text: '健康成长！',
-                startFrame: 140,
-                animationType: 'scale',
-                bubbleColor: '#7EC8FF',
-              },
-            ],
-          },
-          // 角色4：右下角 - 小蛇
-          {
-            // series: 'zodiac',
-            type: 'snake',
-            series: 'image',
-            imageSrc: "pic/沙和尚.png",            
-            size: orientation === 'portrait' ? 120 : 100,
-            animate: true,
-            entrance: {
-              enabled: true,
-              direction: 'bottom',
-              delay: 60,
-              distance: 150,
-              springConfig: { damping: 12, stiffness: 80 },
-              horizontalPosition: 0.85,
-              verticalPosition: 0.65,
-            },
-            expressionTimeline: [
-              { expression: 'happy', startFrame: 0 },
-              { expression: 'excited', startFrame: 180 },
-              { expression: 'waving', startFrame: 360 },
-            ],
-            speechTimeline: [
-              {
-                text: '万事如意！',
-                startFrame: 180,
-                animationType: 'scale',
-                bubbleColor: '#B892FF',
-              },
-            ],
-          },
-        ],
+        characters: celebrationCharacters,
         confetti: {
           enabled: true,
           level: 'high',
@@ -620,13 +521,11 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           gradient: 'linear-gradient(180deg, #0a0a2e 0%, #1a1a4e 50%, #2a2a6e 100%)',
         },
         character: {
-          // series: characterSeries,
-          type: typedCharacterType,
+          type: mainCharacter?.type as ZodiacType | PetType | HeroType | undefined,
           series: 'image',
-          imageSrc: "pic/孙悟空.png",            
-          size: orientation === 'portrait' ? 500 : 500,
+          imageSrc: mainCharacter?.imageSrc || "pic/孙悟空.png",            
+          size: orientation === 'portrait' ? 500 : 450,
           animate: true,
-          // imageSrc: characterImageSrc,
           entrance: {
             enabled: true,
             direction: 'top',
@@ -639,7 +538,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         },
         subtitles: [
           {
-            text: '未来的一年，我会一直守护你。',
+            text: mainCharacter?.greeting || '未来的一年，我会一直守护你。',
             startFrame: 24,
             durationInFrames: 180,
             position: 'bottom',
@@ -669,8 +568,9 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     return mergeChapterConfigs(chapterList, customChapterList as StoryChapterConfig[] | undefined);
   }, [
     fps, photos, dreams, name, age, subStyle, orientation, 
-    confettiLevel, theme, characterSeries, typedCharacterType,
-    birthdaySongSource, birthdaySongVolume, characterImageSrc, customChapterList
+    confettiLevel, theme,
+    birthdaySongSource, birthdaySongVolume, customChapterList,
+    characterResources, blessingSeries, mainCharacter,
   ]);
   
   return (

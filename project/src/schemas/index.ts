@@ -3,12 +3,12 @@ import { CompleteCompositionSchema, CustomChapterInputSchema } from '../../../ef
 
 // ==================== 枚举类型 Schema ====================
 
-// 角色系列
-export const CharacterSeriesSchema = z.enum(['zodiac', 'pet', 'hero', 'image']).meta({
-  description: '角色系列：生肖守护神/萌宠精灵/勇气超人/自定义图片'
+// 祝福系列
+export const BlessingSeriesSchema = z.enum(['journey_to_the_west', 'zodiac', 'fairy_tale', 'custom']).meta({
+  description: '祝福系列：西游记/生肖守护神/童话/自定义'
 });
 
-// 生肖类型
+// 生肖类型（用于类型定义，Schema 中已移除相关参数）
 export const ZodiacTypeSchema = z.enum([
   'rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake',
   'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'
@@ -72,13 +72,35 @@ export const CartoonElementSchema = z.object({
 // ==================== 主 Schema ====================
 
 /**
- * 儿童生日祝福 Schema v2.0
- * 支持模块化分镜、角色系统、照片互动等新功能
+ * 儿童生日祝福 Schema v2.1
+ * 支持模块化分镜、角色系统、照片互动、祝福系列等新功能
+ * 支持"简化参数"模式：只传核心参数，其余使用默认配置
  */
 export const KidsBirthdaySchema = CompleteCompositionSchema.extend({
-  // ========== 基本信息 ==========
+  // ========== 核心参数（简化模式必填） ==========
   name: z.string().min(1).max(10).meta({ description: '主角名字' }),
   age: z.number().min(1).max(18).optional().meta({ description: '年龄' }),
+  photos: z.array(PhotoDataSchema).max(5).default([]).meta({
+    description: '照片列表（最多5张）'
+  }),
+  orientation: ScreenOrientationSchema.default('portrait').meta({
+    description: '屏幕方向'
+  }),
+  
+  // ========== 祝福系列（新增，简化模式核心参数） ==========
+  blessingSeries: BlessingSeriesSchema.default('journey_to_the_west').meta({
+    description: '祝福系列（如西游记系列），决定使用的角色和视频资源'
+  }),
+  
+  // ========== 自定义角色资源（可选，覆盖系列默认） ==========
+  customCharacterImages: z.array(z.string()).optional().meta({
+    description: '自定义角色图片路径列表，覆盖祝福系列的默认角色图片'
+  }),
+  customCharacterVideos: z.array(z.string()).optional().meta({
+    description: '自定义角色视频路径列表，覆盖祝福系列的默认角色视频'
+  }),
+  
+  // ========== 基本信息 ==========
   message: z.string().max(100).default('愿你每天开心成长').meta({ description: '祝福语' }),
   
   // ========== 视频配置（固定 124 秒：4秒倒计时 + 120秒正片） ==========
@@ -89,33 +111,14 @@ export const KidsBirthdaySchema = CompleteCompositionSchema.extend({
   width: z.number().default(720),
   height: z.number().default(1280),
   
-  // ========== 风格 ==========
-  subStyle: KidsSubStyleSchema.default('general'),
-  
-  // ========== 角色系统 ==========
-  characterSeries: CharacterSeriesSchema.default('zodiac').meta({
-    description: '角色系列'
-  }),
-  characterType: z.string().default('tiger').meta({
-    description: '角色类型（根据series选择对应的生肖/萌宠/超人类型，image模式下可忽略）'
-  }),
-  characterImageSrc: z.string().optional().meta({
-    description: '自定义角色图片路径（本地路径或网络URL），仅当 characterSeries="image" 时使用'
-  }),
-  
-  // ========== 照片系统 ==========
-  photos: z.array(PhotoDataSchema).max(5).default([]).meta({
-    description: '照片列表（最多5张）'
+  // ========== 风格（颜色主题） ==========
+  subStyle: KidsSubStyleSchema.default('general').meta({
+    description: '风格子类型：girl_unicorn（粉紫）/ boy_rocket（蓝绿）/ animal（绿黄）/ general（黄蓝）'
   }),
   
   // ========== 梦想泡泡 ==========
   dreams: z.array(DreamJobSchema).max(5).default(['astronaut', 'artist', 'racer']).meta({
     description: '梦想职业列表（最多5个）'
-  }),
-  
-  // ========== 布局 ==========
-  orientation: ScreenOrientationSchema.default('portrait').meta({
-    description: '屏幕方向'
   }),
   
   // ========== 名字样式 ==========
@@ -211,4 +214,41 @@ export const getCharacterTypes = (series: 'zodiac' | 'pet' | 'hero' | 'image'): 
     default:
       return ['tiger'];
   }
+};
+
+/**
+ * 获取祝福系列配置
+ */
+export const getBlessingSeriesConfig = (series: 'journey_to_the_west' | 'zodiac' | 'fairy_tale' | 'custom') => {
+  const configs: Record<string, { name: string; characters: { type: string; imageSrc: string; videoSrc?: string; name: string; greeting: string }[] }> = {
+    journey_to_the_west: {
+      name: '西游记系列',
+      characters: [
+        { type: 'sun_wukong', imageSrc: 'pic/孙悟空.png', videoSrc: '孙悟空.mp4', name: '孙悟空', greeting: '俺老孙来也！祝你生日快乐！' },
+        { type: 'tang_seng', imageSrc: 'pic/唐僧.png', videoSrc: '唐僧.mp4', name: '唐僧', greeting: '阿弥陀佛，祝你健康成长！' },
+        { type: 'zhu_bajie', imageSrc: 'pic/猪八戒.png', videoSrc: '猪八戒.mp4', name: '猪八戒', greeting: '嘿嘿，生日快乐！' },
+        { type: 'sha_wujing', imageSrc: 'pic/沙和尚.png', videoSrc: '沙和尚.mp4', name: '沙和尚', greeting: '祝你天天开心！' },
+        { type: 'white_dragon_horse', imageSrc: 'pic/白龙马.png', videoSrc: '白龙马.mp4', name: '白龙马', greeting: '祝你一马当先！' },
+      ],
+    },
+    zodiac: {
+      name: '生肖守护神系列',
+      characters: [
+        { type: 'tiger', imageSrc: 'pic/小老虎.png', name: '小老虎', greeting: '嗷呜～祝你生日快乐！' },
+        { type: 'rabbit', imageSrc: 'pic/小兔子.png', name: '小兔子', greeting: '蹦蹦跳～祝你快乐成长！' },
+        { type: 'dragon', imageSrc: 'pic/小龙龙.png', name: '小龙龙', greeting: '吼～祝你心想事成！' },
+      ],
+    },
+    fairy_tale: {
+      name: '童话系列',
+      characters: [
+        { type: 'mickey', imageSrc: 'pic/米奇.png', name: '米奇', greeting: '祝你生日快乐！' },
+      ],
+    },
+    custom: {
+      name: '自定义系列',
+      characters: [],
+    },
+  };
+  return configs[series] || configs.journey_to_the_west;
 };
