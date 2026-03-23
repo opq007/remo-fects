@@ -246,7 +246,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           },
         },
         character: {
-          series: characterSeries,
+          series: "image",
           type: typedCharacterType,
           size: 500,
           animate: true,
@@ -265,75 +265,6 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
       });
     }
     
-    // // 模块 B：角色入场
-    // if (modules.includes('B')) {
-    //   chapterList.push({
-    //     id: 'B_characterEntrance',
-    //     durationInFrames: 10 * fps,
-    //     background: {
-    //       type: 'gradient',
-    //       gradient: theme.gradient,
-    //     },
-    //     magicEffects: {
-    //       balloonBurst: {
-    //         enabled: true,
-    //         x: 0.5,
-    //         y: 0.5,
-    //         balloonCount: 12,
-    //         triggerFrame: 192,
-    //       },
-    //       whiteFlash: {
-    //         enabled: true,
-    //         durationInFrames: 20,
-    //         triggerFrame: 200,
-    //       },
-    //     },
-    //     character: {
-    //       series: characterSeries,
-    //       type: typedCharacterType,
-    //       size: orientation === 'portrait' ? 180 : 150,
-    //       animate: true,
-    //       imageSrc: characterImageSrc,
-    //       entrance: {
-    //         enabled: true,
-    //         direction: 'bottom',
-    //         delay: 0,
-    //         distance: 200,
-    //         springConfig: { damping: 12, stiffness: 80 },
-    //         verticalPosition: 0.45,
-    //         horizontalPosition: 0.5,
-    //       },
-    //       speechTimeline: [
-    //         {
-    //           text: '我是你的生肖守护神小老虎！',
-    //           startFrame: 72,
-    //           endFrame: 120,
-    //           animationType: 'scale',
-    //         },
-    //       ],
-    //       expressionTimeline: [
-    //         { expression: 'happy', startFrame: 0 },
-    //         { expression: 'waving', startFrame: 72 },
-    //         { expression: 'happy', startFrame: 120 },
-    //       ],
-    //     },
-    //     textElements: [
-    //       {
-    //         type: 'name',
-    //         showAge: false,
-    //         fontSize: orientation === 'portrait' ? 100 : 80,
-    //         color: theme.primary,
-    //         verticalPosition: 0.2,
-    //         startFrame: 120,
-    //         animationType: 'bounce',
-    //       },
-    //     ],
-    //     name,
-    //     age,
-    //     subStyle,
-    //     orientation,
-    //   });
-    // }
  // 模块 F：成长庆祝高潮
     if (modules.includes('F')) {
       chapterList.push({
@@ -527,8 +458,9 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         characters: [
           // 角色1：左上角 - 小老虎（位置调整避免遮挡照片）
           {
-            series: 'zodiac',
             type: 'tiger',
+            series: 'image',
+            imageSrc: "pic/孙悟空.png",
             size: orientation === 'portrait' ? 120 : 100,
             animate: true,
             entrance: {
@@ -556,8 +488,9 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           },
           // 角色2：右上角 - 小兔子
           {
-            series: 'zodiac',
             type: 'rabbit',
+            series: 'image',
+            imageSrc: "pic/唐僧.png",
             size: orientation === 'portrait' ? 120 : 100,
             animate: true,
             entrance: {
@@ -585,8 +518,10 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           },
           // 角色3：左下角 - 小龙（位置调整到更底部）
           {
-            series: 'zodiac',
+            // series: 'zodiac',
             type: 'dragon',
+            series: 'image',
+            imageSrc: "pic/猪八戒.png",            
             size: orientation === 'portrait' ? 120 : 100,
             animate: true,
             entrance: {
@@ -614,8 +549,10 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
           },
           // 角色4：右下角 - 小蛇
           {
-            series: 'zodiac',
+            // series: 'zodiac',
             type: 'snake',
+            series: 'image',
+            imageSrc: "pic/沙和尚.png",            
             size: orientation === 'portrait' ? 120 : 100,
             animate: true,
             entrance: {
@@ -677,23 +614,25 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
     if (modules.includes('H')) {
       chapterList.push({
         id: 'H_futureBlessing',
-        durationInFrames: 15 * fps,
+        durationInFrames: 10 * fps,
         background: {
           type: 'gradient',
           gradient: 'linear-gradient(180deg, #0a0a2e 0%, #1a1a4e 50%, #2a2a6e 100%)',
         },
         character: {
-          series: characterSeries,
+          // series: characterSeries,
           type: typedCharacterType,
-          size: orientation === 'portrait' ? 180 : 150,
+          series: 'image',
+          imageSrc: "pic/孙悟空.png",            
+          size: orientation === 'portrait' ? 500 : 500,
           animate: true,
-          imageSrc: characterImageSrc,
+          // imageSrc: characterImageSrc,
           entrance: {
             enabled: true,
-            direction: 'bottom',
+            direction: 'top',
             delay: 0,
-            distance: 0,
-            verticalPosition: 0.4,
+            distance: 400,
+            verticalPosition: 0.2,
             horizontalPosition: 0.5,
           },
           expression: 'happy',
@@ -701,7 +640,7 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         subtitles: [
           {
             text: '未来的一年，我会一直守护你。',
-            startFrame: 60,
+            startFrame: 24,
             durationInFrames: 180,
             position: 'bottom',
             fontSize: 28,
@@ -726,59 +665,6 @@ export const KidsBirthdayComposition: React.FC<KidsBirthdayProps> = (props) => {
         },
       });
     }
-    
-    // // 模块 J：温暖收尾
-    // if (modules.includes('J')) {
-    //   chapterList.push({
-    //     id: 'J_warmClosing',
-    //     durationInFrames: 5 * fps,
-    //     background: {
-    //       type: 'gradient',
-    //       gradient: theme.gradient,
-    //     },
-    //     character: {
-    //       series: characterSeries,
-    //       type: typedCharacterType,
-    //       size: orientation === 'portrait' ? 180 : 150,
-    //       animate: true,
-    //       imageSrc: characterImageSrc,
-    //       entrance: {
-    //         enabled: true,
-    //         direction: 'bottom',
-    //         distance: 0,
-    //         verticalPosition: 0.6,
-    //         horizontalPosition: 0.5,
-    //       },
-    //       expression: 'waving',
-    //     },
-    //     subtitles: [
-    //       {
-    //         text: `生日快乐，${name}！`,
-    //         startFrame: 30,
-    //         durationInFrames: 90,
-    //         position: 'top',
-    //         fontSize: 40,
-    //         color: PRIMARY_COLORS.creamYellow,
-    //         animationType: 'bounce',
-    //       },
-    //     ],
-    //     textElements: [
-    //       {
-    //         type: 'custom',
-    //         text: '✨ Remo-Fects ✨',
-    //         fontSize: 24,
-    //         color: PRIMARY_COLORS.violet,
-    //         verticalPosition: 0.95,
-    //         startFrame: 60,
-    //         animationType: 'fade',
-    //       },
-    //     ],
-    //     name,
-    //     age,
-    //     subStyle,
-    //     orientation,
-    //   });
-    // }
     
     return mergeChapterConfigs(chapterList, customChapterList as StoryChapterConfig[] | undefined);
   }, [

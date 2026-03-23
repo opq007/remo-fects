@@ -82,7 +82,7 @@ export const KidsBirthdaySchema = CompleteCompositionSchema.extend({
   message: z.string().max(100).default('愿你每天开心成长').meta({ description: '祝福语' }),
   
   // ========== 视频配置（固定 124 秒：4秒倒计时 + 120秒正片） ==========
-  duration: z.number().default(124).meta({ 
+  duration: z.number().default(120).meta({ 
     description: '视频时长(秒)，固定为 124 秒（4秒倒计时 + 120秒正片）' 
   }),
   fps: z.number().default(24),

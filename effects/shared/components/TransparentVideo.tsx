@@ -26,8 +26,12 @@ export interface ChromaKeyConfig {
 export interface TransparentVideoConfig {
   /** 是否启用 */
   enabled?: boolean;
-  /** 视频源（本地路径或网络 URL） */
-  src: string;
+  /** 
+   * 视频源（本地路径或网络 URL）
+   * - 可选，为空时组件仅播放 volumeSrc 音频（纯音频模式）
+   * - 有值时正常播放视频
+   */
+  src?: string;
   /** 
    * 自定义音频源（本地路径或网络 URL）
    * - 优先使用此音频替代视频内置音频
@@ -152,6 +156,10 @@ const isGreenPixelRelaxed = (r: number, g: number, b: number): boolean => {
  * - chromaKey: 自定义色度键（移除指定颜色）
  * - webmAlpha: WebM 透明视频（无需处理，直接播放）
  * 
+ * 纯音频模式：
+ * - 当 src 为空但 volumeSrc 有值时，组件仅播放音频（不渲染视频）
+ * - 适用于只需要音频播放的场景
+ * 
  * 音频处理说明：
  * - volumeSrc 参数支持所有模式，优先使用指定的自定义音频源
  * - 色度键模式：视频元素始终静音，使用独立 Audio 组件播放音频
@@ -186,15 +194,18 @@ export const TransparentVideo: React.FC<TransparentVideoProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { width: configWidth, height: configHeight, fps } = useVideoConfig();
   
+  // 判断是否为纯音频模式（视频源为空但有音频源）
+  const isAudioOnlyMode = !src && Boolean(volumeSrc);
+  
   // 计算视频显示尺寸
   const displayWidth = customWidth ?? Math.round(configWidth * scale);
   const displayHeight = customHeight ?? Math.round(configHeight * scale);
   
   // 判断视频源类型
-  const isNetworkUrl = src.startsWith('http://') || src.startsWith('https://');
-  const videoSrc = isNetworkUrl ? src : staticFile(src);
+  const isNetworkUrl = src?.startsWith('http://') || src?.startsWith('https://');
+  const videoSrc = src ? (isNetworkUrl ? src : staticFile(src)) : '';
   
-  // 判断音频源类型，优先使用 volumeSrc
+  // 判断音频源类型，纯音频模式必须使用 volumeSrc
   const audioSource = volumeSrc 
     ? (volumeSrc.startsWith('http://') || volumeSrc.startsWith('https://') ? volumeSrc : staticFile(volumeSrc))
     : videoSrc;
@@ -277,6 +288,25 @@ export const TransparentVideo: React.FC<TransparentVideoProps> = ({
   }, [startFrame, fps]);
   
   if (!enabled) return null;
+  
+  // 纯音频模式：只播放音频，不渲染视频
+  if (isAudioOnlyMode) {
+    if (muted) return null;
+    
+    return (
+      <AbsoluteFill style={{ pointerEvents: 'none' }}>
+        <Audio
+          src={audioSource}
+          volume={volume}
+          playbackRate={playbackRate}
+          startFrom={startFrom}
+        />
+      </AbsoluteFill>
+    );
+  }
+  
+  // 视频源为空且无音频源：不渲染任何内容
+  if (!src) return null;
   
   // 计算位置和变换
   const positionStyle: React.CSSProperties = {
