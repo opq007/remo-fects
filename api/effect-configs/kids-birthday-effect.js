@@ -1,11 +1,12 @@
 /**
- * 儿童生日祝福特效配置 v5.0
+ * 儿童生日祝福特效配置 v6.0
  * 
  * 更新说明：
  * - 视频时长固定为 124 秒（4秒倒计时 + 120秒正片）
- * - 移除 videoVersion 参数
- * - 新增 chapterList 支持自定义章节配置
- * - 角色系统增加 image 类型（自定义图片）
+ * - 移除 characterSeries、characterType、characterImageSrc（被 blessingSeries 替代）
+ * - 新增 blessingSeries 祝福系列参数（西游记/生肖/童话/自定义）
+ * - 新增 customCharacterImages、customCharacterVideos 自定义角色资源
+ * - 简化参数结构：只需 name + blessingSeries 即可生成视频
  */
 
 const path = require('path');
@@ -61,28 +62,30 @@ const params = {
     description: '视频高度'
   },
   
-  // ========== 风格 ==========
+  // ========== 风格（颜色主题） ==========
   subStyle: {
     type: 'string',
     defaultValue: 'general',
-    description: '风格主题：girl_unicorn(女孩独角兽) | boy_rocket(男孩火箭) | animal(可爱动物) | general(通用派对)'
+    description: '风格主题：girl_unicorn(粉紫) | boy_rocket(蓝绿) | animal(绿黄) | general(黄蓝)'
   },
   
-  // ========== 角色系统 ==========
-  characterSeries: {
+  // ========== 祝福系列（决定角色和视频资源） ==========
+  blessingSeries: {
     type: 'string',
-    defaultValue: 'zodiac',
-    description: '角色系列：zodiac(生肖守护神) | pet(萌宠精灵) | hero(勇气超人) | image(自定义图片)'
+    defaultValue: 'journey_to_the_west',
+    description: '祝福系列：journey_to_the_west(西游记) | zodiac(生肖守护神) | fairy_tale(童话) | custom(自定义)'
   },
-  characterType: {
-    type: 'string',
-    defaultValue: 'tiger',
-    description: '角色类型（根据series选择：生肖12种/萌宠6种/超人5种，image模式可忽略）'
-  },
-  characterImageSrc: {
-    type: 'string',
+  
+  // ========== 自定义角色资源（可选，覆盖系列默认） ==========
+  customCharacterImages: {
+    type: 'array',
     defaultValue: null,
-    description: '自定义角色图片路径（仅当 characterSeries="image" 时使用）'
+    description: '自定义角色图片路径列表，覆盖祝福系列的默认角色图片'
+  },
+  customCharacterVideos: {
+    type: 'array',
+    defaultValue: null,
+    description: '自定义角色视频路径列表，覆盖祝福系列的默认角色视频'
   },
   
   // ========== 照片系统 ==========
@@ -193,20 +196,48 @@ const params = {
   },
 };
 
-// 辅助函数：获取有效的角色类型
-function getValidCharacterTypes(series) {
-  switch (series) {
-    case 'zodiac':
-      return ['rat', 'ox', 'tiger', 'rabbit', 'dragon', 'snake', 'horse', 'goat', 'monkey', 'rooster', 'dog', 'pig'];
-    case 'pet':
-      return ['bunny', 'kitten', 'puppy', 'bear', 'fox', 'panda'];
-    case 'hero':
-      return ['superhero', 'astronaut', 'knight', 'wizard', 'pirate'];
-    case 'image':
-      return []; // image 模式不需要类型
-    default:
-      return ['tiger'];
-  }
+// 辅助函数：获取有效的祝福系列
+function getValidBlessingSeries() {
+  return ['journey_to_the_west', 'zodiac', 'fairy_tale', 'custom'];
+}
+
+// 辅助函数：获取祝福系列配置
+function getBlessingSeriesConfig(series) {
+  const configs = {
+    journey_to_the_west: {
+      name: '西游记系列',
+      description: '孙悟空、唐僧、猪八戒、沙和尚、白龙马',
+      characters: [
+        { type: 'sun_wukong', name: '孙悟空', greeting: '俺老孙来也！祝你生日快乐！' },
+        { type: 'tang_seng', name: '唐僧', greeting: '阿弥陀佛，祝你健康成长！' },
+        { type: 'zhu_bajie', name: '猪八戒', greeting: '嘿嘿，生日快乐！' },
+        { type: 'sha_wujing', name: '沙和尚', greeting: '祝你天天开心！' },
+        { type: 'white_dragon_horse', name: '白龙马', greeting: '祝你一马当先！' }
+      ]
+    },
+    zodiac: {
+      name: '生肖守护神系列',
+      description: '12生肖守护神',
+      characters: [
+        { type: 'tiger', name: '小老虎', greeting: '嗷呜～祝你生日快乐！' },
+        { type: 'rabbit', name: '小兔子', greeting: '蹦蹦跳～祝你快乐成长！' },
+        { type: 'dragon', name: '小龙龙', greeting: '吼～祝你心想事成！' }
+      ]
+    },
+    fairy_tale: {
+      name: '童话系列',
+      description: '经典童话角色',
+      characters: [
+        { type: 'mickey', name: '米奇', greeting: '祝你生日快乐！' }
+      ]
+    },
+    custom: {
+      name: '自定义系列',
+      description: '使用自定义角色资源',
+      characters: []
+    }
+  };
+  return configs[series] || configs.journey_to_the_west;
 }
 
 // 辅助函数：获取 Composition ID
@@ -229,17 +260,17 @@ function validate(params) {
     return { valid: false, error: '祝福语长度不能超过100个字符' };
   }
   
-  // 验证角色类型
-  if (params.characterSeries !== 'image' && params.characterType) {
-    const validTypes = getValidCharacterTypes(params.characterSeries || 'zodiac');
-    if (validTypes.length > 0 && !validTypes.includes(params.characterType)) {
-      return { valid: false, error: `角色类型无效，${params.characterSeries}系列可选：${validTypes.join(', ')}` };
+  // 验证祝福系列
+  if (params.blessingSeries) {
+    const validSeries = getValidBlessingSeries();
+    if (!validSeries.includes(params.blessingSeries)) {
+      return { valid: false, error: `祝福系列无效，可选：${validSeries.join(', ')}` };
     }
   }
   
-  // image 模式需要提供图片
-  if (params.characterSeries === 'image' && !params.characterImageSrc) {
-    return { valid: false, error: 'image 模式需要提供 characterImageSrc 自定义图片路径' };
+  // custom 系列建议提供自定义资源
+  if (params.blessingSeries === 'custom' && !params.customCharacterImages && !params.customCharacterVideos) {
+    return { valid: false, error: 'custom 系列需要提供 customCharacterImages 或 customCharacterVideos' };
   }
   
   if (params.photos && params.photos.length > 5) {
@@ -258,7 +289,6 @@ function validate(params) {
  */
 function buildRenderParams(reqParams, commonParams) {
   const orientation = reqParams.orientation || params.orientation.defaultValue;
-  const characterSeries = reqParams.characterSeries || params.characterSeries.defaultValue;
   
   const result = { ...commonParams };
 
@@ -273,11 +303,6 @@ function buildRenderParams(reqParams, commonParams) {
   
   // 固定时长为 124 秒
   result.duration = 124;
-  
-  // 处理角色类型默认值
-  if (characterSeries !== 'image') {
-    result.characterType = reqParams.characterType || getValidCharacterTypes(characterSeries)[0];
-  }
   
   // 支持嵌套参数（背景、音频等）
   if (reqParams.background) result.background = reqParams.background;
@@ -304,86 +329,86 @@ function buildRenderParams(reqParams, commonParams) {
 // 获取预设配置
 function getPresets() {
   return {
+    'journey_to_the_west': {
+      name: '西游记系列',
+      blessingSeries: 'journey_to_the_west',
+      subStyle: 'general',
+      confettiLevel: 'high',
+      description: '孙悟空师徒五人为你庆祝生日'
+    },
+    'zodiac': {
+      name: '生肖守护神',
+      blessingSeries: 'zodiac',
+      subStyle: 'general',
+      confettiLevel: 'high',
+      description: '生肖守护神为你送上祝福'
+    },
     'girl_unicorn': {
       name: '女孩独角兽',
+      blessingSeries: 'journey_to_the_west',
       subStyle: 'girl_unicorn',
-      characterSeries: 'pet',
-      characterType: 'bunny',
       confettiLevel: 'high',
-      dreams: ['artist', 'musician', 'teacher']
+      dreams: ['artist', 'musician', 'teacher'],
+      description: '粉紫配色，适合小女孩'
     },
     'boy_rocket': {
       name: '男孩火箭',
+      blessingSeries: 'journey_to_the_west',
       subStyle: 'boy_rocket',
-      characterSeries: 'hero',
-      characterType: 'astronaut',
       confettiLevel: 'high',
-      dreams: ['astronaut', 'racer', 'scientist']
+      dreams: ['astronaut', 'racer', 'scientist'],
+      description: '蓝绿配色，适合小男孩'
     },
     'animal': {
       name: '可爱动物',
+      blessingSeries: 'zodiac',
       subStyle: 'animal',
-      characterSeries: 'pet',
-      characterType: 'puppy',
-      confettiLevel: 'high'
+      confettiLevel: 'high',
+      description: '可爱动物主题'
     },
     'general': {
       name: '通用派对',
+      blessingSeries: 'journey_to_the_west',
       subStyle: 'general',
-      characterSeries: 'zodiac',
-      characterType: 'tiger',
-      confettiLevel: 'high'
+      confettiLevel: 'high',
+      description: '通用派对风格'
     },
   };
 }
 
-// 获取角色选项
-function getCharacterOptions() {
+// 获取祝福系列选项
+function getBlessingSeriesOptions() {
   return {
+    journey_to_the_west: {
+      name: '西游记系列',
+      description: '孙悟空师徒五人为你庆祝生日',
+      characters: [
+        { type: 'sun_wukong', name: '孙悟空', greeting: '俺老孙来也！祝你生日快乐！' },
+        { type: 'tang_seng', name: '唐僧', greeting: '阿弥陀佛，祝你健康成长！' },
+        { type: 'zhu_bajie', name: '猪八戒', greeting: '嘿嘿，生日快乐！' },
+        { type: 'sha_wujing', name: '沙和尚', greeting: '祝你天天开心！' },
+        { type: 'white_dragon_horse', name: '白龙马', greeting: '祝你一马当先！' }
+      ]
+    },
     zodiac: {
-      name: '生肖守护神',
-      description: '根据小朋友的生肖选择守护神',
+      name: '生肖守护神系列',
+      description: '12生肖守护神，选择对应的生肖角色',
       characters: [
-        { type: 'rat', name: '小老鼠', description: '聪明机灵' },
-        { type: 'ox', name: '小牛牛', description: '勤恳踏实' },
-        { type: 'tiger', name: '小老虎', description: '勇敢威武' },
-        { type: 'rabbit', name: '小兔子', description: '温柔可爱' },
-        { type: 'dragon', name: '小龙龙', description: '神气活现' },
-        { type: 'snake', name: '小蛇蛇', description: '灵动优雅' },
-        { type: 'horse', name: '小马驹', description: '自由奔放' },
-        { type: 'goat', name: '小山羊', description: '温和善良' },
-        { type: 'monkey', name: '小猴子', description: '活泼好动' },
-        { type: 'rooster', name: '小公鸡', description: '自信美丽' },
-        { type: 'dog', name: '小狗汪', description: '忠诚可靠' },
-        { type: 'pig', name: '小猪猪', description: '可爱福气' }
+        { type: 'tiger', name: '小老虎', greeting: '嗷呜～祝你生日快乐！' },
+        { type: 'rabbit', name: '小兔子', greeting: '蹦蹦跳～祝你快乐成长！' },
+        { type: 'dragon', name: '小龙龙', greeting: '吼～祝你心想事成！' }
       ]
     },
-    pet: {
-      name: '萌宠精灵',
-      description: '可爱的小动物精灵',
+    fairy_tale: {
+      name: '童话系列',
+      description: '经典童话角色，适合喜欢童话的小朋友',
       characters: [
-        { type: 'bunny', name: '蹦蹦兔', description: '蹦蹦跳跳' },
-        { type: 'kitten', name: '喵喵猫', description: '温柔粘人' },
-        { type: 'puppy', name: '汪汪狗', description: '活泼忠诚' },
-        { type: 'bear', name: '小熊熊', description: '温暖抱抱' },
-        { type: 'fox', name: '小狐狸', description: '机智聪明' },
-        { type: 'panda', name: '盼盼熊', description: '国宝萌宠' }
+        { type: 'mickey', name: '米奇', greeting: '祝你生日快乐！' }
       ]
     },
-    hero: {
-      name: '勇气超人',
-      description: '勇敢的小英雄',
-      characters: [
-        { type: 'superhero', name: '超级小英雄', description: '保护世界' },
-        { type: 'astronaut', name: '小小宇航员', description: '探索宇宙' },
-        { type: 'knight', name: '勇敢小骑士', description: '守护正义' },
-        { type: 'wizard', name: '魔法小巫师', description: '神奇魔法' },
-        { type: 'pirate', name: '冒险小海盗', description: '勇敢探险' }
-      ]
-    },
-    image: {
-      name: '自定义角色',
-      description: '使用自定义图片作为角色',
+    custom: {
+      name: '自定义系列',
+      description: '使用自定义角色图片和视频',
       characters: []
     }
   };
@@ -405,8 +430,8 @@ module.exports = {
   validate,
   buildRenderParams,
   getPresets,
-  getCharacterOptions,
-  getValidCharacterTypes,
+  getBlessingSeriesOptions,
+  getBlessingSeriesConfig,
   getModules,
   getDuration
 };
