@@ -60,14 +60,10 @@ export interface StoryPanelProps extends Omit<BaseCompositionComponentProps, 'ch
   overlayContent?: ReactNode;
   
   /** 是否启用全局水印 */
-  watermark?: {
-    enabled: boolean;
-  } & Partial<WatermarkProps>;
+  watermark?: Partial<WatermarkProps> & { enabled?: boolean };
   
   /** 是否启用全局走马灯 */
-  marquee?: {
-    enabled: boolean;
-  } & Partial<MarqueeProps>;
+  marquee?: Partial<MarqueeProps> & { enabled?: boolean };
   
   /** 背景音乐配置 */
   backgroundMusic?: {

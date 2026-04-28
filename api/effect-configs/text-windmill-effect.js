@@ -1,20 +1,11 @@
 /**
  * 文字大风车特效参数配置
- * 支持二维数组输入，每个第一维是一个叶片，每个第二维是叶片内的内容项
+ * 使用嵌套参数格式
  */
 
 const path = require('path');
-const {
-  DEFAULT_COLORS,
-  DEFAULT_BLESSING_STYLE,
-  numberRangeParser,
-  intRangeParser,
-  booleanParser,
-} = require('./shared-params');
+const { DEFAULT_COLORS, DEFAULT_BLESSING_STYLE, numberRangeParser, intRangeParser, booleanParser, arrayParser } = require('./shared-params');
 
-/**
- * 特效基础信息
- */
 const config = {
   id: 'text-windmill-effect',
   name: '文字大风车特效',
@@ -22,9 +13,6 @@ const config = {
   path: path.join(__dirname, '../../effects/text-windmill-effect')
 };
 
-/**
- * 默认叶片数据
- */
 const DEFAULT_BLADES_DATA = [
   [{ type: 'text', content: '福' }, { type: 'text', content: '运' }],
   [{ type: 'text', content: '禄' }, { type: 'text', content: '财' }],
@@ -32,32 +20,20 @@ const DEFAULT_BLADES_DATA = [
   [{ type: 'text', content: '吉' }, { type: 'text', content: '祥' }],
 ];
 
-/**
- * 解析单个内容项
- */
 function parseContentItem(item) {
   if (typeof item === 'string') {
-    // 判断是否是祝福图案类型
     const blessingTypes = ['goldCoin', 'moneyBag', 'luckyBag', 'redPacket', 'star', 'heart', 'balloon'];
-    if (blessingTypes.includes(item)) {
-      return { type: 'blessing', content: item };
-    }
+    if (blessingTypes.includes(item)) return { type: 'blessing', content: item };
     return { type: 'text', content: item };
   }
   if (typeof item === 'object' && item !== null) {
-    return {
-      type: item.type || 'text',
-      content: item.content || ''
-    };
+    return { type: item.type || 'text', content: item.content || '' };
   }
   return { type: 'text', content: String(item) };
 }
 
-/**
- * 特效特有参数定义
- */
 const params = {
-  // ===== 叶片数据配置（二维数组） =====
+  // 叶片数据
   bladesData: {
     type: 'array',
     defaultValue: DEFAULT_BLADES_DATA,
@@ -66,198 +42,51 @@ const params = {
       if (Array.isArray(v)) {
         if (v.length === 0) return DEFAULT_BLADES_DATA;
         return v.map(blade => {
-          if (!Array.isArray(blade)) {
-            return [parseContentItem(blade)];
-          }
+          if (!Array.isArray(blade)) return [parseContentItem(blade)];
           return blade.map(item => parseContentItem(item));
         });
       }
-      if (typeof v === 'string') {
-        try {
-          const parsed = JSON.parse(v);
-          if (Array.isArray(parsed)) {
-            return parsed.map(blade => {
-              if (!Array.isArray(blade)) return [parseContentItem(blade)];
-              return blade.map(item => parseContentItem(item));
-            });
-          }
-        } catch (e) {
-          // 解析失败，使用默认值
-        }
-      }
       return DEFAULT_BLADES_DATA;
     },
-    description: '叶片数据（二维数组），每个第一维是一个叶片，每个第二维是叶片内的内容项'
   },
-
-  // ===== 简化文字输入（兼容模式） =====
-  words: {
-    type: 'array',
-    defaultValue: [],
-    parser: (v) => {
-      if (Array.isArray(v)) return v;
-      if (typeof v === 'string') {
-        try {
-          return JSON.parse(v);
-        } catch {
-          return v.split(',').map(w => w.trim()).filter(w => w);
-        }
-      }
-      return [];
-    },
-    description: '文字列表（简化模式，自动生成叶片）'
-  },
-
-  // ===== 字体配置 =====
-  fontSize: {
-    type: 'number',
-    defaultValue: 60,
-    parser: (v) => parseInt(v) || 60,
-    description: '基础字体大小'
-  },
-
-  // ===== 颜色配置 =====
-  colors: {
-    type: 'array',
-    defaultValue: DEFAULT_COLORS,
-    parser: (v) => {
-      if (Array.isArray(v)) return v.length > 0 ? v : DEFAULT_COLORS;
-      if (typeof v === 'string') {
-        try {
-          const arr = JSON.parse(v);
-          return arr.length > 0 ? arr : DEFAULT_COLORS;
-        } catch {
-          const arr = v.split(',').map(c => c.trim()).filter(c => c);
-          return arr.length > 0 ? arr : DEFAULT_COLORS;
-        }
-      }
-      return DEFAULT_COLORS;
-    },
-    description: '叶片颜色列表（循环使用）'
-  },
-  glowColor: {
-    type: 'string',
-    defaultValue: '#ffd700',
-    description: '发光颜色'
-  },
-  glowIntensity: {
-    type: 'number',
-    defaultValue: 1.2,
-    parser: (v) => parseFloat(v) || 1.2,
-    description: '发光强度'
-  },
-
-  // ===== 旋转配置 =====
-  rotationSpeed: {
-    type: 'number',
-    defaultValue: 0.3,
-    parser: (v) => parseFloat(v) || 0.3,
-    description: '旋转速度（圈/秒）'
-  },
-  rotationDirection: {
-    type: 'string',
-    defaultValue: 'clockwise',
-    parser: (v) => v === 'counterclockwise' ? 'counterclockwise' : 'clockwise',
-    description: '旋转方向：clockwise（顺时针）或 counterclockwise（逆时针）'
-  },
-
-  // ===== 中心点配置 =====
-  centerOffsetY: {
-    type: 'number',
-    defaultValue: 0,
-    parser: numberRangeParser(-0.5, 0.5, 0),
-    description: '中心点垂直偏移（-0.5 到 0.5，相对于画面高度）'
-  },
-
-  // ===== 3D 视角配置 =====
-  tiltAngle: {
-    type: 'number',
-    defaultValue: 30,
-    parser: intRangeParser(-60, 60, 30),
-    description: '3D 视角倾斜角度（度）'
-  },
-  rotateY: {
-    type: 'number',
-    defaultValue: 0,
-    parser: intRangeParser(-180, 180, 0),
-    description: '3D 视角 Y 轴旋转角度（度）'
-  },
-  perspective: {
-    type: 'number',
-    defaultValue: 1000,
-    parser: (v) => parseInt(v) || 1000,
-    description: '透视距离'
-  },
-
-  // ===== 效果开关 =====
-  enableGlow: {
-    type: 'boolean',
-    defaultValue: true,
-    parser: booleanParser(true),
-    description: '启用发光效果'
-  },
-  appearDuration: {
-    type: 'number',
-    defaultValue: 30,
-    parser: (v) => parseInt(v) || 30,
-    description: '叶片出现动画时长（帧）'
-  },
-
-  // ===== 叶片控制 =====
-  itemRotateWithBlade: {
-    type: 'boolean',
-    defaultValue: false,
-    parser: booleanParser(false),
-    description: '叶片内部元素是否随叶片旋转（true: 随叶片旋转, false: 保持水平）'
-  },
-  bladeLengthRatio: {
-    type: 'number',
-    defaultValue: 0.7,
-    parser: numberRangeParser(0.3, 1, 0.7),
-    description: '叶片长度比例（0.3-1.0）'
-  },
-  enableRandomBladeLength: {
-    type: 'boolean',
-    defaultValue: false,
-    parser: booleanParser(false),
-    description: '是否启用叶片长度随机变化'
-  },
-
-  // ===== 祝福图案样式 =====
-  blessingStyle: {
-    type: 'object',
-    defaultValue: null,
-    parser: (v) => {
-      if (!v) return null;
-      if (typeof v === 'string') {
-        try {
-          return JSON.parse(v);
-        } catch {
-          return null;
-        }
-      }
-      return v;
-    },
-    description: '祝福图案样式配置'
-  }
+  
+  // 简化文字输入
+  words: { type: 'array', defaultValue: [], parser: arrayParser([]) },
+  
+  // 字体
+  fontSize: { type: 'number', defaultValue: 60 },
+  
+  // 颜色
+  colors: { type: 'array', defaultValue: DEFAULT_COLORS, parser: arrayParser(DEFAULT_COLORS) },
+  glowColor: { type: 'string', defaultValue: '#ffd700' },
+  glowIntensity: { type: 'number', defaultValue: 1.2 },
+  
+  // 旋转
+  rotationSpeed: { type: 'number', defaultValue: 0.3 },
+  rotationDirection: { type: 'string', defaultValue: 'clockwise' },
+  
+  // 中心点
+  centerOffsetY: { type: 'number', defaultValue: 0, parser: numberRangeParser(-0.5, 0.5, 0) },
+  
+  // 3D
+  tiltAngle: { type: 'number', defaultValue: 30, parser: intRangeParser(-60, 60, 30) },
+  rotateY: { type: 'number', defaultValue: 0, parser: intRangeParser(-180, 180, 0) },
+  perspective: { type: 'number', defaultValue: 1000 },
+  
+  // 效果
+  enableGlow: { type: 'boolean', defaultValue: true, parser: booleanParser(true) },
+  appearDuration: { type: 'number', defaultValue: 30 },
+  itemRotateWithBlade: { type: 'boolean', defaultValue: false, parser: booleanParser(false) },
+  bladeLengthRatio: { type: 'number', defaultValue: 0.7, parser: numberRangeParser(0.3, 1, 0.7) },
+  enableRandomBladeLength: { type: 'boolean', defaultValue: false, parser: booleanParser(false) },
+  
+  blessingStyle: { type: 'object', defaultValue: null },
 };
 
-/**
- * 参数验证
- */
 function validate(params) {
-  // 如果提供了 bladesData 或 words，则有效
-  if ((params.bladesData && params.bladesData.length > 0) ||
-      (params.words && params.words.length > 0)) {
-    return { valid: true };
-  }
-  // 否则使用默认值
   return { valid: true };
 }
 
-/**
- * 构建渲染参数
- */
 function buildRenderParams(reqParams, commonParams) {
   const result = { ...commonParams };
 
@@ -283,9 +112,7 @@ function buildRenderParams(reqParams, commonParams) {
           bladeItems.push({ type: 'text', content: result.words[wordIndex] });
         }
       }
-      if (bladeItems.length > 0) {
-        bladesData.push(bladeItems);
-      }
+      if (bladeItems.length > 0) bladesData.push(bladeItems);
     }
     result.bladesData = bladesData;
   }
@@ -293,9 +120,4 @@ function buildRenderParams(reqParams, commonParams) {
   return result;
 }
 
-module.exports = {
-  config,
-  params,
-  validate,
-  buildRenderParams
-};
+module.exports = { config, params, validate, buildRenderParams };

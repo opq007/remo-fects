@@ -4,12 +4,9 @@ import { KidsBirthdayComposition } from './compositions';
 import { KidsBirthdaySchema } from './schemas';
 
 /**
- * 儿童生日祝福视频生成器 v2.0
+ * 儿童生日祝福视频生成器 v3.0
  * 
- * 支持模块化分镜系统：
- * - 60秒版本：A+B+C+D+E+F+G（适合短视频平台）
- * - 90秒版本：上述+H（适合分享给亲友）
- * - 120秒版本：全模块（完整祝福体验）
+ * 固定 124 秒版本（4秒倒计时 + 120秒正片）
  * 
  * 支持角色系统：
  * - 生肖守护神系列（12生肖）
@@ -20,13 +17,13 @@ import { KidsBirthdaySchema } from './schemas';
 export const RemotionRoot: React.FC = () => {
   return (
     <Folder name="儿童生日祝福">
-      {/* ========== 时长版本 ========== */}
-      <Folder name="时长版本">
-        {/* 120秒完整版 */}
+      {/* ========== 竖屏版本 ========== */}
+      <Folder name="竖屏">
+        {/* 通用风格 */}
         <Composition
-          id="KidsBirthday120s"
+          id="KidsBirthdayPortrait"
           component={KidsBirthdayComposition}
-          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
+          durationInFrames={2976} // 124秒 @ 24fps
           fps={24}
           width={720}
           height={1280}
@@ -35,17 +32,15 @@ export const RemotionRoot: React.FC = () => {
             name: '小明',
             age: 6,
             message: '愿你每天开心成长，梦想成真！',
-            videoVersion: '120s',
-            duration: 124, // 更新为124秒
+            duration: 124,
             fps: 24,
             width: 720,
             height: 1280,
             subStyle: 'general',
-            characterSeries: 'zodiac',
-            characterType: 'tiger',
-            photos: [],
+            photos: [{"src":"熊猫.png"}],
             dreams: ['astronaut', 'artist', 'racer'],
             orientation: 'portrait',
+            blessingSeries: 'journey_to_the_west',
             nameFontSize: 120,
             showAge: true,
             blessingText: '生日快乐',
@@ -55,150 +50,55 @@ export const RemotionRoot: React.FC = () => {
             musicEnabled: true,
             musicTrack: 'JoyfulChildren',
             birthdaySongSource: 'birthday_audio.mp3',
-            birthdaySongVolume: 0.6
-          }}
-        />
-        
-        {/* 90秒版本 */}
-        <Composition
-          id="KidsBirthday90s"
-          component={KidsBirthdayComposition}
-          durationInFrames={2256} // 94秒 @ 24fps (90秒 + 4秒倒计时)
-          fps={24}
-          width={720}
-          height={1280}
-          schema={KidsBirthdaySchema}
-          defaultProps={{
-            name: '小明',
-            age: 6,
-            message: '愿你每天开心成长！',
-            videoVersion: '90s',
-            duration: 94, // 更新为94秒
-            fps: 24,
-            width: 720,
-            height: 1280,
-            subStyle: 'general',
-            characterSeries: 'zodiac',
-            characterType: 'tiger',
-            photos: [],
-            dreams: ['astronaut', 'artist', 'racer'],
-            orientation: 'portrait',
-            nameFontSize: 120,
-            showAge: true,
-            blessingText: '生日快乐',
-            blessingFontSize: 60,
-            confettiLevel: 'high',
-            animationSpeed: 'normal',
-            musicEnabled: true,
-            musicTrack: 'JoyfulChildren',
-            birthdaySongSource: 'birthday_audio.mp3',
-            birthdaySongVolume: 0.6
-          }}
-        />
-        
-        {/* 60秒版本 */}
-        <Composition
-          id="KidsBirthday60s"
-          component={KidsBirthdayComposition}
-          durationInFrames={1536} // 64秒 @ 24fps (60秒 + 4秒倒计时)
-          fps={24}
-          width={720}
-          height={1280}
-          schema={KidsBirthdaySchema}
-          defaultProps={{
-            name: '小明',
-            age: 6,
-            message: '生日快乐！',
-            videoVersion: '60s',
-            duration: 64, // 更新为64秒
-            fps: 24,
-            width: 720,
-            height: 1280,
-            subStyle: 'general',
-            characterSeries: 'zodiac',
-            characterType: 'tiger',
-            photos: [],
-            dreams: [],
-            orientation: 'portrait',
-            nameFontSize: 120,
-            showAge: true,
-            blessingText: '生日快乐',
-            blessingFontSize: 60,
-            confettiLevel: 'high',
-            animationSpeed: 'normal',
-            musicEnabled: true,
-            musicTrack: 'JoyfulChildren',
             birthdaySongVolume: 0.6,
-            // 自定义章节列表
-            chapterList: [
-              // 倒计时开场章节（精简配置，其余使用默认值）
-              {
-                id: '0_countdown',
-                countdown: {
-                  enabled: true,
-                  audio: {
-                    enabled: true,
-                    tickSound: 'countDown_common.mp3',
-                    endSound: 'countDown_game.mp3',
-                    volume: 0.6,
-                  },
-                },
-              },
-              // 生日歌章节特效配置
-              {
-                id: 'G_birthdaySong',
-                plusEffects: [
-                  // 文字烟花特效
-                  {
-                    effectType: 'textFirework',
-                    contentType: 'mixed',
-                    words: ['生日快乐', 'Happy Birthday', '快乐成长', '梦想成真'],
-                    images: [],
-                    imageWeight: 0.3,
-                    blessingTypes: ['goldCoin', 'star', 'heart'],
-                    fontSize: 80,
-                    colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1'],
-                    glowColor: '#FFD700',
-                    glowIntensity: 1.2,
-                    x: 0.5,
-                    y: 0.4,
-                    scale: 1,
-                    opacity: 0.9,
-                    seed: 12345,
-                  },
-                  // 文字雨特效
-                  {
-                    effectType: 'textRain',
-                    contentType: 'mixed',
-                    words: ['福', '寿', '喜', '乐'],
-                    images: [],
-                    imageWeight: 0.3,
-                    blessingTypes: ['goldCoin', 'star'],
-                    fontSize: 60,
-                    colors: ['#FFD700', '#FF6B6B', '#4ECDC4', '#96CEB4'],
-                    glowColor: '#FFD700',
-                    glowIntensity: 0.8,
-                    x: 0.5,
-                    y: 0.5,
-                    scale: 1,
-                    opacity: 0.7,
-                    animationSpeed: 0.3,
-                    seed: 54321,
-                  },
+            // 走马灯测试配置（添加 positionY 参数）
+            marquee: {
+              enabled: true,
+              positionY: 0.85,  // 新增：垂直位置（0-1）
+              foreground: {
+                texts: [
+                  { text: '生日快乐' },
+                  { text: 'Happy Birthday' },
+                  { text: '快乐成长' },
                 ],
+                fontSize: 24,
+                opacity: 0.8,
               },
-            ],
+              background: {
+                texts: [
+                  { text: '✨' },
+                  { text: '🎉' },
+                  { text: '🎂' },
+                ],
+                fontSize: 18,
+                opacity: 0.4,
+              },
+              direction: 'left-to-right',
+              speed: 50,
+            },
+            // 水印测试配置
+            watermark: {
+              enabled: true,
+              text: 'Remo-Fects',
+              fontSize: 20,
+              opacity: 0.5,
+            },
+            // 径向发散粒子测试配置
+            radialBurst: {
+              enabled: true,
+              effectType: 'sparkleBurst',
+              color: '#FFD76A',
+              secondaryColor: '#7EC8FF',
+              intensity: 0.8,
+            },
           }}
         />
-      </Folder>
-      
-      {/* ========== 风格模板 ========== */}
-      <Folder name="风格模板">
+        
         {/* 女孩独角兽风格 */}
         <Composition
           id="KidsBirthdayGirl"
           component={KidsBirthdayComposition}
-          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
+          durationInFrames={2976}
           fps={24}
           width={720}
           height={1280}
@@ -207,17 +107,15 @@ export const RemotionRoot: React.FC = () => {
             name: '小美',
             age: 5,
             message: '小公主生日快乐！',
-            videoVersion: '120s',
-            duration: 124, // 更新为124秒
+            duration: 124,
             fps: 24,
             width: 720,
             height: 1280,
             subStyle: 'girl_unicorn',
-            characterSeries: 'pet',
-            characterType: 'bunny',
-            photos: [],
+            photos: [{"src":"熊猫.png"}],
             dreams: ['artist', 'musician', 'teacher'],
             orientation: 'portrait',
+            blessingSeries: 'journey_to_the_west',
             nameFontSize: 120,
             showAge: true,
             blessingText: '生日快乐',
@@ -235,7 +133,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="KidsBirthdayBoy"
           component={KidsBirthdayComposition}
-          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
+          durationInFrames={2976}
           fps={24}
           width={720}
           height={1280}
@@ -244,55 +142,15 @@ export const RemotionRoot: React.FC = () => {
             name: '小强',
             age: 7,
             message: '小小男子汉生日快乐！',
-            videoVersion: '120s',
-            duration: 124, // 更新为124秒
+            duration: 124,
             fps: 24,
             width: 720,
             height: 1280,
             subStyle: 'boy_rocket',
-            characterSeries: 'hero',
-            characterType: 'astronaut',
-            photos: [],
+            photos: [{"src":"熊猫.png"}],
             dreams: ['astronaut', 'racer', 'scientist'],
             orientation: 'portrait',
-            nameFontSize: 120,
-            showAge: true,
-            blessingText: '生日快乐',
-            blessingFontSize: 60,
-            confettiLevel: 'high',
-            animationSpeed: 'normal',
-            musicEnabled: true,
-            musicTrack: 'JoyfulChildren',
-            birthdaySongSource: 'birthday_audio.mp3',
-            birthdaySongVolume: 0.6
-          }}
-        />
-        
-        {/* 自定义图片角色风格 */}
-        <Composition
-          id="KidsBirthdayCustomImage"
-          component={KidsBirthdayComposition}
-          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
-          fps={24}
-          width={720}
-          height={1280}
-          schema={KidsBirthdaySchema}
-          defaultProps={{
-            name: '宝贝',
-            age: 5,
-            message: '生日快乐！',
-            videoVersion: '120s',
-            duration: 124, // 更新为124秒
-            fps: 24,
-            width: 720,
-            height: 1280,
-            subStyle: 'general',
-            characterSeries: 'image',
-            characterType: 'tiger', // image 模式下使用默认值
-            characterImageSrc: '熊猫.png', // 本地图片路径（相对于 public 目录）
-            photos: [],
-            dreams: ['artist', 'musician', 'teacher'],
-            orientation: 'portrait',
+            blessingSeries: 'journey_to_the_west',
             nameFontSize: 120,
             showAge: true,
             blessingText: '生日快乐',
@@ -307,13 +165,12 @@ export const RemotionRoot: React.FC = () => {
         />
       </Folder>
       
-      {/* ========== 屏幕方向 ========== */}
-      <Folder name="屏幕方向">
-        {/* 横屏版本 */}
+      {/* ========== 横屏版本 ========== */}
+      <Folder name="横屏">
         <Composition
           id="KidsBirthdayLandscape"
           component={KidsBirthdayComposition}
-          durationInFrames={2976} // 124秒 @ 24fps (120秒 + 4秒倒计时)
+          durationInFrames={2976}
           fps={24}
           width={1280}
           height={720}
@@ -322,17 +179,15 @@ export const RemotionRoot: React.FC = () => {
             name: '小明',
             age: 6,
             message: '生日快乐！',
-            videoVersion: '120s',
-            duration: 124, // 更新为124秒
+            duration: 124,
             fps: 24,
             width: 1280,
             height: 720,
             subStyle: 'general',
-            characterSeries: 'zodiac',
-            characterType: 'tiger',
-            photos: [],
+            photos: [{"src":"熊猫.png"}],
             dreams: ['astronaut', 'artist', 'racer'],
             orientation: 'landscape',
+            blessingSeries: 'journey_to_the_west',
             nameFontSize: 100,
             showAge: true,
             blessingText: '生日快乐',
